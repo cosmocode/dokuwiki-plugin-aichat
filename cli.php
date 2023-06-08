@@ -10,6 +10,7 @@ use Hexogen\KDTree\ItemList;
 use Hexogen\KDTree\KDTree;
 use Hexogen\KDTree\NearestSearch;
 use Hexogen\KDTree\Point;
+use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -35,6 +36,8 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
 
         $options->registerCommand('ask', 'Ask a question');
         $options->registerArgument('question', 'The question to ask', true, 'ask');
+
+        $options->registerCommand('chat', 'Start an interactive chat session');
     }
 
     /** @inheritDoc */
@@ -51,34 +54,94 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
             case 'ask':
                 $this->ask($options->getArgs()[0]);
                 break;
+            case 'chat':
+                $this->chat();
+                break;
             default:
                 echo $options->help();
         }
     }
 
-    protected function ask($query) {
+    /**
+     * Interactive Chat Session
+     *
+     * @return void
+     * @throws Exception
+     */
+    protected function chat()
+    {
         /** @var helper_plugin_aichat_prompt $prompt */
         $prompt = plugin_load('helper', 'aichat_prompt');
-        
-        $result = $prompt->askQuestion($query);
 
-        echo $result['answer'];
-        echo "\n\nSources:\n";
-        foreach($result['sources'] as $source) {
-            echo $source['meta']['pageid'] . "\n";
+        $history = [];
+        while ($q = $this->readLine('Your Question')) {
+            if ($history) {
+                $question = $prompt->rephraseChatQuestion($q, $history);
+                $this->colors->ptln("Interpretation: $question", Colors::C_LIGHTPURPLE);
+            } else {
+                $question = $q;
+            }
+            $result = $prompt->askQuestion($question);
+            $history[] = [$q, $result['answer']];
+            $this->printAnswer($result);
+        }
+
+    }
+
+    /**
+     * Print the given detailed answer in a nice way
+     *
+     * @param array $answer
+     * @return void
+     */
+    protected function printAnswer($answer)
+    {
+        $this->colors->ptln($answer['answer'], Colors::C_LIGHTCYAN);
+        echo "\n";
+        foreach ($answer['sources'] as $source) {
+            $this->colors->ptln("\t".$source['meta']['pageid'], Colors::C_LIGHTBLUE);
+        }
+        echo "\n";
+    }
+
+    /**
+     * Handle a single, standalone question
+     *
+     * @param string $query
+     * @return void
+     * @throws Exception
+     */
+    protected function ask($query)
+    {
+        /** @var helper_plugin_aichat_prompt $prompt */
+        $prompt = plugin_load('helper', 'aichat_prompt');
+
+        $result = $prompt->askQuestion($query);
+        $this->printAnswer($result);
+    }
+
+    /**
+     * Get the pages that are similar to the query
+     *
+     * @param string $query
+     * @return void
+     */
+    protected function similar($query)
+    {
+        $openAI = new OpenAI($this->getConf('openaikey'), $this->getConf('openaiorg'));
+        $embedding = new Embeddings($openAI, $this);
+
+        $sources = $embedding->getSimilarChunks($query);
+        foreach ($sources as $source) {
+            $this->colors->ptln($source['meta']['pageid'], Colors::C_LIGHTBLUE);
         }
     }
 
-    protected function similar($query)
-    {
-
-        $openAI = new OpenAI($this->getConf('openaikey'), $this->getConf('openaiorg'));
-
-        $embedding = new Embeddings($openAI, $this);
-
-        var_dump($embedding->getSimilarChunks($query));
-    }
-
+    /**
+     * Recreate chunks and embeddings for all pages
+     *
+     * @return void
+     */
     protected function createEmbeddings()
     {
         $openAI = new OpenAI($this->getConf('openaikey'), $this->getConf('openaiorg'));
@@ -87,6 +150,26 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         $embeddings->createNewIndex();
     }
 
+    /**
+     * Interactively ask for a value from the user
+     *
+     * @param string $prompt
+     * @return string
+     */
+    protected function readLine($prompt)
+    {
+        $value = '';
 
+        while ($value === '') {
+            echo $prompt;
+            echo ': ';
+
+            $fh = fopen('php://stdin', 'r');
+            $value = trim(fgets($fh));
+            fclose($fh);
+        }
+
+        return $value;
+    }
 }
 

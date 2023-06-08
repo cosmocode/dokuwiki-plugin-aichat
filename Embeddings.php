@@ -17,7 +17,7 @@ use Vanderlee\Sentence\Sentence;
 class Embeddings
 {
 
-    const MAX_TOKEN_LEN = 1500;
+    const MAX_TOKEN_LEN = 1000;
     const INDEX_NAME = 'aichat';
     const INDEX_FILE = 'index.bin';
 
@@ -71,7 +71,6 @@ class Embeddings
 
         $file = $this->getStorageDir() . self::INDEX_FILE;
         $fsTree = new FSKDTree($file, new ItemFactory());
-        $items = $fsTree->getItemCount();
         $fsSearcher = new NearestSearch($fsTree);
         $items = $fsSearcher->search(new Point($embedding), $limit);
 

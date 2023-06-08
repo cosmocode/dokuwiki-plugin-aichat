@@ -72,6 +72,7 @@ class OpenAI
      * @param string $endpoint
      * @param array $data Payload to send
      * @return array API response
+     * @todo add retry, when openAI responds with model overload
      * @throws \Exception
      */
     protected function request($endpoint, $data)
