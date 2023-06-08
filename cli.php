@@ -1,19 +1,8 @@
 <?php
 
-use dokuwiki\plugin\aichat\Embeddings;
-use dokuwiki\plugin\aichat\OpenAI;
-use Hexogen\KDTree\FSKDTree;
-use Hexogen\KDTree\FSTreePersister;
-use Hexogen\KDTree\Item;
-use Hexogen\KDTree\ItemFactory;
-use Hexogen\KDTree\ItemList;
-use Hexogen\KDTree\KDTree;
-use Hexogen\KDTree\NearestSearch;
-use Hexogen\KDTree\Point;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 
-require_once __DIR__ . '/vendor/autoload.php';
 
 /**
  * DokuWiki Plugin aichat (CLI Component)
@@ -23,6 +12,15 @@ require_once __DIR__ . '/vendor/autoload.php';
  */
 class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
 {
+    /** @var helper_plugin_aichat */
+    protected $helper;
+
+    public function __construct($autocatch = true)
+    {
+        parent::__construct($autocatch);
+        $this->helper = plugin_load('helper', 'aichat');
+    }
+
 
     /** @inheritDoc */
     protected function setup(Options $options)
@@ -70,22 +68,18 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      */
     protected function chat()
     {
-        /** @var helper_plugin_aichat_prompt $prompt */
-        $prompt = plugin_load('helper', 'aichat_prompt');
-
         $history = [];
         while ($q = $this->readLine('Your Question')) {
             if ($history) {
-                $question = $prompt->rephraseChatQuestion($q, $history);
+                $question = $this->helper->rephraseChatQuestion($q, $history);
                 $this->colors->ptln("Interpretation: $question", Colors::C_LIGHTPURPLE);
             } else {
                 $question = $q;
             }
-            $result = $prompt->askQuestion($question);
+            $result = $this->helper->askQuestion($question);
             $history[] = [$q, $result['answer']];
             $this->printAnswer($result);
         }
-
     }
 
     /**
@@ -99,7 +93,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         $this->colors->ptln($answer['answer'], Colors::C_LIGHTCYAN);
         echo "\n";
         foreach ($answer['sources'] as $source) {
-            $this->colors->ptln("\t".$source['meta']['pageid'], Colors::C_LIGHTBLUE);
+            $this->colors->ptln("\t" . $source['meta']['pageid'], Colors::C_LIGHTBLUE);
         }
         echo "\n";
     }
@@ -113,10 +107,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      */
     protected function ask($query)
     {
-        /** @var helper_plugin_aichat_prompt $prompt */
-        $prompt = plugin_load('helper', 'aichat_prompt');
-
-        $result = $prompt->askQuestion($query);
+        $result = $this->helper->askQuestion($query);
         $this->printAnswer($result);
     }
 
@@ -128,10 +119,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      */
     protected function similar($query)
     {
-        $openAI = new OpenAI($this->getConf('openaikey'), $this->getConf('openaiorg'));
-        $embedding = new Embeddings($openAI, $this);
-
-        $sources = $embedding->getSimilarChunks($query);
+        $sources = $this->helper->getEmbeddings()->getSimilarChunks($query);
         foreach ($sources as $source) {
             $this->colors->ptln($source['meta']['pageid'], Colors::C_LIGHTBLUE);
         }
@@ -144,10 +132,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      */
     protected function createEmbeddings()
     {
-        $openAI = new OpenAI($this->getConf('openaikey'), $this->getConf('openaiorg'));
-
-        $embeddings = new Embeddings($openAI, $this);
-        $embeddings->createNewIndex();
+        $this->helper->getEmbeddings()->createNewIndex();
     }
 
     /**

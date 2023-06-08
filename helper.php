@@ -4,13 +4,15 @@ use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\OpenAI;
 use TikToken\Encoder;
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 /**
  * DokuWiki Plugin aichat (Helper Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class helper_plugin_aichat_prompt extends \dokuwiki\Extension\Plugin
+class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
 {
     /** @var OpenAI */
     protected $openAI;
@@ -23,12 +25,49 @@ class helper_plugin_aichat_prompt extends \dokuwiki\Extension\Plugin
         $this->embeddings = new Embeddings($this->openAI);
     }
 
+    /**
+     * Access the OpenAI client
+     *
+     * @return OpenAI
+     */
+    public function getOpenAI()
+    {
+        return $this->openAI;
+    }
+
+    /**
+     * Access the Embeddings interface
+     *
+     * @return Embeddings
+     */
+    public function getEmbeddings()
+    {
+        return $this->embeddings;
+    }
+
+    /**
+     * Ask a question with a chat history
+     *
+     * @param string $question
+     * @param array[] $history The chat history [[user, ai], [user, ai], ...]
+     * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
+     * @throws Exception
+     */
+    public function askChatQuestion($question, $history = [])
+    {
+        if ($history) {
+            $standaloneQuestion = $this->rephraseChatQuestion($question, $history);
+        } else {
+            $standaloneQuestion = $question;
+        }
+        return $this->askQuestion($standaloneQuestion);
+    }
 
     /**
      * Ask a single standalone question
      *
      * @param string $question
-     * @return array
+     * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
     public function askQuestion($question)
