@@ -48,8 +48,24 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
             case 'similar':
                 $this->similar($options->getArgs()[0]);
                 break;
+            case 'ask':
+                $this->ask($options->getArgs()[0]);
+                break;
             default:
                 echo $options->help();
+        }
+    }
+
+    protected function ask($query) {
+        /** @var helper_plugin_aichat_prompt $prompt */
+        $prompt = plugin_load('helper', 'aichat_prompt');
+        
+        $result = $prompt->askQuestion($query);
+
+        echo $result['answer'];
+        echo "\n\nSources:\n";
+        foreach($result['sources'] as $source) {
+            echo $source['meta']['pageid'] . "\n";
         }
     }
 
