@@ -1,0 +1,175 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "f81afb2dcee034e2ad5e630fd25d0707",
+    "packages": [
+        {
+            "name": "hexogen/kdtree",
+            "version": "v0.2.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hexogen/kdtree.git",
+                "reference": "f739186638445990463762d467e07a8262228daa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hexogen/kdtree/zipball/f739186638445990463762d467e07a8262228daa",
+                "reference": "f739186638445990463762d467e07a8262228daa",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1|^8.0"
+            },
+            "require-dev": {
+                "league/csv": "^9.7.0",
+                "mockery/mockery": "dev-master",
+                "phpunit/phpunit": "^9.0",
+                "squizlabs/php_codesniffer": "^3.5.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Hexogen\\KDTree\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Volodymyr Basarab",
+                    "email": "volodymyrbas@gmail.com",
+                    "homepage": "https://github.com/hexogen",
+                    "role": "Developer"
+                }
+            ],
+            "description": "file system KDTree index",
+            "homepage": "https://github.com/hexogen/kdtree",
+            "keywords": [
+                "algorithms",
+                "data structures",
+                "hexogen",
+                "kdtree",
+                "search"
+            ],
+            "support": {
+                "issues": "https://github.com/hexogen/kdtree/issues",
+                "source": "https://github.com/hexogen/kdtree/tree/v0.2.5"
+            },
+            "time": "2022-11-21T13:19:19+00:00"
+        },
+        {
+            "name": "mehrab-wj/tiktoken-php",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mehrab-wj/tiktoken-php.git",
+                "reference": "f894247f05bb3494a9cb4bcad5d588e87ff50e73"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mehrab-wj/tiktoken-php/zipball/f894247f05bb3494a9cb4bcad5d588e87ff50e73",
+                "reference": "f894247f05bb3494a9cb4bcad5d588e87ff50e73",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.14",
+                "phpstan/phpstan": "^1.9",
+                "phpunit/phpunit": "^9.5",
+                "rector/rector": "^0.15.12",
+                "symfony/var-dumper": "^6.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "TikToken\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mehrab Hojjati Pour",
+                    "email": "thisismehrab@gmail.com"
+                }
+            ],
+            "description": "a clone of python tiktoken but for PHP! fast BPE tokeniser for use with OpenAI's models.",
+            "support": {
+                "source": "https://github.com/mehrab-wj/tiktoken-php/tree/v1.0.0"
+            },
+            "time": "2023-04-19T18:36:48+00:00"
+        },
+        {
+            "name": "vanderlee/php-sentence",
+            "version": "1.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vanderlee/php-sentence.git",
+                "reference": "ed7ce41ef815bd21e61f62b692418740f988451f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vanderlee/php-sentence/zipball/ed7ce41ef815bd21e61f62b692418740f988451f",
+                "reference": "ed7ce41ef815bd21e61f62b692418740f988451f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-mbstring": "*",
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^3.6.12"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Vanderlee\\Sentence\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Simple text sentence splitting and counting. Supports atleast english, german and dutch, possibly more.",
+            "homepage": "https://github.com/vanderlee/php-sentence.git",
+            "keywords": [
+                "boundary",
+                "count",
+                "disambiguation",
+                "segmentation",
+                "sentence",
+                "split"
+            ],
+            "support": {
+                "issues": "https://github.com/vanderlee/php-sentence/issues",
+                "source": "https://github.com/vanderlee/php-sentence"
+            },
+            "time": "2022-03-24T16:25:31+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
+}
