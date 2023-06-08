@@ -3,5 +3,10 @@
         "vanderlee/php-sentence": "^1.0",
         "mehrab-wj/tiktoken-php": "^1.0",
         "hexogen/kdtree": "^0.2.5"
+    },
+    "config": {
+        "platform": {
+            "php": "8.1"
+        }
     }
 }

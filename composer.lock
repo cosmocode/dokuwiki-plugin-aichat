@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f81afb2dcee034e2ad5e630fd25d0707",
+    "content-hash": "dfd261dce2ba791d8d925c5953bacd66",
     "packages": [
         {
             "name": "hexogen/kdtree",
@@ -171,5 +171,8 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
+    "platform-overrides": {
+        "php": "8.1"
+    },
     "plugin-api-version": "2.3.0"
 }
