@@ -64,40 +64,25 @@ class Embeddings
      */
     public function createNewIndex($skipRE = '')
     {
-        io_rmdir($this->getStorageDir(), true); // delete old index
-
         $indexer = new Indexer();
         $pages = $indexer->getPages();
-        $itemCount = 0;
 
         $itemList = new ItemList(1536);
-        foreach ($pages as $page) {
+        foreach ($pages as $pid => $page) {
             if (!page_exists($page)) continue;
             if (isHiddenPage($page)) continue;
             if ($skipRE && preg_match($skipRE, $page)) continue;
-            $text = rawWiki($page);
-            $chunks = $this->splitIntoChunks($text);
-            $meta = [
-                'pageid' => $page,
-            ];
-            foreach ($chunks as $chunk) {
-                try {
-                    $embedding = $this->openAI->getEmbedding($chunk);
-                } catch (\Exception $e) {
-                    if ($this->logger) {
-                        $this->logger->error(
-                            'Failed to get embedding for chunk of page {page}: {msg}',
-                            ['page' => $page, 'msg' => $e->getMessage()]
-                        );
-                    }
-                    continue;
-                }
-                $item = new Item($itemCount++, $embedding);
-                $itemList->addItem($item);
-                $this->saveChunk($item->getId(), $chunk, $meta);
-            }
-            if ($this->logger) {
-                $this->logger->success('Split {id} into {count} chunks', ['id' => $page, 'count' => count($chunks)]);
+
+            $chunkID = $pid * 100; // chunk IDs start at page ID * 100
+
+            $firstChunk = $this->getChunkFilePath($chunkID);
+            if (@filemtime(wikiFN($page)) < @filemtime($firstChunk)) {
+                // page is older than the chunks we have, reuse the existing chunks
+                $this->reusePageChunks($itemList, $page, $chunkID);
+            } else {
+                // page is newer than the chunks we have, create new chunks
+                $this->deletePageChunks($chunkID);
+                $this->createPageChunks($itemList, $page, $chunkID);
             }
         }
 
@@ -107,6 +92,80 @@ class Embeddings
         }
         $persister = new FSTreePersister($this->getStorageDir());
         $persister->convert($tree, self::INDEX_FILE);
+    }
+
+    /**
+     * Split the given page, fetch embedding vectors, save chunks and add them to the tree list
+     *
+     * @param ItemList $itemList The list to add the items to
+     * @param string $page Name of the page to split
+     * @param int $chunkID The ID of the first chunk of this page
+     * @return void
+     * @throws \Exception
+     */
+    protected function createPageChunks(ItemList $itemList, $page, $chunkID)
+    {
+        $text = rawWiki($page);
+        $chunks = $this->splitIntoChunks($text);
+        $meta = [
+            'pageid' => $page,
+        ];
+        foreach ($chunks as $chunk) {
+            try {
+                $embedding = $this->openAI->getEmbedding($chunk);
+            } catch (\Exception $e) {
+                if ($this->logger) {
+                    $this->logger->error(
+                        'Failed to get embedding for chunk of page {page}: {msg}',
+                        ['page' => $page, 'msg' => $e->getMessage()]
+                    );
+                }
+                continue;
+            }
+            $item = new Item($chunkID, $embedding);
+            $itemList->addItem($item);
+            $this->saveChunk($item->getId(), $chunk, $embedding, $meta);
+            $chunkID++;
+        }
+        if ($this->logger) {
+            $this->logger->success('{id} split into {count} chunks', ['id' => $page, 'count' => count($chunks)]);
+        }
+    }
+
+    /**
+     * Load the existing chunks for the given page and add them to the tree list
+     *
+     * @param ItemList $itemList The list to add the items to
+     * @param string $page Name of the page to split
+     * @param int $chunkID The ID of the first chunk of this page
+     * @return void
+     */
+    protected function reusePageChunks(ItemList $itemList, $page, $chunkID)
+    {
+        for ($i = 0; $i < 100; $i++) {
+            $chunk = $this->loadChunk($chunkID + $i);
+            if (!$chunk) break;
+            $item = new Item($chunkID, $chunk['embedding']);
+            $itemList->addItem($item);
+        }
+        if ($this->logger) {
+            $this->logger->success('{id} reused {count} chunks', ['id' => $page, 'count' => $i]);
+        }
+    }
+
+    /**
+     * Delete all possibly existing chunks for one page (identified by the first chunk ID)
+     *
+     * @param int $chunkID The ID of the first chunk of this page
+     * @return void
+     */
+    protected function deletePageChunks($chunkID)
+    {
+        for ($i = 0; $i < 100; $i++) {
+            $chunk = $this->getChunkFilePath($chunkID + $i);
+            if (!file_exists($chunk)) break;
+            unlink($chunk);
+        }
     }
 
     /**
@@ -186,18 +245,20 @@ class Embeddings
      *
      * @param int $id The chunk id in the K-D tree
      * @param string $text raw text of the chunk
+     * @param float[] $embedding embedding vector of the chunk
      * @param array $meta meta data to store with the chunk
      * @return void
      */
-    public function saveChunk($id, $text, $meta = [])
+    public function saveChunk($id, $text, $embedding, $meta = [])
     {
         $data = [
             'id' => $id,
             'text' => $text,
+            'embedding' => $embedding,
             'meta' => $meta,
         ];
 
-        $chunkfile = $this->getStorageDir('chunk') . $id . '.json';
+        $chunkfile = $this->getChunkFilePath($id);
         io_saveFile($chunkfile, json_encode($data));
     }
 
@@ -205,12 +266,25 @@ class Embeddings
      * Load chunk data from the file system
      *
      * @param int $id
-     * @return array The chunk data [id, text, meta => []]
+     * @return array|false The chunk data [id, text, embedding, meta => []], false if not found
      */
     public function loadChunk($id)
     {
-        $chunkfile = $this->getStorageDir('chunk') . $id . '.json';
+        $chunkfile = $this->getChunkFilePath($id);
+        if (!file_exists($chunkfile)) return false;
         return json_decode(io_readFile($chunkfile, false), true);
+    }
+
+    /**
+     * Return the path to the chunk file
+     *
+     * @param $id
+     * @return string
+     */
+    protected function getChunkFilePath($id)
+    {
+        $id = dechex($id); // use hexadecimal for shorter file names
+        return $this->getStorageDir('chunk') . $id . '.json';
     }
 
     /**
