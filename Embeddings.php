@@ -11,6 +11,7 @@ use Hexogen\KDTree\ItemList;
 use Hexogen\KDTree\KDTree;
 use Hexogen\KDTree\NearestSearch;
 use Hexogen\KDTree\Point;
+use splitbrain\phpcli\CLI;
 use TikToken\Encoder;
 use Vanderlee\Sentence\Sentence;
 
@@ -27,14 +28,38 @@ class Embeddings
     const INDEX_NAME = 'aichat';
     const INDEX_FILE = 'index.bin';
 
+    /** @var OpenAI */
     protected $openAI;
+    /** @var CLI|null */
+    protected $logger;
 
-    public function __construct(OpenAI $openAI, $logger = null)
+    /**
+     * @param OpenAI $openAI
+     */
+    public function __construct(OpenAI $openAI)
     {
         $this->openAI = $openAI;
+    }
+
+    /**
+     * Add a logger instance
+     *
+     * @param CLI $logger
+     * @return void
+     */
+    public function setLogger(CLI $logger)
+    {
         $this->logger = $logger;
     }
 
+    /**
+     * Create a new K-D Tree from all pages
+     *
+     * Deletes the existing index
+     *
+     * @return void
+     * @throws \Hexogen\KDTree\Exception\ValidationException
+     */
     public function createNewIndex()
     {
         io_rmdir($this->getStorageDir(), true); // delete old index

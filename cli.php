@@ -19,6 +19,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     {
         parent::__construct($autocatch);
         $this->helper = plugin_load('helper', 'aichat');
+        $this->helper->getEmbeddings()->setLogger($this);
     }
 
 
