@@ -56,6 +56,11 @@ class AIChatChat extends HTMLElement {
                 --color-human: #ebd8b2;
                 --color-ai: #c6dbf2;
                 --color-link: #4881bf;
+                
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                justify-content: space-between;
             }
 
             * {

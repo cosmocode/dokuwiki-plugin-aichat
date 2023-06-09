@@ -52,12 +52,17 @@ class syntax_plugin_aichat extends \dokuwiki\Extension\SyntaxPlugin
 
         $opts = [
             'hello' => trim($data['body']),
+            'placeholder' => $this->getLang('placeholder'),
             'url' => DOKU_BASE . '/lib/exe/ajax.php?call=aichat',
         ];
         $html = '<aichat-chat ' . buildAttributes($opts) . '></aichat-chat>';
 
         if (in_array('button', $data['params'])) {
-            $html = '<aichat-button>' . $html . '</aichat-button>';
+            $opts = [
+                'title' => $this->getLang('title'),
+            ];
+
+            $html = '<aichat-button ' . buildAttributes($opts) . '>' . $html . '</aichat-button>';
         }
 
         $renderer->doc .= $html;
