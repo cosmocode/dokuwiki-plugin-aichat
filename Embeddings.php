@@ -3,6 +3,7 @@
 namespace dokuwiki\plugin\aichat;
 
 use dokuwiki\Search\Indexer;
+use Hexogen\KDTree\Exception\ValidationException;
 use Hexogen\KDTree\FSKDTree;
 use Hexogen\KDTree\FSTreePersister;
 use Hexogen\KDTree\Item;
@@ -57,10 +58,11 @@ class Embeddings
      *
      * Deletes the existing index
      *
+     * @param string $skipRE Regular expression to filter out pages (full RE with delimiters)
      * @return void
-     * @throws \Hexogen\KDTree\Exception\ValidationException
+     * @throws ValidationException
      */
-    public function createNewIndex()
+    public function createNewIndex($skipRE = '')
     {
         io_rmdir($this->getStorageDir(), true); // delete old index
 
@@ -72,13 +74,24 @@ class Embeddings
         foreach ($pages as $page) {
             if (!page_exists($page)) continue;
             if (isHiddenPage($page)) continue;
+            if ($skipRE && preg_match($skipRE, $page)) continue;
             $text = rawWiki($page);
             $chunks = $this->splitIntoChunks($text);
             $meta = [
                 'pageid' => $page,
             ];
             foreach ($chunks as $chunk) {
-                $embedding = $this->openAI->getEmbedding($chunk);
+                try {
+                    $embedding = $this->openAI->getEmbedding($chunk);
+                } catch (\Exception $e) {
+                    if ($this->logger) {
+                        $this->logger->error(
+                            'Failed to get embedding for chunk of page {page}: {msg}',
+                            ['page' => $page, 'msg' => $e->getMessage()]
+                        );
+                    }
+                    continue;
+                }
                 $item = new Item($itemCount++, $embedding);
                 $itemList->addItem($item);
                 $this->saveChunk($item->getId(), $chunk, $meta);
@@ -134,7 +147,7 @@ class Embeddings
      * @todo maybe add overlap support
      * @todo support splitting too long sentences
      */
-    protected function splitIntoChunks($text)
+    public function splitIntoChunks($text)
     {
         $sentenceSplitter = new Sentence();
         $tiktok = new Encoder();
@@ -148,7 +161,8 @@ class Embeddings
             $slen = count($tiktok->encode($sentence));
             if ($slen > self::MAX_TOKEN_LEN) {
                 // sentence is too long, we need to split it further
-                throw new \Exception('Sentence too long, splitting not implemented yet');
+                if ($this->logger) $this->logger->warning('Sentence too long, splitting not implemented yet');
+                continue;
             }
 
             if ($chunklen + $slen < self::MAX_TOKEN_LEN) {

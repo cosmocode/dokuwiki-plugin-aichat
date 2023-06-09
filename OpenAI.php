@@ -11,6 +11,8 @@ class OpenAI
 {
     const EMBEDDING_MODEL = 'text-embedding-ada-002';
     const CHAT_MODEL = 'gpt-3.5-turbo';
+    /** @var int How often to retry a request if it fails */
+    const MAX_RETRIES = 3;
 
     /** @var DokuHTTPClient */
     protected $http;
@@ -78,16 +80,21 @@ class OpenAI
      * @param array $data Payload to send
      * @return array API response
      * @throws \Exception
-     * @todo add retry, when openAI responds with model overload
      */
-    protected function request($endpoint, $data)
+    protected function request($endpoint, $data, $retry = 0)
     {
+        if ($retry) sleep($retry); // wait a bit between retries
+
         $url = 'https://api.openai.com/v1/' . $endpoint;
 
         /** @noinspection PhpParamsInspection */
         $this->http->post($url, json_encode($data));
         $response = $this->http->resp_body;
         if ($response === false || $this->http->error) {
+            if ($retry < self::MAX_RETRIES) {
+                return $this->request($endpoint, $data, $retry + 1);
+            }
+
             throw new \Exception('OpenAI API returned no response. ' . $this->http->error);
         }
 
@@ -96,6 +103,10 @@ class OpenAI
             throw new \Exception('OpenAI API returned invalid JSON: ' . $response);
         }
         if (isset($data['error'])) {
+            if ($retry < self::MAX_RETRIES) {
+                return $this->request($endpoint, $data, $retry + 1);
+            }
+
             throw new \Exception('OpenAI API returned error: ' . $data['error']['message']);
         }
         return $data;

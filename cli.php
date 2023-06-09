@@ -37,6 +37,9 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         $options->registerArgument('question', 'The question to ask', true, 'ask');
 
         $options->registerCommand('chat', 'Start an interactive chat session');
+
+        $options->registerCommand('split', 'Split a page into chunks (for debugging)');
+        $options->registerArgument('page', 'The page to split', true, 'split');
     }
 
     /** @inheritDoc */
@@ -56,9 +59,31 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
             case 'chat':
                 $this->chat();
                 break;
+            case 'split':
+                $this->split($options->getArgs()[0]);
+                break;
             default:
                 echo $options->help();
         }
+    }
+
+    /**
+     * Split the given page into chunks and print them
+     *
+     * @param string $page
+     * @return void
+     * @throws Exception
+     */
+    protected function split($page)
+    {
+        $text = rawWiki($page);
+        $chunks = $this->helper->getEmbeddings()->splitIntoChunks($text);
+        foreach ($chunks as $chunk) {
+            echo $chunk;
+            echo "\n";
+            $this->colors->ptln('--------------------------------', Colors::C_LIGHTPURPLE);
+        }
+        $this->success('Split into ' . count($chunks) . ' chunks');
     }
 
     /**
@@ -130,10 +155,13 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      * Recreate chunks and embeddings for all pages
      *
      * @return void
+     * @todo make skip regex configurable
      */
     protected function createEmbeddings()
     {
-        $this->helper->getEmbeddings()->createNewIndex();
+        ini_set('memory_limit', -1); // we may need a lot of memory here
+        $this->helper->getEmbeddings()->createNewIndex('/(^|:)(playground|sandbox)(:|$)/');
+        $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
     }
 
     /**
