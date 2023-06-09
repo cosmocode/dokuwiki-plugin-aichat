@@ -4,11 +4,15 @@ namespace dokuwiki\plugin\aichat;
 
 use dokuwiki\http\DokuHTTPClient;
 
+/**
+ * Client to communicate with the OpenAI API
+ */
 class OpenAI
 {
     const EMBEDDING_MODEL = 'text-embedding-ada-002';
     const CHAT_MODEL = 'gpt-3.5-turbo';
 
+    /** @var DokuHTTPClient */
     protected $http;
 
     /**
@@ -53,7 +57,8 @@ class OpenAI
      * @return string The answer
      * @throws \Exception
      */
-    public function getChatAnswer($messages) {
+    public function getChatAnswer($messages)
+    {
         $data = [
             'messages' => $messages,
             'model' => self::CHAT_MODEL,
@@ -72,8 +77,8 @@ class OpenAI
      * @param string $endpoint
      * @param array $data Payload to send
      * @return array API response
-     * @todo add retry, when openAI responds with model overload
      * @throws \Exception
+     * @todo add retry, when openAI responds with model overload
      */
     protected function request($endpoint, $data)
     {
@@ -88,13 +93,11 @@ class OpenAI
 
         $data = json_decode($response, true);
         if (!$data) {
-            throw new \Exception('OpenAI API returned invalid JSON: '.$response);
+            throw new \Exception('OpenAI API returned invalid JSON: ' . $response);
         }
         if (isset($data['error'])) {
             throw new \Exception('OpenAI API returned error: ' . $data['error']['message']);
         }
         return $data;
     }
-
-
 }

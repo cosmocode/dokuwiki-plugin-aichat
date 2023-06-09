@@ -14,6 +14,12 @@ use Hexogen\KDTree\Point;
 use TikToken\Encoder;
 use Vanderlee\Sentence\Sentence;
 
+/**
+ * Manage the embeddings index
+ *
+ * Pages are split into chunks of 1000 tokens each. For each chunk the embedding vector is fetched from
+ * OpenAI and stored in a K-D Tree, chunk data is written to the file system.
+ */
 class Embeddings
 {
 
@@ -121,7 +127,14 @@ class Embeddings
         return $chunks;
     }
 
-
+    /**
+     * Store additional chunk data in the file system
+     *
+     * @param int $id The chunk id in the K-D tree
+     * @param string $text raw text of the chunk
+     * @param array $meta meta data to store with the chunk
+     * @return void
+     */
     public function saveChunk($id, $text, $meta = [])
     {
         $data = [
@@ -134,13 +147,24 @@ class Embeddings
         io_saveFile($chunkfile, json_encode($data));
     }
 
-
+    /**
+     * Load chunk data from the file system
+     *
+     * @param int $id
+     * @return array The chunk data [id, text, meta => []]
+     */
     public function loadChunk($id)
     {
         $chunkfile = $this->getStorageDir('chunk') . $id . '.json';
         return json_decode(io_readFile($chunkfile, false), true);
     }
 
+    /**
+     * Return the path to where the K-D tree and chunk data is stored
+     *
+     * @param string $subdir
+     * @return string
+     */
     protected function getStorageDir($subdir = '')
     {
         global $conf;

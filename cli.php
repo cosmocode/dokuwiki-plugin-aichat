@@ -25,7 +25,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     /** @inheritDoc */
     protected function setup(Options $options)
     {
-        $options->setHelp('Manage the AI chatbot data');
+        $options->setHelp('Manage and query the AI chatbot data');
 
         $options->registerCommand('embed', 'Create embeddings for all pages');
 
