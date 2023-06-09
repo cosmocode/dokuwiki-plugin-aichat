@@ -73,9 +73,13 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     public function askQuestion($question)
     {
         $similar = $this->embeddings->getSimilarChunks($question);
-        $context = implode("\n", array_column($similar, 'text'));
 
-        $prompt = $this->getPrompt('question', ['context' => $context]);
+        if ($similar) {
+            $context = implode("\n", array_column($similar, 'text'));
+            $prompt = $this->getPrompt('question', ['context' => $context]);
+        } else {
+            $prompt = $this->getPrompt('noanswer');
+        }
         $messages = [
             [
                 'role' => 'system',

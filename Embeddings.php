@@ -64,25 +64,40 @@ class Embeddings
         }
 
         $tree = new KDTree($itemList);
-        if($this->logger) {
+        if ($this->logger) {
             $this->logger->success('Created index with {count} items', ['count' => $tree->getItemCount()]);
         }
         $persister = new FSTreePersister($this->getStorageDir());
         $persister->convert($tree, self::INDEX_FILE);
     }
 
+    /**
+     * Do a nearest neighbor search for chunks similar to the given question
+     *
+     * Returns only chunks the current user is allowed to read, may return an empty result.
+     *
+     * @param string $query The question
+     * @param int $limit The number of results to return
+     * @return array
+     * @throws \Exception
+     */
     public function getSimilarChunks($query, $limit = 4)
     {
+        global $auth;
         $embedding = $this->openAI->getEmbedding($query);
 
         $file = $this->getStorageDir() . self::INDEX_FILE;
         $fsTree = new FSKDTree($file, new ItemFactory());
         $fsSearcher = new NearestSearch($fsTree);
-        $items = $fsSearcher->search(new Point($embedding), $limit);
+        $items = $fsSearcher->search(new Point($embedding), $limit * 2); // we get twice as many as needed
 
         $result = [];
         foreach ($items as $item) {
-            $result [] = $this->loadChunk($item->getId());
+            $chunk = $this->loadChunk($item->getId());
+            // filter out chunks the user is not allowed to read
+            if ($auth && auth_quickaclcheck($chunk['meta']['pageid']) < AUTH_READ) continue;
+            $result[] = $chunk;
+            if (count($result) >= $limit) break;
         }
         return $result;
     }
