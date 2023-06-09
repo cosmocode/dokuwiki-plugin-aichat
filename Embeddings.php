@@ -71,11 +71,11 @@ class Embeddings
         $itemList = new ItemList(1536);
         foreach ($pages as $page) {
             if (!page_exists($page)) continue;
+            if (isHiddenPage($page)) continue;
             $text = rawWiki($page);
             $chunks = $this->splitIntoChunks($text);
             $meta = [
                 'pageid' => $page,
-                // fixme add title here?
             ];
             foreach ($chunks as $chunk) {
                 $embedding = $this->openAI->getEmbedding($chunk);
