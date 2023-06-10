@@ -77,9 +77,10 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      */
     protected function treeinfo()
     {
-        $tree = $this->helper->getEmbeddings()->getTree();
-        echo 'Items: ' . $tree->getItemCount() . "\n";
-        echo 'Dimensions: ' . $tree->getDimensionCount() . "\n";
+        $stats = $this->helper->getEmbeddings()->getStorage()->statistics();
+        foreach($stats as $key => $value) {
+            echo $key . ': ' . $value. "\n";
+        }
     }
 
     /**
@@ -162,7 +163,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     {
         $sources = $this->helper->getEmbeddings()->getSimilarChunks($query);
         foreach ($sources as $source) {
-            $this->colors->ptln($source['meta']['pageid'], Colors::C_LIGHTBLUE);
+            $this->colors->ptln($source->getPage(), Colors::C_LIGHTBLUE);
         }
     }
 
