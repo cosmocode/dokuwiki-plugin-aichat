@@ -106,7 +106,6 @@ class OpenAI
             if ($retry < self::MAX_RETRIES) {
                 return $this->request($endpoint, $data, $retry + 1);
             }
-
             throw new \Exception('OpenAI API returned error: ' . $data['error']['message']);
         }
         return $data;

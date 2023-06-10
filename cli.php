@@ -40,6 +40,8 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
 
         $options->registerCommand('split', 'Split a page into chunks (for debugging)');
         $options->registerArgument('page', 'The page to split', true, 'split');
+
+        $options->registerCommand('info', 'Get Info about the K-D Tree');
     }
 
     /** @inheritDoc */
@@ -62,9 +64,22 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
             case 'split':
                 $this->split($options->getArgs()[0]);
                 break;
+            case 'info':
+                $this->treeinfo();
+                break;
             default:
                 echo $options->help();
         }
+    }
+
+    /**
+     * @return void
+     */
+    protected function treeinfo()
+    {
+        $tree = $this->helper->getEmbeddings()->getTree();
+        echo 'Items: ' . $tree->getItemCount() . "\n";
+        echo 'Dimensions: ' . $tree->getDimensionCount() . "\n";
     }
 
     /**

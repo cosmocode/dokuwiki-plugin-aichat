@@ -183,8 +183,7 @@ class Embeddings
         global $auth;
         $embedding = $this->openAI->getEmbedding($query);
 
-        $file = $this->getStorageDir() . self::INDEX_FILE;
-        $fsTree = new FSKDTree($file, new ItemFactory());
+        $fsTree = $this->getTree();
         $fsSearcher = new NearestSearch($fsTree);
         $items = $fsSearcher->search(new Point($embedding), $limit * 2); // we get twice as many as needed
 
@@ -197,6 +196,17 @@ class Embeddings
             if (count($result) >= $limit) break;
         }
         return $result;
+    }
+
+    /**
+     * Access to the KD Tree
+     *
+     * @return FSKDTree
+     */
+    public function getTree()
+    {
+        $file = $this->getStorageDir() . self::INDEX_FILE;
+        return new FSKDTree($file, new ItemFactory());
     }
 
     /**
