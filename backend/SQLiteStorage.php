@@ -28,8 +28,8 @@ class SQLiteStorage extends AbstractStorage
     public function getChunk($chunkID)
     {
         $record = $this->db->queryRecord('SELECT * FROM embeddings WHERE id = ?', [$chunkID]);
-        if(!$record) return null;
-        
+        if (!$record) return null;
+
         return new Chunk(
             $record['page'],
             $record['id'],
@@ -39,9 +39,13 @@ class SQLiteStorage extends AbstractStorage
         );
     }
 
+    /** @inheritdoc */
     public function startCreation($dimension, $clear = false)
     {
-        // TODO: Implement startCreation() method.
+        if ($clear) {
+            /** @noinspection SqlWithoutWhere */
+            $this->db->exec('DELETE FROM embeddings');
+        }
     }
 
     /** @inheritdoc */
@@ -56,6 +60,7 @@ class SQLiteStorage extends AbstractStorage
         $this->db->exec('DELETE FROM embeddings WHERE page = ?', [$page]);
     }
 
+    /** @inheritdoc */
     public function addPageChunks($chunks)
     {
         foreach ($chunks as $chunk) {
@@ -69,18 +74,21 @@ class SQLiteStorage extends AbstractStorage
         }
     }
 
+    /** @inheritdoc */
     public function finalizeCreation()
     {
-        // TODO: Implement finalizeCreation() method.
         $this->db->exec('VACUUM');
     }
 
     /** @inheritdoc */
     public function getSimilarChunks($vector, $limit = 4)
     {
-        // TODO: add PERMISSION check
         $result = $this->db->queryAll(
-            'SELECT *, COSIM(?, embedding) as similarity FROM embeddings ORDER BY similarity DESC LIMIT ?',
+            'SELECT *, COSIM(?, embedding) AS similarity 
+               FROM embeddings
+              WHERE GETACCESSLEVEL(page) > 0
+           ORDER BY similarity DESC
+              LIMIT ?',
             [json_encode($vector), $limit]
         );
         $chunks = [];

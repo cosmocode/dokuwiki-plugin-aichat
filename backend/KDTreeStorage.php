@@ -36,6 +36,11 @@ class KDTreeStorage extends AbstractStorage
     /** @inheritdoc */
     public function startCreation($dimension, $clear = false)
     {
+        if ($clear) {
+            io_rmdir($this->getStorageDir('chunk'), true);
+            @unlink($this->getStorageDir() . self::INDEX_FILE);
+        }
+
         $this->itemList = new ItemList($dimension);
     }
 
@@ -82,7 +87,8 @@ class KDTreeStorage extends AbstractStorage
     }
 
     /** @inheritdoc */
-    public function getSimilarChunks($vector, $limit = 4) {
+    public function getSimilarChunks($vector, $limit = 4)
+    {
         $fsTree = $this->getTree();
         $fsSearcher = new NearestSearch($fsTree);
         $items = $fsSearcher->search(new Point($vector), $limit * 2); // we get twice as many as needed

@@ -29,9 +29,20 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     {
         $options->useCompactHelp();
 
-        $options->setHelp('Manage and query the AI chatbot data');
+        $options->setHelp(
+            'Manage and query the AI chatbot data. Please note that calls to your LLM provider will be made. ' .
+            'This may incur costs.'
+        );
 
-        $options->registerCommand('embed', 'Create embeddings for all pages');
+        $options->registerCommand(
+            'embed',
+            'Create embeddings for all pages. This skips pages that already have embeddings'
+        );
+        $options->registerOption(
+            'clear',
+            'Clear all existing embeddings before creating new ones',
+            'c', false, 'embed'
+        );
 
         $options->registerCommand('similar', 'Search for similar pages');
         $options->registerArgument('query', 'Look up chunks similar to this query', true, 'similar');
@@ -53,7 +64,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         switch ($options->getCmd()) {
 
             case 'embed':
-                $this->createEmbeddings();
+                $this->createEmbeddings($options->getOpt('clear'));
                 break;
             case 'similar':
                 $this->similar($options->getArgs()[0]);
@@ -81,8 +92,8 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     protected function treeinfo()
     {
         $stats = $this->helper->getEmbeddings()->getStorage()->statistics();
-        foreach($stats as $key => $value) {
-            echo $key . ': ' . $value. "\n";
+        foreach ($stats as $key => $value) {
+            echo $key . ': ' . $value . "\n";
         }
     }
 
@@ -177,10 +188,10 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      * @return void
      * @todo make skip regex configurable
      */
-    protected function createEmbeddings()
+    protected function createEmbeddings($clear)
     {
         ini_set('memory_limit', -1); // we may need a lot of memory here
-        $this->helper->getEmbeddings()->createNewIndex('/(^|:)(playground|sandbox)(:|$)/');
+        $this->helper->getEmbeddings()->createNewIndex('/(^|:)(playground|sandbox)(:|$)/', $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
     }
 

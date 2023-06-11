@@ -64,26 +64,31 @@ class Embeddings
     }
 
     /**
-     * Create a new K-D Tree from all pages
-     *
-     * Deletes the existing index
+     * Update the embeddings storage
      *
      * @param string $skipRE Regular expression to filter out pages (full RE with delimiters)
+     * @param bool $clear Should any existing storage be cleared before updating?
      * @return void
-     * @throws ValidationException
+     * @throws \Exception
      */
-    public function createNewIndex($skipRE = '')
+    public function createNewIndex($skipRE = '', $clear = false)
     {
         $indexer = new Indexer();
         $pages = $indexer->getPages();
 
-        $this->storage->startCreation(1536);
+        $this->storage->startCreation(1536, $clear);
         foreach ($pages as $pid => $page) {
-            if (!page_exists($page)) continue;
-            if (isHiddenPage($page)) continue;
-            if ($skipRE && preg_match($skipRE, $page)) continue; // FIXME delete previous chunks
-
             $chunkID = $pid * 100; // chunk IDs start at page ID * 100
+
+            if (
+                !page_exists($page) ||
+                isHiddenPage($page) ||
+                ($skipRE && preg_match($skipRE, $page))
+            ) {
+                // this page should not be in the index (anymore)
+                $this->storage->deletePageChunks($page, $chunkID);
+                continue;
+            }
 
             $firstChunk = $this->storage->getChunk($chunkID);
             if ($firstChunk && @filemtime(wikiFN($page)) < $firstChunk->getCreated()) {
