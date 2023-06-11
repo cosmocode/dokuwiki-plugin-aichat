@@ -112,6 +112,7 @@ class Embeddings
      * @param int $firstChunkID The ID of the first chunk of this page
      * @return Chunk[] A list of chunks created for this page
      * @throws \Exception
+     * @todo support the text renderer
      */
     protected function createPageChunks($page, $firstChunkID)
     {

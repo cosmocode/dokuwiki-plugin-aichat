@@ -70,6 +70,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      * @param string $question
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
+     * @todo add context until token limit is hit
      */
     public function askQuestion($question)
     {
