@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\plugin\aichat\backend\Chunk;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 
@@ -26,6 +27,8 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     /** @inheritDoc */
     protected function setup(Options $options)
     {
+        $options->useCompactHelp();
+
         $options->setHelp('Manage and query the AI chatbot data');
 
         $options->registerCommand('embed', 'Create embeddings for all pages');
@@ -41,7 +44,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         $options->registerCommand('split', 'Split a page into chunks (for debugging)');
         $options->registerArgument('page', 'The page to split', true, 'split');
 
-        $options->registerCommand('info', 'Get Info about the K-D Tree');
+        $options->registerCommand('info', 'Get Info about the vector storage');
     }
 
     /** @inheritDoc */
@@ -135,7 +138,8 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         $this->colors->ptln($answer['answer'], Colors::C_LIGHTCYAN);
         echo "\n";
         foreach ($answer['sources'] as $source) {
-            $this->colors->ptln("\t" . $source['meta']['pageid'], Colors::C_LIGHTBLUE);
+            /** @var Chunk $source */
+            $this->colors->ptln("\t" . $source->getPage(), Colors::C_LIGHTBLUE);
         }
         echo "\n";
     }

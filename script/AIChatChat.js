@@ -170,6 +170,7 @@ class AIChatChat extends HTMLElement {
             this.#history.push([response.question, response.answer, response.sources]);
             this.saveHistory();
             p.textContent = response.question; // replace original question with interpretation
+            p.title = message; // show original question on hover
             this.displayMessage(response.answer, response.sources); // display the answer
         } catch (e) {
             console.error(e);

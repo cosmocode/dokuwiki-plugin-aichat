@@ -1,5 +1,8 @@
 <?php
 
+use dokuwiki\ErrorHandler;
+use dokuwiki\plugin\aichat\backend\Chunk;
+
 /**
  * DokuWiki Plugin aichat (Action Component)
  *
@@ -34,24 +37,30 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
 
         $question = $INPUT->post->str('question');
         $history = json_decode($INPUT->post->str('history'));
-
-        /** @var helper_plugin_aichat $helper */
-        $helper = plugin_load('helper', 'aichat');
-
-        $result = $helper->askChatQuestion($question, $history);
-
-        $sources = [];
-        foreach ($result['sources'] as $source) {
-            $sources[wl($source['meta']['pageid'])] = p_get_first_heading($source['meta']['pageid']) ?:
-                $source['meta']['pageid'];
-        }
-
         header('Content-Type: application/json');
-        echo json_encode([
-            'question' => $result['question'],
-            'answer' => $result['answer'],
-            'sources' => $sources,
-        ]);
+
+        try {
+            /** @var helper_plugin_aichat $helper */
+            $helper = plugin_load('helper', 'aichat');
+            $result = $helper->askChatQuestion($question, $history);
+            $sources = [];
+            foreach ($result['sources'] as $source) {
+                /** @var Chunk $source */
+                $sources[wl($source->getPage())] = p_get_first_heading($source->getPage()) ?: $source->getPage();
+            }
+            echo json_encode([
+                'question' => $result['question'],
+                'answer' => $result['answer'],
+                'sources' => $sources,
+            ]);
+        } catch (\Exception $e) {
+            ErrorHandler::logException($e);
+            echo json_encode([
+                'question' => $question,
+                'answer' => 'An error occurred. More info may be available in the error log. ' . $e->getMessage(),
+                'sources' => [],
+            ]);
+        }
     }
 
 }
