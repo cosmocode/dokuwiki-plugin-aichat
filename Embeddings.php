@@ -89,6 +89,7 @@ class Embeddings
             if ($firstChunk && @filemtime(wikiFN($page)) < $firstChunk->getCreated()) {
                 // page is older than the chunks we have, reuse the existing chunks
                 $this->storage->reusePageChunks($page, $chunkID);
+                if($this->logger) $this->logger->info("Reusing chunks for $page");
             } else {
                 // page is newer than the chunks we have, create new chunks
                 $this->storage->deletePageChunks($page, $chunkID);

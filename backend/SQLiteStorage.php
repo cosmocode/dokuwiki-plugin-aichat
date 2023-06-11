@@ -30,7 +30,7 @@ class SQLiteStorage extends AbstractStorage
         $record = $this->db->queryRecord('SELECT * FROM embeddings WHERE id = ?', [$chunkID]);
         if(!$record) return null;
         
-        new Chunk(
+        return new Chunk(
             $record['page'],
             $record['id'],
             $record['chunk'],
