@@ -83,6 +83,7 @@ class Embeddings
             if (
                 !page_exists($page) ||
                 isHiddenPage($page) ||
+                filesize(wikiFN($page)) < 150 || // skip very small pages
                 ($skipRE && preg_match($skipRE, $page))
             ) {
                 // this page should not be in the index (anymore)
