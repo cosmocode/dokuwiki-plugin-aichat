@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\plugin\aichat\backend\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\OpenAI;
 use TikToken\Encoder;
@@ -75,7 +76,9 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         $similar = $this->embeddings->getSimilarChunks($question);
 
         if ($similar) {
-            $context = implode("\n", array_column($similar, 'text'));
+            $context = implode("\n", array_map(function (Chunk $chunk) {
+                return $chunk->getText();
+            }, $similar));
             $prompt = $this->getPrompt('question', ['context' => $context]);
         } else {
             $prompt = $this->getPrompt('noanswer');

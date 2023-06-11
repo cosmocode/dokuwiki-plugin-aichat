@@ -11,11 +11,35 @@ class OpenAI
 {
     const EMBEDDING_MODEL = 'text-embedding-ada-002';
     const CHAT_MODEL = 'gpt-3.5-turbo';
+
+    /**
+     * real 1K cost multiplied by 10000 to avoid floating point issues
+     */
+    const PRICING = [
+        self::EMBEDDING_MODEL => 4, // $0.0004 per 1k token
+        self::CHAT_MODEL => 20, // $0.002 per 1k token
+    ];
+
+
     /** @var int How often to retry a request if it fails */
     const MAX_RETRIES = 3;
 
     /** @var DokuHTTPClient */
     protected $http;
+
+    /** @var int total tokens used by this instance */
+    protected $tokensUsed = 0;
+    /** @var int total cost used by this instance (multiplied by 1000*10000) */
+    protected $costEstimate = 0;
+
+    /** @var int total time spent in requests by this instance */
+    protected $timeUsed = 0;
+
+    /** @var int total number of requests made by this instance */
+    protected $requestsMade = 0;
+
+    /** @var int start of the current request chain (may be multiple when retries needed) */
+    protected $requestStart = 0;
 
     /**
      * Initialize the OpenAI API
@@ -84,6 +108,8 @@ class OpenAI
     protected function request($endpoint, $data, $retry = 0)
     {
         if ($retry) sleep($retry); // wait a bit between retries
+        if (!$this->requestStart) $this->requestStart = microtime(true);
+        $this->requestsMade++;
 
         $url = 'https://api.openai.com/v1/' . $endpoint;
 
@@ -95,19 +121,58 @@ class OpenAI
                 return $this->request($endpoint, $data, $retry + 1);
             }
 
+            $this->requestStart = 0;
             throw new \Exception('OpenAI API returned no response. ' . $this->http->error);
         }
 
-        $data = json_decode($response, true);
-        if (!$data) {
+        $result = json_decode($response, true);
+        if (!$result) {
+            $this->requestStart = 0;
             throw new \Exception('OpenAI API returned invalid JSON: ' . $response);
         }
-        if (isset($data['error'])) {
+        if (isset($result['error'])) {
             if ($retry < self::MAX_RETRIES) {
                 return $this->request($endpoint, $data, $retry + 1);
             }
-            throw new \Exception('OpenAI API returned error: ' . $data['error']['message']);
+            $this->requestStart = 0;
+            throw new \Exception('OpenAI API returned error: ' . $result['error']['message']);
         }
-        return $data;
+
+        // update usage statistics
+        $this->tokensUsed += $result['usage']['total_tokens'];
+        $this->costEstimate += $result['usage']['total_tokens'] * self::PRICING[$data['model']];
+        $this->timeUsed += microtime(true) - $this->requestStart;
+        $this->requestStart = 0;
+
+        return $result;
     }
+
+    /**
+     * Reset the usage statistics
+     *
+     * Usually not needed when only handling one operation per request, but useful in CLI
+     */
+    public function resetUsageStats()
+    {
+        $this->tokensUsed = 0;
+        $this->costEstimate = 0;
+        $this->timeUsed = 0;
+        $this->requestsMade = 0;
+    }
+
+    /**
+     * Get the usage statistics for this instance
+     *
+     * @return string[]
+     */
+    public function getUsageStats()
+    {
+        return [
+            'tokens' => $this->tokensUsed,
+            'cost' => round($this->costEstimate / 1000 / 10000, 4),
+            'time' => round($this->timeUsed, 2),
+            'requests' => $this->requestsMade,
+        ];
+    }
+
 }

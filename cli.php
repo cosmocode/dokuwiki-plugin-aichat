@@ -23,7 +23,6 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         $this->helper->getEmbeddings()->setLogger($this);
     }
 
-
     /** @inheritDoc */
     protected function setup(Options $options)
     {
@@ -126,6 +125,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     {
         $history = [];
         while ($q = $this->readLine('Your Question')) {
+            $this->helper->getOpenAI()->resetUsageStats();
             if ($history) {
                 $question = $this->helper->rephraseChatQuestion($q, $history);
                 $this->colors->ptln("Interpretation: $question", Colors::C_LIGHTPURPLE);
@@ -136,23 +136,6 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
             $history[] = [$q, $result['answer']];
             $this->printAnswer($result);
         }
-    }
-
-    /**
-     * Print the given detailed answer in a nice way
-     *
-     * @param array $answer
-     * @return void
-     */
-    protected function printAnswer($answer)
-    {
-        $this->colors->ptln($answer['answer'], Colors::C_LIGHTCYAN);
-        echo "\n";
-        foreach ($answer['sources'] as $source) {
-            /** @var Chunk $source */
-            $this->colors->ptln("\t" . $source->getPage(), Colors::C_LIGHTBLUE);
-        }
-        echo "\n";
     }
 
     /**
@@ -193,6 +176,36 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
         ini_set('memory_limit', -1); // we may need a lot of memory here
         $this->helper->getEmbeddings()->createNewIndex('/(^|:)(playground|sandbox)(:|$)/', $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
+    }
+
+    /**
+     * Print the given detailed answer in a nice way
+     *
+     * @param array $answer
+     * @return void
+     */
+    protected function printAnswer($answer)
+    {
+        $this->colors->ptln($answer['answer'], Colors::C_LIGHTCYAN);
+        echo "\n";
+        foreach ($answer['sources'] as $source) {
+            /** @var Chunk $source */
+            $this->colors->ptln("\t" . $source->getPage(), Colors::C_LIGHTBLUE);
+        }
+        echo "\n";
+        $this->printUsage();
+    }
+
+    /**
+     * Print the usage statistics for OpenAI
+     *
+     * @return void
+     */
+    protected function printUsage() {
+        $this->info(
+            'Made {requests} requests in {time}s to OpenAI. Used {tokens} tokens for about ${cost}.',
+            $this->helper->getOpenAI()->getUsageStats()
+        );
     }
 
     /**
