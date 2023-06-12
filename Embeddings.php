@@ -95,7 +95,7 @@ class Embeddings
             if ($firstChunk && @filemtime(wikiFN($page)) < $firstChunk->getCreated()) {
                 // page is older than the chunks we have, reuse the existing chunks
                 $this->storage->reusePageChunks($page, $chunkID);
-                if($this->logger) $this->logger->info("Reusing chunks for $page");
+                if ($this->logger) $this->logger->info("Reusing chunks for $page");
             } else {
                 // page is newer than the chunks we have, create new chunks
                 $this->storage->deletePageChunks($page, $chunkID);
@@ -108,16 +108,28 @@ class Embeddings
     /**
      * Split the given page, fetch embedding vectors and return Chunks
      *
+     * Will use the text renderer plugin if available to get the rendered text.
+     * Otherwise the raw wiki text is used.
+     *
      * @param string $page Name of the page to split
      * @param int $firstChunkID The ID of the first chunk of this page
      * @return Chunk[] A list of chunks created for this page
      * @throws \Exception
-     * @todo support the text renderer
      */
     protected function createPageChunks($page, $firstChunkID)
     {
         $chunkList = [];
-        $parts = $this->splitIntoChunks(rawWiki($page));
+
+        $textRenderer = plugin_load('renderer', 'text');
+        if ($textRenderer) {
+            global $ID;
+            $ID = $page;
+            $text = p_cached_output(wikiFN($page), 'text', $page);
+        } else {
+            $text = rawWiki($page);
+        }
+
+        $parts = $this->splitIntoChunks($text);
         foreach ($parts as $part) {
             try {
                 $embedding = $this->openAI->getEmbedding($part);
