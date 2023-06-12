@@ -7,4 +7,5 @@
 
 $conf['openaikey']    = '';
 $conf['openaiorg']    = '';
+$conf['logging'] = 0;
 

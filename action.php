@@ -53,6 +53,20 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
                 'answer' => $result['answer'],
                 'sources' => $sources,
             ]);
+
+            if ($this->getConf('logging')) {
+                \dokuwiki\Logger::getInstance('aichat')->log(
+                    $question,
+                    [
+                        'interpretation' => $result['question'],
+                        'answer' => $result['answer'],
+                        'sources' => $sources,
+                        'ip' => $INPUT->server->str('REMOTE_ADDR'),
+                        'user' => $INPUT->server->str('REMOTE_USER'),
+                        'stats' => $helper->getOpenAI()->getUsageStats()
+                    ]
+                );
+            }
         } catch (\Exception $e) {
             ErrorHandler::logException($e);
             echo json_encode([

@@ -7,4 +7,4 @@
 
 $lang['openaikey'] = 'Your OpenAI API key';
 $lang['openaiorg'] = 'Your OpenAI organization ID (if any)';
-
+$lang['logging'] = 'Log all questions and answers. Use the <a href="?do=admin&page=logviewer&facility=aichat">Log Viewer</a> to access.';
