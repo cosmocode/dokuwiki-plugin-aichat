@@ -9,3 +9,4 @@
 $meta['openaikey'] = array('string');
 $meta['openaiorg'] = array('string');
 $meta['logging'] = array('onoff');
+$meta['restrict'] = array('string');

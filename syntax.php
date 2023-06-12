@@ -50,6 +50,12 @@ class syntax_plugin_aichat extends \dokuwiki\Extension\SyntaxPlugin
             return false;
         }
 
+        if($this->getConf('restricted')) $renderer->nocache();
+        $helper = plugin_load('helper', 'aichat');
+        if(!$helper->userMayAccess()) {
+            return true;
+        }
+
         $opts = [
             'hello' => trim($data['body']),
             'placeholder' => $this->getLang('placeholder'),

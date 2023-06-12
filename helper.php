@@ -27,6 +27,24 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     }
 
     /**
+     * Check if the current user is allowed to use the plugin (if it has been restricted)
+     * 
+     * @return bool
+     */
+    public function userMayAccess()
+    {
+        global $auth;
+        global $USERINFO;
+        global $INPUT;
+
+        if (!$auth) return true;
+        if (!$this->getConf('restrict')) return true;
+        if (!isset($USERINFO)) return false;
+
+        return auth_isMember($this->getConf('restrict'), $INPUT->server->str('REMOTE_USER'), $USERINFO['grps']);
+    }
+
+    /**
      * Access the OpenAI client
      *
      * @return OpenAI

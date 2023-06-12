@@ -16,7 +16,6 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
     public function register(Doku_Event_Handler $controller)
     {
         $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE', $this, 'handleQuestion');
-
     }
 
 
@@ -35,13 +34,23 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
         $event->stopPropagation();
         global $INPUT;
 
+        /** @var helper_plugin_aichat $helper */
+        $helper = plugin_load('helper', 'aichat');
+
         $question = $INPUT->post->str('question');
         $history = json_decode($INPUT->post->str('history'));
         header('Content-Type: application/json');
 
+        if (!$helper->userMayAccess()) {
+            echo json_encode([
+                'question' => $question,
+                'answer' => $this->getLang('restricted'),
+                'sources' => [],
+            ]);
+            return;
+        }
+
         try {
-            /** @var helper_plugin_aichat $helper */
-            $helper = plugin_load('helper', 'aichat');
             $result = $helper->askChatQuestion($question, $history);
             $sources = [];
             foreach ($result['sources'] as $source) {
