@@ -178,6 +178,7 @@ class AIChatChat extends HTMLElement {
         }
 
         this.stopProgress();
+        this.#input.focus();
     }
 
     /**
@@ -210,7 +211,6 @@ class AIChatChat extends HTMLElement {
         }
         this.#input.style.display = 'initial';
         this.#progress.style.display = 'none';
-        this.#input.focus();
     }
 
     /**
