@@ -131,6 +131,8 @@ class Embeddings
 
         $parts = $this->splitIntoChunks($text);
         foreach ($parts as $part) {
+            if(trim($part) == '') continue; // skip empty chunks
+
             try {
                 $embedding = $this->openAI->getEmbedding($part);
             } catch (\Exception $e) {
@@ -146,7 +148,11 @@ class Embeddings
             $firstChunkID++;
         }
         if ($this->logger) {
-            $this->logger->success('{id} split into {count} chunks', ['id' => $page, 'count' => count($parts)]);
+            if(count($chunkList)) {
+                $this->logger->success('{id} split into {count} chunks', ['id' => $page, 'count' => count($chunkList)]);
+            } else {
+                $this->logger->warning('{id} could not be split into chunks', ['id' => $page]);
+            }
         }
         return $chunkList;
     }
