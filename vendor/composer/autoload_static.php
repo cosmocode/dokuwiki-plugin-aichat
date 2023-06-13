@@ -15,10 +15,6 @@ class ComposerStaticInitcf5108d0fe7a5d23e88d41bf066096a6
         array (
             'TikToken\\' => 9,
         ),
-        'H' => 
-        array (
-            'Hexogen\\KDTree\\' => 15,
-        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -29,10 +25,6 @@ class ComposerStaticInitcf5108d0fe7a5d23e88d41bf066096a6
         'TikToken\\' => 
         array (
             0 => __DIR__ . '/..' . '/mehrab-wj/tiktoken-php/src',
-        ),
-        'Hexogen\\KDTree\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/hexogen/kdtree/src',
         ),
     );
 

@@ -38,8 +38,7 @@ class Embeddings
     public function __construct(OpenAI $openAI)
     {
         $this->openAI = $openAI;
-        //$this->storage = new KDTreeStorage(); // FIXME make configurable
-        $this->storage = new SQLiteStorage(); // FIXME make configurable
+        $this->storage = new SQLiteStorage();
     }
 
     /**
