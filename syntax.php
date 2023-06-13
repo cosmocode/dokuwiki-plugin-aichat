@@ -59,7 +59,7 @@ class syntax_plugin_aichat extends \dokuwiki\Extension\SyntaxPlugin
         $opts = [
             'hello' => trim($data['body']),
             'placeholder' => $this->getLang('placeholder'),
-            'url' => DOKU_BASE . '/lib/exe/ajax.php?call=aichat',
+            'url' => DOKU_BASE . 'lib/exe/ajax.php?call=aichat',
         ];
         $html = '<aichat-chat ' . buildAttributes($opts) . '></aichat-chat>';
 
