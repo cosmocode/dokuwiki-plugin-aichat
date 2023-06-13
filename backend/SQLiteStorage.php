@@ -21,7 +21,7 @@ class SQLiteStorage extends AbstractStorage
     public function __construct()
     {
         $this->db = new SQLiteDB('aichat', DOKU_PLUGIN . 'aichat/db/');
-        $this->db->getDb()->sqliteCreateFunction('COSIM', [$this, 'sqliteCosineSimilarityCallback'], 2);
+        $this->db->getPdo()->sqliteCreateFunction('COSIM', [$this, 'sqliteCosineSimilarityCallback'], 2);
     }
 
     /** @inheritdoc */
