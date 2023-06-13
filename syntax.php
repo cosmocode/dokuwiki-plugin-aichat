@@ -67,6 +67,7 @@ class syntax_plugin_aichat extends \dokuwiki\Extension\SyntaxPlugin
             $opts = [
                 'label' => $this->getLang('title'),
             ];
+            if(in_array('float', $data['params'])) $opts['class'] = 'float';
 
             $html = '<aichat-button ' . buildAttributes($opts) . '>' . $html . '</aichat-button>';
         }

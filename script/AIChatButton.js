@@ -61,6 +61,7 @@ class AIChatButton extends HTMLElement {
         style.textContent = `
             :host {
                 --color-chat-icon: #4881bf;
+                --icon-size: 2em;
             }
             button {
                 background: none;
@@ -73,7 +74,10 @@ class AIChatButton extends HTMLElement {
             svg {
                 width: 2em;
                 height: 2em;
-                
+            }
+            button.start svg {
+                width: var(--icon-size);
+                height: var(--icon-size);
             }
             dialog {
                 width: 500px;
