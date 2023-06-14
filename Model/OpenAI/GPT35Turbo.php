@@ -95,6 +95,15 @@ class GPT35Turbo extends AbstractModel
     }
 
     /**
+     * @internal for checking available models
+     */
+    public function listUpstreamModels() {
+        $url = 'https://api.openai.com/v1/models';
+        $result = $this->http->get($url);
+        return $result;
+    }
+
+    /**
      * Send data to the chat endpoint
      *
      * @param array $messages Messages in OpenAI format (with role and content)
@@ -158,9 +167,11 @@ class GPT35Turbo extends AbstractModel
         }
 
         // update usage statistics
-        $price = self::$prices[$data['model']] ?? 0;
-        $this->tokensUsed += $result['usage']['total_tokens'];
-        $this->costEstimate += $result['usage']['total_tokens'] * $price;
+        if(isset($result['usage'])) {
+            $price = self::$prices[$data['model']] ?? 0;
+            $this->tokensUsed += $result['usage']['total_tokens'];
+            $this->costEstimate += $result['usage']['total_tokens'] * $price;
+        }
         $this->timeUsed += microtime(true) - $this->requestStart;
         $this->requestStart = 0;
 

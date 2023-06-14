@@ -96,6 +96,8 @@ class cli_plugin_aichat extends CLIPlugin
         foreach ($stats as $key => $value) {
             echo $key . ': ' . $value . "\n";
         }
+
+        //echo $this->helper->getModel()->listUpstreamModels();
     }
 
     /**
