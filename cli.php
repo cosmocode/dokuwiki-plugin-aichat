@@ -91,7 +91,7 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function showinfo()
     {
-        echo 'model: '. $this->getConf('model') . "\n";
+        echo 'model: ' . $this->getConf('model') . "\n";
         $stats = $this->helper->getEmbeddings()->getStorage()->statistics();
         foreach ($stats as $key => $value) {
             echo $key . ': ' . $value . "\n";
@@ -190,7 +190,7 @@ class cli_plugin_aichat extends CLIPlugin
 
     /**
      * Print the given sources
-     * 
+     *
      * @param Chunk[] $sources
      * @return void
      */
@@ -198,7 +198,10 @@ class cli_plugin_aichat extends CLIPlugin
     {
         foreach ($sources as $source) {
             /** @var Chunk $source */
-            $this->colors->ptln("\t" . $source->getPage() . ' ' . $source->getId(), Colors::C_LIGHTBLUE);
+            $this->colors->ptln(
+                "\t" . $source->getPage() . ' ' . $source->getId() . ' (' . $source->getScore() . ')',
+                Colors::C_LIGHTBLUE
+            );
         }
     }
 

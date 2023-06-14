@@ -14,6 +14,8 @@ class Chunk implements \JsonSerializable
     protected $embedding;
     /** @var int */
     protected $created;
+    /** @var int */
+    protected $score;
 
     /**
      * @param string $page
@@ -22,13 +24,14 @@ class Chunk implements \JsonSerializable
      * @param float[] $embedding
      * @param int $created
      */
-    public function __construct($page, $id, $text, $embedding, $created = '')
+    public function __construct($page, $id, $text, $embedding, $created = '', $score = 0)
     {
         $this->page = $page;
         $this->id = $id;
         $this->text = $text;
         $this->embedding = $embedding;
-        $this->created = $created ? $created : time();
+        $this->created = $created ?: time();
+        $this->score = $score;
     }
 
     /**
@@ -110,6 +113,24 @@ class Chunk implements \JsonSerializable
     {
         $this->created = $created;
     }
+
+    /**
+     * @return int
+     */
+    public function getScore()
+    {
+        return $this->score;
+    }
+
+    /**
+     * @param int
+     */
+    public function setScore($score): void
+    {
+        $this->score = $score;
+    }
+
+
 
     /**
      * Create a Chunk from a JSON string

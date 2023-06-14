@@ -99,7 +99,8 @@ class SQLiteStorage extends AbstractStorage
                 $record['id'],
                 $record['chunk'],
                 json_decode($record['embedding'], true),
-                $record['created']
+                $record['created'],
+                $record['similarity']
             );
         }
         return $chunks;
