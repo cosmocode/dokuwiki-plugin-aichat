@@ -91,7 +91,7 @@ class AIChatButton extends HTMLElement {
                 left: auto;
                 z-index: 9999;
                 
-                padding: 0.25em;
+                padding: 0.5em;
                 
                 box-shadow: 0 4px 5px rgb(0 0 0 / 30%);
                 border-radius: 8px;

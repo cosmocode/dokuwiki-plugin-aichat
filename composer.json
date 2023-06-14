@@ -1,7 +1,8 @@
 {
     "require": {
         "vanderlee/php-sentence": "^1.0",
-        "mehrab-wj/tiktoken-php": "^1.0"
+        "mehrab-wj/tiktoken-php": "^1.0",
+        "erusev/parsedown": "^1.7"
     },
     "config": {
         "platform": {

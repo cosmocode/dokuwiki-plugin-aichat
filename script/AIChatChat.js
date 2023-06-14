@@ -69,6 +69,7 @@ class AIChatChat extends HTMLElement {
             }
             form {
                 clear: both;
+                margin-bottom: 1em;
             }
             progress,
             input {
@@ -85,39 +86,40 @@ class AIChatChat extends HTMLElement {
             a {
                 color: var(--color-link);
             }
-            .output p {
+            .output > div {
                 border-radius: 0.25em;
                 clear: both;
                 padding: 0.5em 1em;
                 position: relative;
+                margin-bottom: 1em;
             }
-            .output p::before {
+            .output > div::before {
                 content: "";
                 width: 0px;
                 height: 0px;
                 position: absolute;
                 top: 0;
             }
-            .output p.user {
+            .output > div.user {
                 background-color: var(--color-human);
                 float: right;
                 margin-right: 2em;
                 border-top-right-radius: 0;
             }
-            .output p.user::before {
+            .output > div.user::before {
                 right: -1em;
                 border-left: 0.5em solid var(--color-human);
                 border-right: 0.5em solid transparent;
                 border-top: 0.5em solid var(--color-human);
                 border-bottom: 0.5em solid transparent;
             }
-            .output p.ai {
+            .output > div.ai {
                 background-color: var(--color-ai);
                 float: left;
                 margin-left: 2em;
                 border-top-left-radius: 0;
             }
-            .output p.ai::before {
+            .output > div.ai::before {
                 left: -1em;
                 border-left: 0.5em solid transparent;
                 border-right: 0.5em solid var(--color-ai);
@@ -221,9 +223,14 @@ class AIChatChat extends HTMLElement {
      * @returns {HTMLParagraphElement} Reference to the newly added message
      */
     displayMessage(message, sources = null) {
-        const p = document.createElement('p');
-        p.textContent = message;
-        p.classList.add(sources !== null ? 'ai' : 'user');
+        const div = document.createElement('div');
+        if(sources !== null) {
+            div.classList.add('ai');
+            div.innerHTML = message; // we get HTML for AI messages
+        } else {
+            div.classList.add('user');
+            div.textContent = message;
+        }
 
         if (sources !== null && Object.keys(sources).length > 0) {
             const ul = document.createElement('ul');
@@ -235,11 +242,11 @@ class AIChatChat extends HTMLElement {
                 li.appendChild(a);
                 ul.appendChild(li);
             });
-            p.appendChild(ul);
+            div.appendChild(ul);
         }
 
-        this.#output.appendChild(p);
-        return p;
+        this.#output.appendChild(div);
+        return div;
     }
 
     /**

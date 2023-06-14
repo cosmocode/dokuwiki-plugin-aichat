@@ -57,9 +57,12 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
                 /** @var Chunk $source */
                 $sources[wl($source->getPage())] = p_get_first_heading($source->getPage()) ?: $source->getPage();
             }
+            $parseDown = new Parsedown();
+            $parseDown->setSafeMode(true);
+
             echo json_encode([
                 'question' => $result['question'],
-                'answer' => $result['answer'],
+                'answer' => $parseDown->text($result['answer']),
                 'sources' => $sources,
             ]);
 
