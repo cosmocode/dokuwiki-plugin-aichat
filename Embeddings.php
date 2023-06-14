@@ -4,10 +4,8 @@ namespace dokuwiki\plugin\aichat;
 
 use dokuwiki\plugin\aichat\backend\AbstractStorage;
 use dokuwiki\plugin\aichat\backend\Chunk;
-use dokuwiki\plugin\aichat\backend\KDTreeStorage;
 use dokuwiki\plugin\aichat\backend\SQLiteStorage;
 use dokuwiki\Search\Indexer;
-use Hexogen\KDTree\Exception\ValidationException;
 use splitbrain\phpcli\CLI;
 use TikToken\Encoder;
 use Vanderlee\Sentence\Sentence;
@@ -20,17 +18,27 @@ use Vanderlee\Sentence\Sentence;
  */
 class Embeddings
 {
+    /** @var int length of all context chunks together */
+    const MAX_CONTEXT_LEN = 3800;
 
-    const MAX_TOKEN_LEN = 1000;
+    /** @var int size of the chunks in tokens */
+    const MAX_CHUNK_LEN = 1000;
 
+    /** @var int maximum overlap between chunks in tokens */
+    const MAX_OVERLAP_LEN = 200;
 
     /** @var OpenAI */
     protected $openAI;
     /** @var CLI|null */
     protected $logger;
+    /** @var Encoder */
+    protected $tokenEncoder;
 
     /** @var AbstractStorage */
     protected $storage;
+
+    /** @var array remember sentences when chunking */
+    private $sentenceQueue = [];
 
     /**
      * @param OpenAI $openAI
@@ -60,6 +68,19 @@ class Embeddings
     public function setLogger(CLI $logger)
     {
         $this->logger = $logger;
+    }
+
+    /**
+     * Get the token encoder instance
+     *
+     * @return Encoder
+     */
+    public function getTokenEncoder()
+    {
+        if ($this->tokenEncoder === null) {
+            $this->tokenEncoder = new Encoder();
+        }
+        return $this->tokenEncoder;
     }
 
     /**
@@ -130,7 +151,7 @@ class Embeddings
 
         $parts = $this->splitIntoChunks($text);
         foreach ($parts as $part) {
-            if(trim($part) == '') continue; // skip empty chunks
+            if (trim($part) == '') continue; // skip empty chunks
 
             try {
                 $embedding = $this->openAI->getEmbedding($part);
@@ -147,7 +168,7 @@ class Embeddings
             $firstChunkID++;
         }
         if ($this->logger) {
-            if(count($chunkList)) {
+            if (count($chunkList)) {
                 $this->logger->success('{id} split into {count} chunks', ['id' => $page, 'count' => count($chunkList)]);
             } else {
                 $this->logger->warning('{id} could not be split into chunks', ['id' => $page]);
@@ -160,24 +181,32 @@ class Embeddings
      * Do a nearest neighbor search for chunks similar to the given question
      *
      * Returns only chunks the current user is allowed to read, may return an empty result.
+     * The number of returned chunks depends on the MAX_CONTEXT_LEN setting.
      *
      * @param string $query The question
-     * @param int $limit The number of results to return
      * @return Chunk[]
      * @throws \Exception
      */
-    public function getSimilarChunks($query, $limit = 4)
+    public function getSimilarChunks($query)
     {
         global $auth;
         $vector = $this->openAI->getEmbedding($query);
 
-        $chunks = $this->storage->getSimilarChunks($vector, $limit);
+        // fetch a few more than needed, since not all chunks are maximum length
+        $fetch = ceil((self::MAX_CONTEXT_LEN / self::MAX_CHUNK_LEN) * 1.2);
+        $chunks = $this->storage->getSimilarChunks($vector, $fetch);
+
+        $size = 0;
         $result = [];
         foreach ($chunks as $chunk) {
             // filter out chunks the user is not allowed to read
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
+
+            $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
+            if ($size + $chunkSize > self::MAX_CONTEXT_LEN) break; // we have enough
+
             $result[] = $chunk;
-            if (count($result) >= $limit) break;
+            $size += $chunkSize;
         }
         return $result;
     }
@@ -187,13 +216,12 @@ class Embeddings
      * @param $text
      * @return array
      * @throws \Exception
-     * @todo maybe add overlap support
      * @todo support splitting too long sentences
      */
     public function splitIntoChunks($text)
     {
         $sentenceSplitter = new Sentence();
-        $tiktok = new Encoder();
+        $tiktok = $this->getTokenEncoder();
 
         $chunks = [];
         $sentences = $sentenceSplitter->split($text);
@@ -202,25 +230,48 @@ class Embeddings
         $chunk = '';
         while ($sentence = array_shift($sentences)) {
             $slen = count($tiktok->encode($sentence));
-            if ($slen > self::MAX_TOKEN_LEN) {
+            if ($slen > self::MAX_CHUNK_LEN) {
                 // sentence is too long, we need to split it further
                 if ($this->logger) $this->logger->warning('Sentence too long, splitting not implemented yet');
                 continue;
             }
 
-            if ($chunklen + $slen < self::MAX_TOKEN_LEN) {
+            if ($chunklen + $slen < self::MAX_CHUNK_LEN) {
                 // add to current chunk
                 $chunk .= $sentence;
                 $chunklen += $slen;
+                // remember sentence for overlap check
+                $this->rememberSentence($sentence);
             } else {
-                // start new chunk
+                // add current chunk to result
                 $chunks[] = $chunk;
-                $chunk = $sentence;
-                $chunklen = $slen;
+
+                // start new chunk with remembered sentences
+                $chunk = join(' ', $this->sentenceQueue);
+                $chunk .= $sentence;
+                $chunklen = count($tiktok->encode($chunk));
             }
         }
         $chunks[] = $chunk;
 
         return $chunks;
+    }
+
+    /**
+     * Add a sentence to the queue of remembered sentences
+     *
+     * @param string $sentence
+     * @return void
+     */
+    protected function rememberSentence($sentence)
+    {
+        // add sentence to queue
+        $this->sentenceQueue[] = $sentence;
+
+        // remove oldest sentences from queue until we are below the max overlap
+        $encoder = $this->getTokenEncoder();
+        while (count($encoder->encode(join(' ', $this->sentenceQueue))) > self::MAX_OVERLAP_LEN) {
+            array_shift($this->sentenceQueue);
+        }
     }
 }

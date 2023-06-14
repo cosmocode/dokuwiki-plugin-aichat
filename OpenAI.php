@@ -10,14 +10,16 @@ use dokuwiki\http\DokuHTTPClient;
 class OpenAI
 {
     const EMBEDDING_MODEL = 'text-embedding-ada-002';
-    const CHAT_MODEL = 'gpt-3.5-turbo';
+    const REPHRASE_MODEL = 'gpt-3.5-turbo';
+    const CHAT_MODEL = 'gpt-3.5-turbo-16k';
 
     /**
      * real 1K cost multiplied by 10000 to avoid floating point issues
      */
     const PRICING = [
-        self::EMBEDDING_MODEL => 4, // $0.0004 per 1k token
-        self::CHAT_MODEL => 20, // $0.002 per 1k token
+        self::EMBEDDING_MODEL => 1, // $0.0001 per 1k token
+        self::REPHRASE_MODEL => 15, // $0.0015 per 1k token
+        self::CHAT_MODEL => 30, // $0.003 per 1k token
     ];
 
 
@@ -80,14 +82,15 @@ class OpenAI
      * Send data to the chat endpoint
      *
      * @param array $messages Messages in OpenAI format (with role and content)
+     * @param string $model The model to use, use the class constants
      * @return string The answer
      * @throws \Exception
      */
-    public function getChatAnswer($messages)
+    public function getChatAnswer($messages, $model= self::CHAT_MODEL)
     {
         $data = [
             'messages' => $messages,
-            'model' => self::CHAT_MODEL,
+            'model' => $model,
             'max_tokens' => null,
             'stream' => false,
             'n' => 1, // number of completions

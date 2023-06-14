@@ -93,15 +93,15 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     public function askQuestion($question)
     {
         $similar = $this->embeddings->getSimilarChunks($question);
-
         if ($similar) {
             $context = implode("\n", array_map(function (Chunk $chunk) {
-                return $chunk->getText();
+                return "\n```\n" . $chunk->getText() . "\n```\n";
             }, $similar));
             $prompt = $this->getPrompt('question', ['context' => $context]);
         } else {
             $prompt = $this->getPrompt('noanswer');
         }
+
         $messages = [
             [
                 'role' => 'system',
@@ -150,7 +150,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         // ask openAI to rephrase the question
         $prompt = $this->getPrompt('rephrase', ['history' => $chatHistory, 'question' => $question]);
         $messages = [['role' => 'user', 'content' => $prompt]];
-        return $this->openAI->getChatAnswer($messages);
+        return $this->openAI->getChatAnswer($messages, OpenAI::REPHRASE_MODEL);
     }
 
     /**
