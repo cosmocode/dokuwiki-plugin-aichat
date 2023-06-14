@@ -1,27 +1,32 @@
 <?php
 
-namespace dokuwiki\plugin\aichat;
+namespace dokuwiki\plugin\aichat\Model\OpenAI;
 
 use dokuwiki\http\DokuHTTPClient;
+use dokuwiki\plugin\aichat\Model\AbstractModel;
 
 /**
- * Client to communicate with the OpenAI API
+ * Basic OpenAI Client using the standard GPT-3.5-turbo model
+ *
+ * Additional OpenAI models just overwrite the $setup array
  */
-class OpenAI
+class GPT35Turbo extends AbstractModel
 {
-    const EMBEDDING_MODEL = 'text-embedding-ada-002';
-    const REPHRASE_MODEL = 'gpt-3.5-turbo';
-    const CHAT_MODEL = 'gpt-3.5-turbo-16k';
-
-    /**
-     * real 1K cost multiplied by 10000 to avoid floating point issues
-     */
-    const PRICING = [
-        self::EMBEDDING_MODEL => 1, // $0.0001 per 1k token
-        self::REPHRASE_MODEL => 15, // $0.0015 per 1k token
-        self::CHAT_MODEL => 30, // $0.003 per 1k token
+    /** @var int[] real 1K cost multiplied by 10000 to avoid floating point issues, as of 2023-06-14 */
+    static protected $prices = [
+        'text-embedding-ada-002' => 1, // $0.0001 per 1k token
+        'gpt-3.5-turbo' => 15, // $0.0015 per 1k token
+        'gpt-3.5-turbo-16k' => 30, // $0.003 per 1k token
+        'gpt-4' => 300, // $0.03 per 1k token
+        'gpt-4-32k' => 600, // $0.06 per 1k token
     ];
 
+    /** @var array[] The models and limits for the different use cases */
+    static protected $setup = [
+        'embedding' => ['text-embedding-ada-002', 1000], // chunk size
+        'rephrase' => ['gpt-3.5-turbo', 3500], // rephrasing context size
+        'chat' => ['gpt-3.5-turbo', 3500], // question context size
+    ];
 
     /** @var int How often to retry a request if it fails */
     const MAX_RETRIES = 3;
@@ -29,28 +34,15 @@ class OpenAI
     /** @var DokuHTTPClient */
     protected $http;
 
-    /** @var int total tokens used by this instance */
-    protected $tokensUsed = 0;
-    /** @var int total cost used by this instance (multiplied by 1000*10000) */
-    protected $costEstimate = 0;
-
-    /** @var int total time spent in requests by this instance */
-    protected $timeUsed = 0;
-
-    /** @var int total number of requests made by this instance */
-    protected $requestsMade = 0;
-
-    /** @var int start of the current request chain (may be multiple when retries needed) */
+    /** @var int start time of the current request chain (may be multiple when retries needed) */
     protected $requestStart = 0;
 
-    /**
-     * Initialize the OpenAI API
-     *
-     * @param string $openAIKey
-     * @param string $openAIOrg
-     */
-    public function __construct($openAIKey, $openAIOrg = '')
+    /** @inheritdoc */
+    public function __construct($authConfig)
     {
+        $openAIKey = $authConfig['key'] ?? '';
+        $openAIOrg = $authConfig['org'] ?? '';
+
         $this->http = new DokuHTTPClient();
         $this->http->timeout = 60;
         $this->http->headers['Authorization'] = 'Bearer ' . $openAIKey;
@@ -60,22 +52,46 @@ class OpenAI
         $this->http->headers['Content-Type'] = 'application/json';
     }
 
-    /**
-     * Get the embedding vectors for a given text
-     *
-     * @param string $text
-     * @return float[]
-     * @throws \Exception
-     */
+    /** @inheritdoc */
+    public function getMaxEmbeddingTokenLength()
+    {
+        return self::$setup['embedding'][1];
+    }
+
+    /** @inheritdoc */
+    public function getMaxContextTokenLength()
+    {
+        return self::$setup['chat'][1];
+    }
+
+    /** @inheritdoc */
+    public function getMaxRephrasingTokenLength()
+    {
+        return self::$setup['rephrase'][1];
+    }
+
+    /** @inheritdoc */
     public function getEmbedding($text)
     {
         $data = [
-            'model' => self::EMBEDDING_MODEL,
+            'model' => self::$setup['embedding'][0],
             'input' => [$text],
         ];
         $response = $this->request('embeddings', $data);
 
         return $response['data'][0]['embedding'];
+    }
+
+    /** @inheritdoc */
+    public function getAnswer($messages)
+    {
+        return $this->getChatCompletion($messages, self::$setup['chat'][0]);
+    }
+
+    /** @inheritdoc */
+    public function getRephrasedQuestion($messages)
+    {
+        return $this->getChatCompletion($messages, self::$setup['rephrase'][0]);
     }
 
     /**
@@ -86,7 +102,7 @@ class OpenAI
      * @return string The answer
      * @throws \Exception
      */
-    public function getChatAnswer($messages, $model= self::CHAT_MODEL)
+    protected function getChatCompletion($messages, $model)
     {
         $data = [
             'messages' => $messages,
@@ -142,40 +158,12 @@ class OpenAI
         }
 
         // update usage statistics
+        $price = self::$prices[$data['model']] ?? 0;
         $this->tokensUsed += $result['usage']['total_tokens'];
-        $this->costEstimate += $result['usage']['total_tokens'] * self::PRICING[$data['model']];
+        $this->costEstimate += $result['usage']['total_tokens'] * $price;
         $this->timeUsed += microtime(true) - $this->requestStart;
         $this->requestStart = 0;
 
         return $result;
     }
-
-    /**
-     * Reset the usage statistics
-     *
-     * Usually not needed when only handling one operation per request, but useful in CLI
-     */
-    public function resetUsageStats()
-    {
-        $this->tokensUsed = 0;
-        $this->costEstimate = 0;
-        $this->timeUsed = 0;
-        $this->requestsMade = 0;
-    }
-
-    /**
-     * Get the usage statistics for this instance
-     *
-     * @return string[]
-     */
-    public function getUsageStats()
-    {
-        return [
-            'tokens' => $this->tokensUsed,
-            'cost' => round($this->costEstimate / 1000 / 10000, 4),
-            'time' => round($this->timeUsed, 2),
-            'requests' => $this->requestsMade,
-        ];
-    }
-
 }

@@ -7,6 +7,9 @@
 
 $conf['openaikey']    = '';
 $conf['openaiorg']    = '';
+
+$conf['model'] = 'OpenAI\\GPT35Turbo';
+
 $conf['logging'] = 0;
 $conf['restrict'] = '';
 

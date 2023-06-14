@@ -1,9 +1,10 @@
 <?php
 
-use dokuwiki\plugin\aichat\backend\Chunk;
+use dokuwiki\plugin\aichat\Model\AbstractModel;
+use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
-use dokuwiki\plugin\aichat\OpenAI;
-use TikToken\Encoder;
+use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
+use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -15,20 +16,32 @@ require_once __DIR__ . '/vendor/autoload.php';
  */
 class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
 {
-    /** @var OpenAI */
-    protected $openAI;
+    /** @var AbstractModel */
+    protected $model;
     /** @var Embeddings */
     protected $embeddings;
 
     public function __construct()
     {
-        $this->openAI = new OpenAI($this->getConf('openaikey'), $this->getConf('openaiorg'));
-        $this->embeddings = new Embeddings($this->openAI);
+        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
+
+        if (class_exists($class)) {
+            // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
+            $this->model = new $class([
+                'key' => $this->getConf('openaikey'),
+                'org' => $this->getConf('openaiorg')
+            ]);
+        } else {
+            throw new \Exception('Configured model not found: ' . $class);
+        }
+
+        // FIXME we currently have only one storage backend, so we can hardcode it
+        $this->embeddings = new Embeddings($this->model, new SQLiteStorage());
     }
 
     /**
      * Check if the current user is allowed to use the plugin (if it has been restricted)
-     * 
+     *
      * @return bool
      */
     public function userMayAccess()
@@ -47,11 +60,11 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     /**
      * Access the OpenAI client
      *
-     * @return OpenAI
+     * @return GPT35Turbo
      */
-    public function getOpenAI()
+    public function getModel()
     {
-        return $this->openAI;
+        return $this->model;
     }
 
     /**
@@ -88,7 +101,6 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      * @param string $question
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
-     * @todo add context until token limit is hit
      */
     public function askQuestion($question)
     {
@@ -113,7 +125,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
             ]
         ];
 
-        $answer = $this->openAI->getChatAnswer($messages);
+        $answer = $this->model->getAnswer($messages);
 
         return [
             'question' => $question,
@@ -133,11 +145,13 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     public function rephraseChatQuestion($question, $history)
     {
         // go back in history as far as possible without hitting the token limit
-        $tiktok = new Encoder();
         $chatHistory = '';
         $history = array_reverse($history);
         foreach ($history as $row) {
-            if (count($tiktok->encode($chatHistory)) > 3000) {
+            if (
+                count($this->embeddings->getTokenEncoder()->encode($chatHistory)) >
+                $this->model->getMaxRephrasingTokenLength()
+            ) {
                 break;
             }
 
@@ -150,7 +164,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         // ask openAI to rephrase the question
         $prompt = $this->getPrompt('rephrase', ['history' => $chatHistory, 'question' => $question]);
         $messages = [['role' => 'user', 'content' => $prompt]];
-        return $this->openAI->getChatAnswer($messages, OpenAI::REPHRASE_MODEL);
+        return $this->model->getRephrasedQuestion($messages);
     }
 
     /**

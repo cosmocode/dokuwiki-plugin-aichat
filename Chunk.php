@@ -1,6 +1,6 @@
 <?php
 
-namespace dokuwiki\plugin\aichat\backend;
+namespace dokuwiki\plugin\aichat;
 
 class Chunk implements \JsonSerializable
 {

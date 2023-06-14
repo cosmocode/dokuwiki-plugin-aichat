@@ -2,9 +2,8 @@
 
 namespace dokuwiki\plugin\aichat;
 
-use dokuwiki\plugin\aichat\backend\AbstractStorage;
-use dokuwiki\plugin\aichat\backend\Chunk;
-use dokuwiki\plugin\aichat\backend\SQLiteStorage;
+use dokuwiki\plugin\aichat\Model\AbstractModel;
+use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\CLI;
 use TikToken\Encoder;
@@ -18,17 +17,11 @@ use Vanderlee\Sentence\Sentence;
  */
 class Embeddings
 {
-    /** @var int length of all context chunks together */
-    const MAX_CONTEXT_LEN = 3800;
-
-    /** @var int size of the chunks in tokens */
-    const MAX_CHUNK_LEN = 1000;
-
     /** @var int maximum overlap between chunks in tokens */
     const MAX_OVERLAP_LEN = 200;
 
-    /** @var OpenAI */
-    protected $openAI;
+    /** @var AbstractModel */
+    protected $model;
     /** @var CLI|null */
     protected $logger;
     /** @var Encoder */
@@ -41,12 +34,12 @@ class Embeddings
     private $sentenceQueue = [];
 
     /**
-     * @param OpenAI $openAI
+     * @param AbstractModel $model
      */
-    public function __construct(OpenAI $openAI)
+    public function __construct(AbstractModel $model, AbstractStorage $storage)
     {
-        $this->openAI = $openAI;
-        $this->storage = new SQLiteStorage();
+        $this->model = $model;
+        $this->storage = $storage;
     }
 
     /**
@@ -96,7 +89,7 @@ class Embeddings
         $indexer = new Indexer();
         $pages = $indexer->getPages();
 
-        $this->storage->startCreation(1536, $clear);
+        $this->storage->startCreation($clear);
         foreach ($pages as $pid => $page) {
             $chunkID = $pid * 100; // chunk IDs start at page ID * 100
 
@@ -154,7 +147,7 @@ class Embeddings
             if (trim($part) == '') continue; // skip empty chunks
 
             try {
-                $embedding = $this->openAI->getEmbedding($part);
+                $embedding = $this->model->getEmbedding($part);
             } catch (\Exception $e) {
                 if ($this->logger) {
                     $this->logger->error(
@@ -190,10 +183,12 @@ class Embeddings
     public function getSimilarChunks($query)
     {
         global $auth;
-        $vector = $this->openAI->getEmbedding($query);
+        $vector = $this->model->getEmbedding($query);
 
-        // fetch a few more than needed, since not all chunks are maximum length
-        $fetch = ceil((self::MAX_CONTEXT_LEN / self::MAX_CHUNK_LEN) * 1.2);
+        $fetch = ceil(
+            ($this->model->getMaxContextTokenLength() / $this->model->getMaxEmbeddingTokenLength())
+            * 1.5 // fetch a few more than needed, since not all chunks are maximum length
+        );
         $chunks = $this->storage->getSimilarChunks($vector, $fetch);
 
         $size = 0;
@@ -203,7 +198,7 @@ class Embeddings
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
 
             $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-            if ($size + $chunkSize > self::MAX_CONTEXT_LEN) break; // we have enough
+            if ($size + $chunkSize > $this->model->getMaxContextTokenLength()) break; // we have enough
 
             $result[] = $chunk;
             $size += $chunkSize;
@@ -230,13 +225,13 @@ class Embeddings
         $chunk = '';
         while ($sentence = array_shift($sentences)) {
             $slen = count($tiktok->encode($sentence));
-            if ($slen > self::MAX_CHUNK_LEN) {
+            if ($slen > $this->model->getMaxEmbeddingTokenLength()) {
                 // sentence is too long, we need to split it further
                 if ($this->logger) $this->logger->warning('Sentence too long, splitting not implemented yet');
                 continue;
             }
 
-            if ($chunklen + $slen < self::MAX_CHUNK_LEN) {
+            if ($chunklen + $slen < $this->model->getMaxEmbeddingTokenLength()) {
                 // add to current chunk
                 $chunk .= $sentence;
                 $chunklen += $slen;

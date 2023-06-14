@@ -1,6 +1,8 @@
 <?php
 
-namespace dokuwiki\plugin\aichat\backend;
+namespace dokuwiki\plugin\aichat\Storage;
+
+use dokuwiki\plugin\aichat\Chunk;
 
 /**
  * Defines a vector storage for page chunks and their embeddings
@@ -25,11 +27,10 @@ abstract class AbstractStorage
      *
      * Storages may need to open a transaction or prepare other things here.
      *
-     * @param int $dimension The dimension of the embedding
      * @param bool $clear Should any existing data been thrown away?
      * @return void
      */
-    abstract public function startCreation($dimension, $clear = false);
+    abstract public function startCreation($clear = false);
 
     /**
      * Called when the storage is (re)built and the existing chunks should be reused

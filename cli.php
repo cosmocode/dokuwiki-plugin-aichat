@@ -1,6 +1,7 @@
 <?php
 
-use dokuwiki\plugin\aichat\backend\Chunk;
+use dokuwiki\Extension\CLIPlugin;
+use dokuwiki\plugin\aichat\Chunk;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 
@@ -11,7 +12,7 @@ use splitbrain\phpcli\Options;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
+class cli_plugin_aichat extends CLIPlugin
 {
     /** @var helper_plugin_aichat */
     protected $helper;
@@ -78,7 +79,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
                 $this->split($options->getArgs()[0]);
                 break;
             case 'info':
-                $this->treeinfo();
+                $this->showinfo();
                 break;
             default:
                 echo $options->help();
@@ -88,8 +89,9 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     /**
      * @return void
      */
-    protected function treeinfo()
+    protected function showinfo()
     {
+        echo 'model: '. $this->getConf('model') . "\n";
         $stats = $this->helper->getEmbeddings()->getStorage()->statistics();
         foreach ($stats as $key => $value) {
             echo $key . ': ' . $value . "\n";
@@ -125,15 +127,10 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     {
         $history = [];
         while ($q = $this->readLine('Your Question')) {
-            $this->helper->getOpenAI()->resetUsageStats();
-            if ($history) {
-                $question = $this->helper->rephraseChatQuestion($q, $history);
-                $this->colors->ptln("Interpretation: $question", Colors::C_LIGHTPURPLE);
-            } else {
-                $question = $q;
-            }
-            $result = $this->helper->askQuestion($question);
-            $history[] = [$q, $result['answer']];
+            $this->helper->getModel()->resetUsageStats();
+            $result = $this->helper->askChatQuestion($q, $history);
+            $this->colors->ptln("Interpretation: {$result['question']}", Colors::C_LIGHTPURPLE);
+            $history[] = [$result['question'], $result['answer']];
             $this->printAnswer($result);
         }
     }
@@ -160,9 +157,7 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     protected function similar($query)
     {
         $sources = $this->helper->getEmbeddings()->getSimilarChunks($query);
-        foreach ($sources as $source) {
-            $this->colors->ptln($source->getPage(), Colors::C_LIGHTBLUE);
-        }
+        $this->printSources($sources);
     }
 
     /**
@@ -188,12 +183,23 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
     {
         $this->colors->ptln($answer['answer'], Colors::C_LIGHTCYAN);
         echo "\n";
-        foreach ($answer['sources'] as $source) {
-            /** @var Chunk $source */
-            $this->colors->ptln("\t" . $source->getPage(), Colors::C_LIGHTBLUE);
-        }
+        $this->printSources($answer['sources']);
         echo "\n";
         $this->printUsage();
+    }
+
+    /**
+     * Print the given sources
+     * 
+     * @param Chunk[] $sources
+     * @return void
+     */
+    protected function printSources($sources)
+    {
+        foreach ($sources as $source) {
+            /** @var Chunk $source */
+            $this->colors->ptln("\t" . $source->getPage() . ' ' . $source->getId(), Colors::C_LIGHTBLUE);
+        }
     }
 
     /**
@@ -201,10 +207,11 @@ class cli_plugin_aichat extends \dokuwiki\Extension\CLIPlugin
      *
      * @return void
      */
-    protected function printUsage() {
+    protected function printUsage()
+    {
         $this->info(
-            'Made {requests} requests in {time}s to OpenAI. Used {tokens} tokens for about ${cost}.',
-            $this->helper->getOpenAI()->getUsageStats()
+            'Made {requests} requests in {time}s to Model. Used {tokens} tokens for about ${cost}.',
+            $this->helper->getModel()->getUsageStats()
         );
     }
 

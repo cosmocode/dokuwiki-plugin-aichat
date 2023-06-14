@@ -1,8 +1,9 @@
 <?php
 
 
-namespace dokuwiki\plugin\aichat\backend;
+namespace dokuwiki\plugin\aichat\Storage;
 
+use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\sqlite\SQLiteDB;
 
 /**
@@ -40,7 +41,7 @@ class SQLiteStorage extends AbstractStorage
     }
 
     /** @inheritdoc */
-    public function startCreation($dimension, $clear = false)
+    public function startCreation($clear = false)
     {
         if ($clear) {
             /** @noinspection SqlWithoutWhere */
@@ -112,7 +113,7 @@ class SQLiteStorage extends AbstractStorage
             'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()'
         );
         return [
-            'type' => 'SQLite',
+            'storage type' => 'SQLite',
             'chunks' => $items,
             'db size' => filesize_h($size)
         ];

@@ -1,7 +1,7 @@
 <?php
 
 use dokuwiki\ErrorHandler;
-use dokuwiki\plugin\aichat\backend\Chunk;
+use dokuwiki\plugin\aichat\Chunk;
 
 /**
  * DokuWiki Plugin aichat (Action Component)
@@ -72,7 +72,7 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
                         'sources' => $sources,
                         'ip' => $INPUT->server->str('REMOTE_ADDR'),
                         'user' => $INPUT->server->str('REMOTE_USER'),
-                        'stats' => $helper->getOpenAI()->getUsageStats()
+                        'stats' => $helper->getModel()->getUsageStats()
                     ]
                 );
             }
