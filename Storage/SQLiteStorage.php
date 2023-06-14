@@ -11,6 +11,9 @@ use dokuwiki\plugin\sqlite\SQLiteDB;
  */
 class SQLiteStorage extends AbstractStorage
 {
+    /** @var float minimum similarity to consider a chunk a match */
+    const SIMILARITY_THRESHOLD = 0.75;
+
     /** @var SQLiteDB */
     protected $db;
 
@@ -88,9 +91,10 @@ class SQLiteStorage extends AbstractStorage
             'SELECT *, COSIM(?, embedding) AS similarity 
                FROM embeddings
               WHERE GETACCESSLEVEL(page) > 0
+                AND similarity > CAST(? AS FLOAT)
            ORDER BY similarity DESC
               LIMIT ?',
-            [json_encode($vector), $limit]
+            [json_encode($vector), self::SIMILARITY_THRESHOLD, $limit]
         );
         $chunks = [];
         foreach ($result as $record) {

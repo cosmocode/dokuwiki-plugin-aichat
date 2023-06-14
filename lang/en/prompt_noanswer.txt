@@ -1,1 +1,1 @@
-Given the user's question, tell them that you can't answer it because you couldn't find any matching wiki pages, which is likely because the user has insufficient permissions to access them. Answer in the same language as the question.
+Given the user's question, tell them that you can't answer it because you couldn't find any matching wiki pages, which is likely because the user has insufficient permissions to access them or the question was off-topic. Answer in the same language as the question.
