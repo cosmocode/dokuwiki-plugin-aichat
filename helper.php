@@ -21,24 +21,6 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     /** @var Embeddings */
     protected $embeddings;
 
-    public function __construct()
-    {
-        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
-
-        if (class_exists($class)) {
-            // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
-            $this->model = new $class([
-                'key' => $this->getConf('openaikey'),
-                'org' => $this->getConf('openaiorg')
-            ]);
-        } else {
-            throw new \Exception('Configured model not found: ' . $class);
-        }
-
-        // FIXME we currently have only one storage backend, so we can hardcode it
-        $this->embeddings = new Embeddings($this->model, new SQLiteStorage());
-    }
-
     /**
      * Check if the current user is allowed to use the plugin (if it has been restricted)
      *
@@ -64,6 +46,19 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      */
     public function getModel()
     {
+        if ($this->model === null) {
+            $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
+
+            if (!class_exists($class)) {
+                throw new \RuntimeException('Configured model not found: ' . $class);
+            }
+            // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
+            $this->model = new $class([
+                'key' => $this->getConf('openaikey'),
+                'org' => $this->getConf('openaiorg')
+            ]);
+        }
+
         return $this->model;
     }
 
@@ -74,6 +69,11 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      */
     public function getEmbeddings()
     {
+        if ($this->embeddings === null) {
+            // FIXME we currently have only one storage backend, so we can hardcode it
+            $this->embeddings = new Embeddings($this->getModel(), new SQLiteStorage());
+        }
+
         return $this->embeddings;
     }
 
@@ -104,7 +104,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      */
     public function askQuestion($question)
     {
-        $similar = $this->embeddings->getSimilarChunks($question);
+        $similar = $this->getEmbeddings()->getSimilarChunks($question);
         if ($similar) {
             $context = implode("\n", array_map(function (Chunk $chunk) {
                 return "\n```\n" . $chunk->getText() . "\n```\n";
@@ -125,7 +125,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
             ]
         ];
 
-        $answer = $this->model->getAnswer($messages);
+        $answer = $this->getModel()->getAnswer($messages);
 
         return [
             'question' => $question,
@@ -149,8 +149,8 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         $history = array_reverse($history);
         foreach ($history as $row) {
             if (
-                count($this->embeddings->getTokenEncoder()->encode($chatHistory)) >
-                $this->model->getMaxRephrasingTokenLength()
+                count($this->getEmbeddings()->getTokenEncoder()->encode($chatHistory)) >
+                $this->getModel()->getMaxRephrasingTokenLength()
             ) {
                 break;
             }
@@ -164,7 +164,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         // ask openAI to rephrase the question
         $prompt = $this->getPrompt('rephrase', ['history' => $chatHistory, 'question' => $question]);
         $messages = [['role' => 'user', 'content' => $prompt]];
-        return $this->model->getRephrasedQuestion($messages);
+        return $this->getModel()->getRephrasedQuestion($messages);
     }
 
     /**
