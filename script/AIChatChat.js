@@ -213,7 +213,7 @@ class AIChatChat extends HTMLElement {
      * Hides the input field and shows the progress bar
      */
     startProgress() {
-        this.#controls.style.removeProperty('display');
+        this.#controls.style.display = 'none';
         this.#progress.style.display = 'block';
         this.#progress.value = 0;
 
@@ -235,7 +235,7 @@ class AIChatChat extends HTMLElement {
             clearInterval(this.#progress._timer);
             this.#progress._timer = null;
         }
-        this.#controls.style.display = 'flex';
+        this.#controls.style.removeProperty('display');
         this.#progress.style.display = 'none';
     }
 
