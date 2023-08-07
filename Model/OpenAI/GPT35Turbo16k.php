@@ -12,6 +12,6 @@ class GPT35Turbo16K extends GPT35Turbo
     static protected $setup = [
         'embedding' => ['text-embedding-ada-002', 3000],
         'rephrase' => ['gpt-3.5-turbo', 3500],
-        'chat' => ['gpt-3.5-turbo-16k', 1500],
+        'chat' => ['gpt-3.5-turbo-16k', 6000],
     ];
 }

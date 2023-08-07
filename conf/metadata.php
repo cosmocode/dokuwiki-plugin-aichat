@@ -13,6 +13,7 @@ $meta['model'] = array('multichoice',
     '_choices' => array(
         'OpenAI\\GPT35Turbo',
         'OpenAI\\GPT35Turbo16k',
+        'OpenAI\\GPT4',
     )
 );
 
