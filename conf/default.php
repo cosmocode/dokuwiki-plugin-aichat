@@ -7,8 +7,10 @@
 
 $conf['openaikey']    = '';
 $conf['openaiorg']    = '';
-
 $conf['model'] = 'OpenAI\\GPT35Turbo';
+
+$conf['pinecone_apikey'] = '';
+$conf['pinecone_baseurl'] = '';
 
 $conf['logging'] = 0;
 $conf['restrict'] = '';

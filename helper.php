@@ -5,6 +5,7 @@ use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
+use dokuwiki\plugin\aichat\Storage\PineconeStorage;
 use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -88,7 +89,11 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     public function getStorage()
     {
         if ($this->storage === null) {
-            $this->storage = new SQLiteStorage();
+            if($this->getConf('pinecone_apikey')) {
+                $this->storage = new PineconeStorage();
+            } else {
+                $this->storage = new SQLiteStorage();
+            }
         }
 
         return $this->storage;
