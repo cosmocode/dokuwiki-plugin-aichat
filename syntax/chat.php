@@ -6,7 +6,7 @@
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class syntax_plugin_aichat extends \dokuwiki\Extension\SyntaxPlugin
+class syntax_plugin_aichat_chat extends \dokuwiki\Extension\SyntaxPlugin
 {
     /** @inheritDoc */
     public function getType()
@@ -29,7 +29,7 @@ class syntax_plugin_aichat extends \dokuwiki\Extension\SyntaxPlugin
     /** @inheritDoc */
     public function connectTo($mode)
     {
-        $this->Lexer->addSpecialPattern('<aichat(?: [^>]+)*>.*?(?:<\/aichat>)', $mode, 'plugin_aichat');
+        $this->Lexer->addSpecialPattern('<aichat(?: [^>]+)*>.*?(?:<\/aichat>)', $mode, 'plugin_aichat_chat');
     }
 
 

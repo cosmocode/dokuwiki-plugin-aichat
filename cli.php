@@ -2,6 +2,7 @@
 
 use dokuwiki\Extension\CLIPlugin;
 use dokuwiki\plugin\aichat\Chunk;
+use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 
@@ -55,6 +56,9 @@ class cli_plugin_aichat extends CLIPlugin
         $options->registerCommand('split', 'Split a page into chunks (for debugging)');
         $options->registerArgument('page', 'The page to split', true, 'split');
 
+        $options->registerCommand('page', 'Check if chunks for a given page are available (for debugging)');
+        $options->registerArgument('page', 'The page to check', true, 'page');
+
         $options->registerCommand('info', 'Get Info about the vector storage');
     }
 
@@ -78,6 +82,9 @@ class cli_plugin_aichat extends CLIPlugin
             case 'split':
                 $this->split($options->getArgs()[0]);
                 break;
+            case 'page':
+                $this->page($options->getArgs()[0]);
+                break;
             case 'info':
                 $this->showinfo();
                 break;
@@ -92,12 +99,38 @@ class cli_plugin_aichat extends CLIPlugin
     protected function showinfo()
     {
         echo 'model: ' . $this->getConf('model') . "\n";
-        $stats = $this->helper->getEmbeddings()->getStorage()->statistics();
+        $stats = $this->helper->getStorage()->statistics();
         foreach ($stats as $key => $value) {
             echo $key . ': ' . $value . "\n";
         }
 
         //echo $this->helper->getModel()->listUpstreamModels();
+    }
+
+    /**
+     * Check chunk availability for a given page
+     *
+     * @param string $page
+     * @return void
+     */
+    protected function page($page)
+    {
+        $indexer = new Indexer();
+        $pages = $indexer->getPages();
+        $pos = array_search(cleanID($page), $pages);
+
+        if ($pos === false) {
+            $this->error('Page not found');
+            return;
+        }
+
+        $storage = $this->helper->getStorage();
+        $chunks = $storage->getPageChunks($page, $pos * 100);
+        if ($chunks) {
+            $this->success('Found ' . count($chunks) . ' chunks');
+        } else {
+            $this->error('No chunks found');
+        }
     }
 
     /**

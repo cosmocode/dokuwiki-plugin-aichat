@@ -34,6 +34,11 @@ class Chunk implements \JsonSerializable
         $this->score = $score;
     }
 
+    public function __toString()
+    {
+        return $this->page . '#' . $this->id;
+    }
+
     /**
      * @return int
      */
