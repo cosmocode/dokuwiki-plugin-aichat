@@ -47,7 +47,7 @@ abstract class AbstractStorage
      * Delete all chunks associated with the given page
      *
      * @param string $page The page the chunks belong to
-     * @param int $firstChunkID The ID of the first chunk to reuse (may not exist)
+     * @param int $firstChunkID The ID of the first chunk
      * @return void
      */
     abstract public function deletePageChunks($page, $firstChunkID);
@@ -68,6 +68,15 @@ abstract class AbstractStorage
      * @return void
      */
     abstract public function finalizeCreation();
+
+    /**
+     * Get all chunks associated with the given page
+     *
+     * @param string $page The page the chunks belong to
+     * @param int $firstChunkID The ID of the first chunk
+     * @return Chunk[]
+     */
+    abstract public function getPageChunks($page, $firstChunkID);
 
     /**
      * Get the chunks most similar to the given vector, using a nearest neighbor search

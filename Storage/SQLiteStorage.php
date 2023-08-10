@@ -85,10 +85,31 @@ class SQLiteStorage extends AbstractStorage
     }
 
     /** @inheritdoc */
+    public function getPageChunks($page, $firstChunkID)
+    {
+        $result = $this->db->queryAll(
+            'SELECT * FROM embeddings WHERE page = ?',
+            [$page]
+        );
+        $chunks = [];
+        foreach ($result as $record) {
+            $chunks[] = new Chunk(
+                $record['page'],
+                $record['id'],
+                $record['chunk'],
+                json_decode($record['embedding'], true),
+                $record['created']
+            );
+        }
+        return $chunks;
+    }
+
+
+    /** @inheritdoc */
     public function getSimilarChunks($vector, $limit = 4)
     {
         $result = $this->db->queryAll(
-            'SELECT *, COSIM(?, embedding) AS similarity 
+            'SELECT *, COSIM(?, embedding) AS similarity
                FROM embeddings
               WHERE GETACCESSLEVEL(page) > 0
                 AND similarity > CAST(? AS FLOAT)

@@ -4,6 +4,7 @@ use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
+use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -20,6 +21,8 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     protected $model;
     /** @var Embeddings */
     protected $embeddings;
+    /** @var AbstractStorage */
+    protected $storage;
 
     /**
      * Check if the current user is allowed to use the plugin (if it has been restricted)
@@ -71,10 +74,24 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     {
         if ($this->embeddings === null) {
             // FIXME we currently have only one storage backend, so we can hardcode it
-            $this->embeddings = new Embeddings($this->getModel(), new SQLiteStorage());
+            $this->embeddings = new Embeddings($this->getModel(), $this->getStorage());
         }
 
         return $this->embeddings;
+    }
+
+    /**
+     * Access the Storage interface
+     *
+     * @return AbstractStorage
+     */
+    public function getStorage()
+    {
+        if ($this->storage === null) {
+            $this->storage = new SQLiteStorage();
+        }
+
+        return $this->storage;
     }
 
     /**
