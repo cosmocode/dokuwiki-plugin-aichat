@@ -189,7 +189,15 @@ class Embeddings
             ($this->model->getMaxContextTokenLength() / $this->model->getMaxEmbeddingTokenLength())
             * 1.5 // fetch a few more than needed, since not all chunks are maximum length
         );
+
+        $time = microtime(true);
         $chunks = $this->storage->getSimilarChunks($vector, $fetch);
+        if ($this->logger) {
+            $this->logger->info(
+                'Fetched {count} similar chunks from store in {time} seconds',
+                ['count' => count($chunks), 'time' => round(microtime(true) - $time, 2)]
+            );
+        }
 
         $size = 0;
         $result = [];
