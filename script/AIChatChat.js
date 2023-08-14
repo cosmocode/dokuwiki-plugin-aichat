@@ -57,7 +57,7 @@ class AIChatChat extends HTMLElement {
                 --color-human: #ebd8b2;
                 --color-ai: #c6dbf2;
                 --color-link: #4881bf;
-                
+
                 display: flex;
                 flex-direction: column;
                 height: 100%;
@@ -87,11 +87,12 @@ class AIChatChat extends HTMLElement {
             .controls button svg {
                 flex-grow: 1;
                 flex-shrink: 1;
+                fill: var(--color-link);
             }
             .controls input {
                 flex-grow: 1;
                 padding: 0.25em;
-                font-size: 1.2em;  
+                font-size: 1.2em;
             }
             progress{
                 width: 100%;
@@ -141,7 +142,7 @@ class AIChatChat extends HTMLElement {
                 border-left: 0.5em solid transparent;
                 border-right: 0.5em solid var(--color-ai);
                 border-top: 0.5em solid var(--color-ai);
-                border-bottom: 0.5em solid transparent;                
+                border-bottom: 0.5em solid transparent;
             }
         `;
         return style;

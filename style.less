@@ -1,7 +1,16 @@
-aichat-button.float {
-    position: fixed;
-    bottom: 1em;
-    right: 1em;
-    --icon-size: 5em;
-    z-index: 9998;
+aichat-chat {
+    --color-link: @ini_link;
+}
+
+aichat-button{
+    --color-chat-icon: @ini_link;
+    --color-link: @ini_link;
+
+    &.float {
+        position: fixed;
+        bottom: 1em;
+        right: 1em;
+        --icon-size: 5em;
+        z-index: 9998;
+    }
 }
