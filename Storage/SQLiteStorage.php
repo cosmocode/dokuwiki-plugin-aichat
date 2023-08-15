@@ -8,6 +8,8 @@ use dokuwiki\plugin\sqlite\SQLiteDB;
 
 /**
  * Implements the storage backend using a SQLite database
+ *
+ * Note: all embeddings are stored and returned as normalized vectors
  */
 class SQLiteStorage extends AbstractStorage
 {
@@ -160,23 +162,18 @@ class SQLiteStorage extends AbstractStorage
     /**
      * Calculate the cosine similarity between two vectors
      *
-     * @param float[] $queryVector The vector of the search phrase
-     * @param float[] $embedding The vector of the chunk
+     * Actually just calculating the dot product of the two vectors, since they are normalized
+     *
+     * @param float[] $queryVector The normalized vector of the search phrase
+     * @param float[] $embedding The normalized vector of the chunk
      * @return float
-     * @link https://doku.wiki/src-cosine-similarity
      */
     protected function cosineSimilarity($queryVector, $embedding)
     {
         $dotProduct = 0;
-        $queryEmbeddingLength = 0;
-        $embeddingLength = 0;
-
         foreach ($queryVector as $key => $value) {
             $dotProduct += $value * $embedding[$key];
-            $queryEmbeddingLength += $value * $value;
-            $embeddingLength += $embedding[$key] * $embedding[$key];
         }
-
-        return $dotProduct / (sqrt($queryEmbeddingLength) * sqrt($embeddingLength));
+        return $dotProduct;
     }
 }
