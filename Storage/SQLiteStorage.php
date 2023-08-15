@@ -1,10 +1,12 @@
-<?php
-
+<?php /** @noinspection SqlResolve */
 
 namespace dokuwiki\plugin\aichat\Storage;
 
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\sqlite\SQLiteDB;
+use KMeans\Cluster;
+use KMeans\Point;
+use KMeans\Space;
 
 /**
  * Implements the storage backend using a SQLite database
@@ -15,6 +17,11 @@ class SQLiteStorage extends AbstractStorage
 {
     /** @var float minimum similarity to consider a chunk a match */
     const SIMILARITY_THRESHOLD = 0.75;
+
+    /** @var int Number of documents to randomly sample to create the clusters */
+    const SAMPLE_SIZE = 2000;
+    /** @var int The average size of each cluster */
+    const CLUSTER_SIZE = 400;
 
     /** @var SQLiteDB */
     protected $db;
@@ -83,8 +90,21 @@ class SQLiteStorage extends AbstractStorage
     /** @inheritdoc */
     public function finalizeCreation()
     {
+        if (!$this->hasClusters()) {
+            $this->createClusters();
+        }
+        $this->setChunkClusters();
+
         $this->db->exec('VACUUM');
     }
+
+    /** @inheritdoc */
+    public function runMaintenance()
+    {
+        $this->createClusters();
+        $this->setChunkClusters();
+    }
+
 
     /** @inheritdoc */
     public function getPageChunks($page, $firstChunkID)
@@ -110,14 +130,18 @@ class SQLiteStorage extends AbstractStorage
     /** @inheritdoc */
     public function getSimilarChunks($vector, $limit = 4)
     {
+        $cluster = $this->getCluster($vector);
+        if ($this->logger) $this->logger->info('Using cluster {cluster} for similarity search', ['cluster' => $cluster]);
+
         $result = $this->db->queryAll(
             'SELECT *, COSIM(?, embedding) AS similarity
                FROM embeddings
-              WHERE GETACCESSLEVEL(page) > 0
+              WHERE cluster = ?
+                AND GETACCESSLEVEL(page) > 0
                 AND similarity > CAST(? AS FLOAT)
            ORDER BY similarity DESC
               LIMIT ?',
-            [json_encode($vector), self::SIMILARITY_THRESHOLD, $limit]
+            [json_encode($vector), $cluster, self::SIMILARITY_THRESHOLD, $limit]
         );
         $chunks = [];
         foreach ($result as $record) {
@@ -140,10 +164,14 @@ class SQLiteStorage extends AbstractStorage
         $size = $this->db->queryValue(
             'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()'
         );
+        $query = "SELECT cluster, COUNT(*) || ' chunks' as cnt FROM embeddings GROUP BY cluster ORDER BY cluster";
+        $clusters = $this->db->queryKeyValueList($query);
+
         return [
             'storage type' => 'SQLite',
             'chunks' => $items,
-            'db size' => filesize_h($size)
+            'db size' => filesize_h($size),
+            'clusters' => $clusters,
         ];
     }
 
@@ -175,5 +203,112 @@ class SQLiteStorage extends AbstractStorage
             $dotProduct += $value * $embedding[$key];
         }
         return $dotProduct;
+    }
+
+    /**
+     * Create new clusters based on random chunks
+     *
+     * @noinspection SqlWithoutWhere
+     */
+    protected function createClusters()
+    {
+        if ($this->logger) $this->logger->info('Creating new clusters...');
+        $this->db->getPdo()->beginTransaction();
+        try {
+            // clean up old cluster data
+            $query = 'DELETE FROM clusters';
+            $this->db->exec($query);
+            $query = 'UPDATE embeddings SET cluster = NULL';
+            $this->db->exec($query);
+
+            // get a random selection of chunks
+            $query = 'SELECT id, embedding FROM embeddings ORDER BY RANDOM() LIMIT ?';
+            $result = $this->db->queryAll($query, [self::SAMPLE_SIZE]);
+            if (!$result) return; // no data to cluster
+            $dimensions = count(json_decode($result[0]['embedding'], true));
+
+            // get the number of all chunks, to calculate the number of clusters
+            $query = 'SELECT COUNT(*) FROM embeddings';
+            $total = $this->db->queryValue($query);
+            $clustercount = ceil($total / self::CLUSTER_SIZE);
+            if ($this->logger) $this->logger->info('Creating {clusters} clusters', ['clusters' => $clustercount]);
+
+            // cluster them using kmeans
+            $space = new Space($dimensions);
+            foreach ($result as $record) {
+                $space->addPoint(json_decode($record['embedding'], true));
+            }
+            $clusters = $space->solve($clustercount, function ($space, $clusters) {
+                static $iterations = 0;
+                ++$iterations;
+                if ($this->logger) {
+                    $clustercounts = join(',', array_map('count', $clusters));
+                    $this->logger->info('Iteration {iteration}: [{clusters}]', [
+                        'iteration' => $iterations, 'clusters' => $clustercounts
+                    ]);
+                }
+            }, Cluster::INIT_KMEANS_PLUS_PLUS);
+
+            // store the clusters
+            foreach ($clusters as $clusterID => $cluster) {
+                /** @var Cluster $cluster */
+                $centroid = $cluster->getCoordinates();
+                $query = 'INSERT INTO clusters (cluster, centroid) VALUES (?, ?)';
+                $this->db->exec($query, [$clusterID, json_encode($centroid)]);
+            }
+
+            $this->db->getPdo()->commit();
+            if ($this->logger) $this->logger->success('Created {clusters} clusters', ['clusters' => count($clusters)]);
+        } catch (\Exception $e) {
+            $this->db->getPdo()->rollBack();
+            throw new \RuntimeException('Clustering failed', 0, $e);
+        }
+    }
+
+    /**
+     * Assign the nearest cluster for all chunks that don't have one
+     *
+     * @return void
+     */
+    protected function setChunkClusters()
+    {
+        if ($this->logger) $this->logger->info('Assigning clusters to chunks...');
+        $query = 'SELECT id, embedding FROM embeddings WHERE cluster IS NULL';
+        $handle = $this->db->query($query);
+
+        while ($record = $handle->fetch(\PDO::FETCH_ASSOC)) {
+            $vector = json_decode($record['embedding'], true);
+            $cluster = $this->getCluster($vector);
+            $query = 'UPDATE embeddings SET cluster = ? WHERE id = ?';
+            $this->db->exec($query, [$cluster, $record['id']]);
+            if ($this->logger) $this->logger->success(
+                'Chunk {id} assigned to cluster {cluster}', ['id' => $record['id'], 'cluster' => $cluster]
+            );
+        }
+        $handle->closeCursor();
+    }
+
+    /**
+     * Get the nearest cluster for the given vector
+     *
+     * @param float[] $vector
+     * @return int|null
+     */
+    protected function getCluster($vector)
+    {
+        $query = 'SELECT cluster, centroid FROM clusters ORDER BY COSIM(centroid, ?) DESC LIMIT 1';
+        $result = $this->db->queryRecord($query, [json_encode($vector)]);
+        if (!$result) return null;
+        return $result['cluster'];
+    }
+
+    /**
+     * Check if clustering has been done before
+     * @return bool
+     */
+    protected function hasClusters()
+    {
+        $query = 'SELECT COUNT(*) FROM clusters';
+        return $this->db->queryValue($query) > 0;
     }
 }

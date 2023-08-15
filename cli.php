@@ -5,6 +5,7 @@ use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
+use splitbrain\phpcli\TableFormatter;
 
 
 /**
@@ -22,7 +23,7 @@ class cli_plugin_aichat extends CLIPlugin
     {
         parent::__construct($autocatch);
         $this->helper = plugin_load('helper', 'aichat');
-        $this->helper->getEmbeddings()->setLogger($this);
+        $this->helper->setLogger($this);
     }
 
     /** @inheritDoc */
@@ -45,6 +46,8 @@ class cli_plugin_aichat extends CLIPlugin
             'c', false, 'embed'
         );
 
+        $options->registerCommand('maintenance', 'Run storage maintenance. Refert to the documentation for details.');
+
         $options->registerCommand('similar', 'Search for similar pages');
         $options->registerArgument('query', 'Look up chunks similar to this query', true, 'similar');
 
@@ -65,10 +68,14 @@ class cli_plugin_aichat extends CLIPlugin
     /** @inheritDoc */
     protected function main(Options $options)
     {
+        ini_set('memory_limit', -1);
         switch ($options->getCmd()) {
 
             case 'embed':
                 $this->createEmbeddings($options->getOpt('clear'));
+                break;
+            case 'maintenance':
+                $this->runMaintenance();
                 break;
             case 'similar':
                 $this->similar($options->getArgs()[0]);
@@ -98,13 +105,40 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function showinfo()
     {
-        echo 'model: ' . $this->getConf('model') . "\n";
-        $stats = $this->helper->getStorage()->statistics();
-        foreach ($stats as $key => $value) {
-            echo $key . ': ' . $value . "\n";
-        }
 
-        //echo $this->helper->getModel()->listUpstreamModels();
+        $stats = [
+            'model' => $this->getConf('model'),
+        ];
+        $stats = array_merge($stats, $this->helper->getStorage()->statistics());
+        $this->printTable($stats);
+    }
+
+    /**
+     * Print key value data as tabular data
+     *
+     * @param array $data
+     * @param int $level
+     * @return void
+     */
+    protected function printTable($data, $level = 0)
+    {
+        $tf = new TableFormatter($this->colors);
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                echo $tf->format(
+                    [$level * 2, 15, '*'],
+                    ['', $key, ''],
+                    [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
+                );
+                $this->printTable($value, $level + 1);
+            } else {
+                echo $tf->format(
+                    [$level * 2, 15, '*'],
+                    ['', $key, $value],
+                    [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTGRAY]
+                );
+            }
+        }
     }
 
     /**
@@ -196,6 +230,19 @@ class cli_plugin_aichat extends CLIPlugin
     }
 
     /**
+     * Run the maintenance tasks
+     *
+     * @return void
+     */
+    protected function runMaintenance()
+    {
+        $start = time();
+        $this->helper->getStorage()->runMaintenance();
+        $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
+        $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
+    }
+
+    /**
      * Recreate chunks and embeddings for all pages
      *
      * @return void
@@ -203,9 +250,10 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function createEmbeddings($clear)
     {
-        ini_set('memory_limit', -1); // we may need a lot of memory here
+        $start = time();
         $this->helper->getEmbeddings()->createNewIndex('/(^|:)(playground|sandbox)(:|$)/', $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
+        $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
     }
 
     /**
