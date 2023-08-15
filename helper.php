@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\Extension\CLIPlugin;
 use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
@@ -17,12 +18,24 @@ require_once __DIR__ . '/vendor/autoload.php';
  */
 class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
 {
+    /** @var CLIPlugin $logger */
+    protected  $logger;
     /** @var AbstractModel */
     protected $model;
     /** @var Embeddings */
     protected $embeddings;
     /** @var AbstractStorage */
     protected $storage;
+
+    /**
+     * Use the given CLI plugin for logging
+     *
+     * @param CLIPlugin $logger
+     * @return void
+     */
+    public function setLogger($logger) {
+        $this->logger = $logger;
+    }
 
     /**
      * Check if the current user is allowed to use the plugin (if it has been restricted)
@@ -75,6 +88,9 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         if ($this->embeddings === null) {
             // FIXME we currently have only one storage backend, so we can hardcode it
             $this->embeddings = new Embeddings($this->getModel(), $this->getStorage());
+            if($this->logger) {
+                $this->embeddings->setLogger($this->logger);
+            }
         }
 
         return $this->embeddings;
@@ -89,6 +105,9 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     {
         if ($this->storage === null) {
             $this->storage = new SQLiteStorage();
+            if($this->logger) {
+                $this->storage->setLogger($this->logger);
+            }
         }
 
         return $this->storage;

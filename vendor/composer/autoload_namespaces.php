@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Parsedown' => array($vendorDir . '/erusev/parsedown'),
+    'KMeans' => array($vendorDir . '/bdelespierre/php-kmeans/src'),
 );

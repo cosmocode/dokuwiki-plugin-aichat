@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\aichat\Storage;
 
+use dokuwiki\Extension\CLIPlugin;
 use dokuwiki\plugin\aichat\Chunk;
 
 /**
@@ -13,6 +14,16 @@ use dokuwiki\plugin\aichat\Chunk;
  */
 abstract class AbstractStorage
 {
+    /** @var CLIPlugin $logger */
+    protected $logger;
+
+    /**
+     * @param CLIPlugin $logger
+     * @return void
+     */
+    public function setLogger($logger) {
+        $this->logger = $logger;
+    }
 
     /**
      * Get the chunk with the given ID
@@ -68,6 +79,16 @@ abstract class AbstractStorage
      * @return void
      */
     abstract public function finalizeCreation();
+
+    /**
+     * Run maintenance tasks on the storage
+     *
+     * Each storage can decide on it's own what to do here. Documentation should explain
+     * how often this should be run.
+     *
+     * @return void
+     */
+    abstract public function runMaintenance();
 
     /**
      * Get all chunks associated with the given page

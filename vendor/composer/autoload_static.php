@@ -36,6 +36,13 @@ class ComposerStaticInitcf5108d0fe7a5d23e88d41bf066096a6
                 0 => __DIR__ . '/..' . '/erusev/parsedown',
             ),
         ),
+        'K' => 
+        array (
+            'KMeans' => 
+            array (
+                0 => __DIR__ . '/..' . '/bdelespierre/php-kmeans/src',
+            ),
+        ),
     );
 
     public static $classMap = array (
