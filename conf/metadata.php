@@ -17,5 +17,8 @@ $meta['model'] = array('multichoice',
     )
 );
 
+$meta['pinecone_apikey'] = array('string');
+$meta['pinecone_baseurl'] = array('string');
+
 $meta['logging'] = array('onoff');
 $meta['restrict'] = array('string');

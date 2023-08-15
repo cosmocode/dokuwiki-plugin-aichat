@@ -6,6 +6,7 @@ use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
+use dokuwiki\plugin\aichat\Storage\PineconeStorage;
 use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -19,7 +20,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
 {
     /** @var CLIPlugin $logger */
-    protected  $logger;
+    protected $logger;
     /** @var AbstractModel */
     protected $model;
     /** @var Embeddings */
@@ -33,7 +34,8 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      * @param CLIPlugin $logger
      * @return void
      */
-    public function setLogger($logger) {
+    public function setLogger($logger)
+    {
         $this->logger = $logger;
     }
 
@@ -88,7 +90,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         if ($this->embeddings === null) {
             // FIXME we currently have only one storage backend, so we can hardcode it
             $this->embeddings = new Embeddings($this->getModel(), $this->getStorage());
-            if($this->logger) {
+            if ($this->logger) {
                 $this->embeddings->setLogger($this->logger);
             }
         }
@@ -104,8 +106,13 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     public function getStorage()
     {
         if ($this->storage === null) {
-            $this->storage = new SQLiteStorage();
-            if($this->logger) {
+            if ($this->getConf('pinecone_apikey')) {
+                $this->storage = new PineconeStorage();
+            } else {
+                $this->storage = new SQLiteStorage();
+            }
+
+            if ($this->logger) {
                 $this->storage->setLogger($this->logger);
             }
         }

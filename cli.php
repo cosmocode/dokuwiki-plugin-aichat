@@ -105,7 +105,6 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function showinfo()
     {
-
         $stats = [
             'model' => $this->getConf('model'),
         ];
@@ -323,4 +322,3 @@ class cli_plugin_aichat extends CLIPlugin
         return $value;
     }
 }
-

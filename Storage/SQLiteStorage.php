@@ -105,7 +105,6 @@ class SQLiteStorage extends AbstractStorage
         $this->setChunkClusters();
     }
 
-
     /** @inheritdoc */
     public function getPageChunks($page, $firstChunkID)
     {
@@ -126,12 +125,13 @@ class SQLiteStorage extends AbstractStorage
         return $chunks;
     }
 
-
     /** @inheritdoc */
     public function getSimilarChunks($vector, $limit = 4)
     {
         $cluster = $this->getCluster($vector);
-        if ($this->logger) $this->logger->info('Using cluster {cluster} for similarity search', ['cluster' => $cluster]);
+        if ($this->logger) $this->logger->info(
+            'Using cluster {cluster} for similarity search', ['cluster' => $cluster]
+        );
 
         $result = $this->db->queryAll(
             'SELECT *, COSIM(?, embedding) AS similarity
