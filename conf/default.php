@@ -14,4 +14,4 @@ $conf['pinecone_baseurl'] = '';
 
 $conf['logging'] = 0;
 $conf['restrict'] = '';
-
+$conf['preferUIlanguage'] = 0;

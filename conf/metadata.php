@@ -22,3 +22,4 @@ $meta['pinecone_baseurl'] = array('string');
 
 $meta['logging'] = array('onoff');
 $meta['restrict'] = array('string');
+$meta['preferUIlanguage'] = array('onoff');

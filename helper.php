@@ -152,7 +152,10 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
             $context = implode("\n", array_map(function (Chunk $chunk) {
                 return "\n```\n" . $chunk->getText() . "\n```\n";
             }, $similar));
-            $prompt = $this->getPrompt('question', ['context' => $context]);
+            $prompt = $this->getPrompt('question', [
+                'context' => $context,
+                'language' => $this->getLanguagePrompt()
+            ]);
         } else {
             $prompt = $this->getPrompt('noanswer');
         }
@@ -227,6 +230,27 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         }
 
         return strtr($template, $replace);
+    }
+
+    /**
+     * Construct the prompt to define the answer language
+     *
+     * @return string
+     */
+    protected function getLanguagePrompt()
+    {
+        global $conf;
+
+        if ($this->getConf('preferUIlanguage')) {
+            $isoLangnames = include(__DIR__ . '/lang/languages.php');
+            if (isset($isoLangnames[$conf['lang']])) {
+                $languagePrompt = 'Always answer in ' . $isoLangnames[$conf['lang']] . '.';
+                return $languagePrompt;
+            }
+        }
+
+        $languagePrompt = 'Always answer in the user\'s language.';
+        return $languagePrompt;
     }
 }
 
