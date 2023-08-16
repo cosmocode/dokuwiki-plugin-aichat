@@ -121,4 +121,15 @@ abstract class AbstractStorage
      * @return string[]
      */
     abstract public function statistics();
+
+    /**
+     * Writes TSV files for visualizing with http://projector.tensorflow.org/
+     *
+     * @param string $vectorfile path to the file with the vectors
+     * @param string $metafile path to the file with the metadata
+     * @return void
+     */
+    public function dumpTSV($vectorfile, $metafile) {
+        throw new \RuntimeException('Not implemented for current storage');
+    }
 }

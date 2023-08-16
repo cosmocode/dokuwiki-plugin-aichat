@@ -311,4 +311,30 @@ class SQLiteStorage extends AbstractStorage
         $query = 'SELECT COUNT(*) FROM clusters';
         return $this->db->queryValue($query) > 0;
     }
+
+    /**
+     * Writes TSV files for visualizing with http://projector.tensorflow.org/
+     *
+     * @param string $vectorfile path to the file with the vectors
+     * @param string $metafile path to the file with the metadata
+     * @return void
+     */
+    public function dumpTSV($vectorfile, $metafile)
+    {
+        $query = 'SELECT * FROM embeddings';
+        $handle = $this->db->query($query);
+
+        $header = implode("\t", ['id', 'page', 'created']);
+        file_put_contents($metafile, $header . "\n", FILE_APPEND);
+
+        while ($row = $handle->fetch(\PDO::FETCH_ASSOC)) {
+            $vector = json_decode($row['embedding'], true);
+            $vector = implode("\t", $vector);
+
+            $meta = implode("\t", [$row['id'], $row['page'], $row['created']]);
+
+            file_put_contents($vectorfile, $vector . "\n", FILE_APPEND);
+            file_put_contents($metafile, $meta . "\n", FILE_APPEND);
+        }
+    }
 }

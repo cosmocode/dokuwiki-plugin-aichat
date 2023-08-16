@@ -56,13 +56,19 @@ class cli_plugin_aichat extends CLIPlugin
 
         $options->registerCommand('chat', 'Start an interactive chat session');
 
+        $options->registerCommand('info', 'Get Info about the vector storage');
+
         $options->registerCommand('split', 'Split a page into chunks (for debugging)');
         $options->registerArgument('page', 'The page to split', true, 'split');
 
         $options->registerCommand('page', 'Check if chunks for a given page are available (for debugging)');
         $options->registerArgument('page', 'The page to check', true, 'page');
 
-        $options->registerCommand('info', 'Get Info about the vector storage');
+        $options->registerCommand('tsv', 'Create TSV files for visualizing at http://projector.tensorflow.org/' .
+            ' Not supported on all storages.');
+        $options->registerArgument('vector.tsv', 'The vector file', false, 'tsv');
+        $options->registerArgument('meta.tsv', 'The meta file', false, 'tsv');
+
     }
 
     /** @inheritDoc */
@@ -94,6 +100,12 @@ class cli_plugin_aichat extends CLIPlugin
                 break;
             case 'info':
                 $this->showinfo();
+                break;
+            case 'tsv':
+                $args = $options->getArgs();
+                $vector = $args[0] ?? 'vector.tsv';
+                $meta = $args[1] ?? 'meta.tsv';
+                $this->tsv($vector, $meta);
                 break;
             default:
                 echo $options->help();
@@ -253,6 +265,19 @@ class cli_plugin_aichat extends CLIPlugin
         $this->helper->getEmbeddings()->createNewIndex('/(^|:)(playground|sandbox)(:|$)/', $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
+    }
+
+    /**
+     * Dump TSV files for debugging
+     *
+     * @return void
+     */
+    protected function tsv($vector, $meta)
+    {
+
+        $storage = $this->helper->getStorage();
+        $storage->dumpTSV($vector, $meta);
+        $this->success('written to ' . $vector . ' and ' . $meta);
     }
 
     /**
