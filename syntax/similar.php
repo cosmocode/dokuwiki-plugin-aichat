@@ -60,9 +60,12 @@ class syntax_plugin_aichat_similar extends \dokuwiki\Extension\SyntaxPlugin
         $chunks = $storage->getPageChunks($id, $pos*100);
         $similar = [];
         foreach ($chunks as $chunk) {
-            $similar += $storage->getSimilarChunks($chunk->getEmbedding());
+            $similar += $storage->getSimilarChunks($chunk->getEmbedding(), 10);
         }
         $similar = array_unique($similar);
+        $similar = array_filter($similar, function ($chunk) use ($id) {
+            return $chunk->getPage() !== $id;
+        });
         usort($similar, function ($a, $b) {
             /** @var Chunk $a */
             /** @var Chunk $b */
@@ -71,18 +74,18 @@ class syntax_plugin_aichat_similar extends \dokuwiki\Extension\SyntaxPlugin
 
         if(!$similar) return true;
 
+        $similar = array_slice($similar, 0, 5);
+
         $renderer->listu_open();
         foreach ($similar as $chunk) {
             /** @var Chunk $chunk */
             $renderer->listitem_open(1);
             $renderer->listcontent_open();
-            $renderer->cdata($chunk->getPage());
+            $renderer->internallink($chunk->getPage(), null, null, false, 'navigation');
             $renderer->listcontent_close();
             $renderer->listitem_close();
         }
-
         $renderer->listu_close();
-
 
         return true;
     }
