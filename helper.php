@@ -1,9 +1,9 @@
 <?php
 
 use dokuwiki\Extension\CLIPlugin;
-use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
+use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\PineconeStorage;
@@ -88,7 +88,6 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     public function getEmbeddings()
     {
         if ($this->embeddings === null) {
-            // FIXME we currently have only one storage backend, so we can hardcode it
             $this->embeddings = new Embeddings($this->getModel(), $this->getStorage());
             if ($this->logger) {
                 $this->embeddings->setLogger($this->logger);
@@ -132,20 +131,23 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     {
         if ($history) {
             $standaloneQuestion = $this->rephraseChatQuestion($question, $history);
+            $prev = end($history);
         } else {
             $standaloneQuestion = $question;
+            $prev = [];
         }
-        return $this->askQuestion($standaloneQuestion);
+        return $this->askQuestion($standaloneQuestion, $prev);
     }
 
     /**
      * Ask a single standalone question
      *
      * @param string $question
+     * @param array $previous [user, ai] of the previous question
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askQuestion($question)
+    public function askQuestion($question, $previous = [])
     {
         $similar = $this->getEmbeddings()->getSimilarChunks($question);
         if ($similar) {
@@ -170,6 +172,17 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
                 'content' => $question
             ]
         ];
+
+        if ($previous) {
+            array_unshift($messages, [
+                'role' => 'assistant',
+                'content' => $previous[1]
+            ]);
+            array_unshift($messages, [
+                'role' => 'user',
+                'content' => $previous[0]
+            ]);
+        }
 
         $answer = $this->getModel()->getAnswer($messages);
 
