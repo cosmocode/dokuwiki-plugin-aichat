@@ -16,6 +16,8 @@ class Chunk implements \JsonSerializable
     protected $created;
     /** @var int */
     protected $score;
+    /** @var string */
+    protected $language;
 
     /**
      * @param string $page
@@ -24,12 +26,13 @@ class Chunk implements \JsonSerializable
      * @param float[] $embedding
      * @param int $created
      */
-    public function __construct($page, $id, $text, $embedding, $created = '', $score = 0)
+    public function __construct($page, $id, $text, $embedding, $lang = '', $created = '', $score = 0)
     {
         $this->page = $page;
         $this->id = $id;
         $this->text = $text;
         $this->embedding = $embedding;
+        $this->language = $lang ?: $this->determineLanguage();
         $this->created = $created ?: time();
         $this->score = $score;
     }
@@ -135,6 +138,42 @@ class Chunk implements \JsonSerializable
         $this->score = $score;
     }
 
+    /**
+     * @return string
+     */
+    public function getLanguage(): string
+    {
+        return $this->language;
+    }
+
+    /**
+     * @param string $language
+     */
+    public function setLanguage($language): void
+    {
+        $this->language = $language;
+    }
+
+    /**
+     * Initialize the language of the chunk
+     *
+     * When the translation plugin is available it is used to determine the language, otherwise the default language
+     * is used.
+     *
+     * @return string The lanuaage code
+     */
+    protected function determineLanguage()
+    {
+        global $conf;
+        /** @var \helper_plugin_translation $trans */
+        $trans = plugin_load('helper', 'translation');
+        if ($trans) {
+            $lc = $trans->realLC($trans->getLangPart($this->page));
+        } else {
+            $lc = $conf['lang'];
+        }
+        return $lc;
+    }
 
 
     /**
@@ -151,6 +190,7 @@ class Chunk implements \JsonSerializable
             $data['id'],
             $data['text'],
             $data['embedding'],
+            $data['language'] ?? '',
             $data['created']
         );
     }
@@ -163,6 +203,7 @@ class Chunk implements \JsonSerializable
             'id' => $this->id,
             'text' => $this->text,
             'embedding' => $this->embedding,
+            'language' => $this->language,
             'created' => $this->created,
         ];
     }

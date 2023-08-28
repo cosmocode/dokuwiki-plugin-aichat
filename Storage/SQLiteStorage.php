@@ -2,10 +2,10 @@
 
 namespace dokuwiki\plugin\aichat\Storage;
 
+use dokuwiki\plugin\aichat\AIChat;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\sqlite\SQLiteDB;
 use KMeans\Cluster;
-use KMeans\Point;
 use KMeans\Space;
 
 /**
@@ -26,6 +26,8 @@ class SQLiteStorage extends AbstractStorage
     /** @var SQLiteDB */
     protected $db;
 
+    protected $useLanguageClusters = false;
+
     /**
      * Initializes the database connection and registers our custom function
      *
@@ -35,6 +37,9 @@ class SQLiteStorage extends AbstractStorage
     {
         $this->db = new SQLiteDB('aichat', DOKU_PLUGIN . 'aichat/db/');
         $this->db->getPdo()->sqliteCreateFunction('COSIM', [$this, 'sqliteCosineSimilarityCallback'], 2);
+
+        $helper = plugin_load('helper', 'aichat');
+        $this->useLanguageClusters = $helper->getConf('preferUIlanguage') >= AIChat::LANG_UI_LIMITED;
     }
 
     /** @inheritdoc */
@@ -48,6 +53,7 @@ class SQLiteStorage extends AbstractStorage
             $record['id'],
             $record['chunk'],
             json_decode($record['embedding'], true),
+            $record['lang'],
             $record['created']
         );
     }
@@ -82,7 +88,8 @@ class SQLiteStorage extends AbstractStorage
                 'id' => $chunk->getId(),
                 'chunk' => $chunk->getText(),
                 'embedding' => json_encode($chunk->getEmbedding()),
-                'created' => $chunk->getCreated()
+                'created' => $chunk->getCreated(),
+                'lang' => $chunk->getLanguage(),
             ]);
         }
     }
@@ -119,6 +126,7 @@ class SQLiteStorage extends AbstractStorage
                 $record['id'],
                 $record['chunk'],
                 json_decode($record['embedding'], true),
+                $record['lang'],
                 $record['created']
             );
         }
@@ -126,9 +134,9 @@ class SQLiteStorage extends AbstractStorage
     }
 
     /** @inheritdoc */
-    public function getSimilarChunks($vector, $limit = 4)
+    public function getSimilarChunks($vector, $lang = '', $limit = 4)
     {
-        $cluster = $this->getCluster($vector);
+        $cluster = $this->getCluster($vector, $lang);
         if ($this->logger) $this->logger->info(
             'Using cluster {cluster} for similarity search', ['cluster' => $cluster]
         );
@@ -150,6 +158,7 @@ class SQLiteStorage extends AbstractStorage
                 $record['id'],
                 $record['chunk'],
                 json_decode($record['embedding'], true),
+                $record['lang'],
                 $record['created'],
                 $record['similarity']
             );
@@ -164,7 +173,7 @@ class SQLiteStorage extends AbstractStorage
         $size = $this->db->queryValue(
             'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()'
         );
-        $query = "SELECT cluster, COUNT(*) || ' chunks' as cnt FROM embeddings GROUP BY cluster ORDER BY cluster";
+        $query = "SELECT cluster || ' ' || lang, COUNT(*) || ' chunks' as cnt FROM embeddings GROUP BY cluster ORDER BY cluster";
         $clusters = $this->db->queryKeyValueList($query);
 
         return [
@@ -208,27 +217,52 @@ class SQLiteStorage extends AbstractStorage
     /**
      * Create new clusters based on random chunks
      *
-     * @noinspection SqlWithoutWhere
+     * @return void
      */
     protected function createClusters()
     {
-        if ($this->logger) $this->logger->info('Creating new clusters...');
+        if($this->useLanguageClusters) {
+            $result = $this->db->queryAll('SELECT DISTINCT lang FROM embeddings');
+            $langs = array_column($result, 'lang');
+            foreach ($langs as $lang) {
+                $this->createLanguageClusters($lang);
+            }
+        } else {
+            $this->createLanguageClusters('');
+        }
+    }
+
+    /**
+     * Create new clusters based on random chunks for the given Language
+     *
+     * @param string $lang The language to cluster, empty when all languages go into the same cluster
+     * @noinspection SqlWithoutWhere
+     */
+    protected function createLanguageClusters($lang)
+    {
+        if($lang != '') {
+            $where = 'WHERE lang = '. $this->db->getPdo()->quote($lang);
+        } else {
+            $where = '';
+        }
+
+        if ($this->logger) $this->logger->info('Creating new {lang} clusters...', ['lang' => $lang]);
         $this->db->getPdo()->beginTransaction();
         try {
             // clean up old cluster data
-            $query = 'DELETE FROM clusters';
+            $query = "DELETE FROM clusters $where";
             $this->db->exec($query);
-            $query = 'UPDATE embeddings SET cluster = NULL';
+            $query = "UPDATE embeddings SET cluster = NULL $where";
             $this->db->exec($query);
 
             // get a random selection of chunks
-            $query = 'SELECT id, embedding FROM embeddings ORDER BY RANDOM() LIMIT ?';
+            $query = "SELECT id, embedding FROM embeddings $where ORDER BY RANDOM() LIMIT ?";
             $result = $this->db->queryAll($query, [self::SAMPLE_SIZE]);
             if (!$result) return; // no data to cluster
             $dimensions = count(json_decode($result[0]['embedding'], true));
 
             // get the number of all chunks, to calculate the number of clusters
-            $query = 'SELECT COUNT(*) FROM embeddings';
+            $query = "SELECT COUNT(*) FROM embeddings $where";
             $total = $this->db->queryValue($query);
             $clustercount = ceil($total / self::CLUSTER_SIZE);
             if ($this->logger) $this->logger->info('Creating {clusters} clusters', ['clusters' => $clustercount]);
@@ -253,15 +287,15 @@ class SQLiteStorage extends AbstractStorage
             foreach ($clusters as $clusterID => $cluster) {
                 /** @var Cluster $cluster */
                 $centroid = $cluster->getCoordinates();
-                $query = 'INSERT INTO clusters (cluster, centroid) VALUES (?, ?)';
-                $this->db->exec($query, [$clusterID, json_encode($centroid)]);
+                $query = 'INSERT INTO clusters (lang, centroid) VALUES (?, ?)';
+                $this->db->exec($query, [$lang, json_encode($centroid)]);
             }
 
             $this->db->getPdo()->commit();
             if ($this->logger) $this->logger->success('Created {clusters} clusters', ['clusters' => count($clusters)]);
         } catch (\Exception $e) {
             $this->db->getPdo()->rollBack();
-            throw new \RuntimeException('Clustering failed', 0, $e);
+            throw new \RuntimeException('Clustering failed: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -273,12 +307,12 @@ class SQLiteStorage extends AbstractStorage
     protected function setChunkClusters()
     {
         if ($this->logger) $this->logger->info('Assigning clusters to chunks...');
-        $query = 'SELECT id, embedding FROM embeddings WHERE cluster IS NULL';
+        $query = 'SELECT id, embedding, lang FROM embeddings WHERE cluster IS NULL';
         $handle = $this->db->query($query);
 
         while ($record = $handle->fetch(\PDO::FETCH_ASSOC)) {
             $vector = json_decode($record['embedding'], true);
-            $cluster = $this->getCluster($vector);
+            $cluster = $this->getCluster($vector, $this->useLanguageClusters ? $record['lang'] : '');
             $query = 'UPDATE embeddings SET cluster = ? WHERE id = ?';
             $this->db->exec($query, [$cluster, $record['id']]);
             if ($this->logger) $this->logger->success(
@@ -294,9 +328,20 @@ class SQLiteStorage extends AbstractStorage
      * @param float[] $vector
      * @return int|null
      */
-    protected function getCluster($vector)
+    protected function getCluster($vector, $lang)
     {
-        $query = 'SELECT cluster, centroid FROM clusters ORDER BY COSIM(centroid, ?) DESC LIMIT 1';
+        if($lang != '') {
+            $where = 'WHERE lang = '. $this->db->getPdo()->quote($lang);
+        } else {
+            $where = '';
+        }
+
+        $query = "SELECT cluster, centroid
+                    FROM clusters
+                   $where
+                ORDER BY COSIM(centroid, ?) DESC
+                   LIMIT 1";
+
         $result = $this->db->queryRecord($query, [json_encode($vector)]);
         if (!$result) return null;
         return $result['cluster'];

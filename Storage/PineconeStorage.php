@@ -88,6 +88,7 @@ class PineconeStorage extends AbstractStorage
             $chunkID,
             $vector['metadata']['text'],
             $vector['values'],
+            $vector['metadata']['language'] ?? '',
             $vector['metadata']['created']
         );
     }
@@ -186,6 +187,7 @@ class PineconeStorage extends AbstractStorage
                 $vector['id'],
                 $vector['metadata']['text'],
                 $vector['values'],
+                $vector['metadata']['language'] ?? '',
                 $vector['metadata']['created']
             );
         }
@@ -193,9 +195,15 @@ class PineconeStorage extends AbstractStorage
     }
 
     /** @inheritdoc */
-    public function getSimilarChunks($vector, $limit = 4)
+    public function getSimilarChunks($vector, $lang = '', $limit = 4)
     {
         $limit = $limit * 2; // we can't check ACLs, so we return more than requested
+
+        if ($lang) {
+            $filter = ['language' => ['$eq', $lang]];
+        } else {
+            $filter = [];
+        }
 
         $response = $this->runQuery(
             '/query',
@@ -204,6 +212,7 @@ class PineconeStorage extends AbstractStorage
                 'topK' => (int)$limit,
                 'include_metadata' => true,
                 'include_values' => true,
+                'filter' => $filter,
             ]
         );
         $chunks = [];
@@ -213,6 +222,7 @@ class PineconeStorage extends AbstractStorage
                 $vector['id'],
                 $vector['metadata']['text'],
                 $vector['values'],
+                $vector['metadata']['language'] ?? '',
                 $vector['metadata']['created'],
                 $vector['score']
             );

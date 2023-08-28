@@ -177,10 +177,11 @@ class Embeddings
      * The number of returned chunks depends on the MAX_CONTEXT_LEN setting.
      *
      * @param string $query The question
+     * @param string $lang Limit results to this language
      * @return Chunk[]
      * @throws \Exception
      */
-    public function getSimilarChunks($query)
+    public function getSimilarChunks($query, $lang='')
     {
         global $auth;
         $vector = $this->model->getEmbedding($query);
@@ -191,7 +192,7 @@ class Embeddings
         );
 
         $time = microtime(true);
-        $chunks = $this->storage->getSimilarChunks($vector, $fetch);
+        $chunks = $this->storage->getSimilarChunks($vector, $lang, $fetch);
         if ($this->logger) {
             $this->logger->info(
                 'Fetched {count} similar chunks from store in {time} seconds',

@@ -22,4 +22,8 @@ $meta['pinecone_baseurl'] = array('string');
 
 $meta['logging'] = array('onoff');
 $meta['restrict'] = array('string');
-$meta['preferUIlanguage'] = array('onoff');
+$meta['preferUIlanguage'] = array('multichoice', '_choices' => array(
+    \dokuwiki\plugin\aichat\AIChat::LANG_AUTO_ALL,
+    \dokuwiki\plugin\aichat\AIChat::LANG_UI_ALL,
+    \dokuwiki\plugin\aichat\AIChat::LANG_UI_LIMITED,
+));

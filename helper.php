@@ -1,6 +1,7 @@
 <?php
 
 use dokuwiki\Extension\CLIPlugin;
+use dokuwiki\plugin\aichat\AIChat;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\AbstractModel;
@@ -149,7 +150,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      */
     public function askQuestion($question, $previous = [])
     {
-        $similar = $this->getEmbeddings()->getSimilarChunks($question);
+        $similar = $this->getEmbeddings()->getSimilarChunks($question, $this->getLanguageLimit());
         if ($similar) {
             $context = implode("\n", array_map(function (Chunk $chunk) {
                 return "\n```\n" . $chunk->getText() . "\n```\n";
@@ -254,7 +255,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     {
         global $conf;
 
-        if ($this->getConf('preferUIlanguage')) {
+        if ($this->getConf('preferUIlanguage') > AIChat::LANG_AUTO_ALL) {
             $isoLangnames = include(__DIR__ . '/lang/languages.php');
             if (isset($isoLangnames[$conf['lang']])) {
                 $languagePrompt = 'Always answer in ' . $isoLangnames[$conf['lang']] . '.';
@@ -264,6 +265,21 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
 
         $languagePrompt = 'Always answer in the user\'s language.';
         return $languagePrompt;
+    }
+
+    /**
+     * Should sources be limited to current language?
+     *
+     * @return string The current language code or empty string
+     */
+    public function getLanguageLimit()
+    {
+        if ($this->getConf('preferUIlanguage') >= AIChat::LANG_UI_LIMITED) {
+            global $conf;
+            return $conf['lang'];
+        } else {
+            return '';
+        }
     }
 }
 

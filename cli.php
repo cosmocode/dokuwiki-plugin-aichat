@@ -236,7 +236,12 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function similar($query)
     {
-        $sources = $this->helper->getEmbeddings()->getSimilarChunks($query);
+        $langlimit = $this->helper->getLanguageLimit();
+        if ($langlimit) {
+            $this->info('Limiting results to {lang}', ['lang' => $langlimit]);
+        }
+
+        $sources = $this->helper->getEmbeddings()->getSimilarChunks($query, $langlimit);
         $this->printSources($sources);
     }
 

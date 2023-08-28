@@ -108,10 +108,11 @@ abstract class AbstractStorage
      * If not, the storage should return twice the $limit of chunks and the caller will filter out the readable ones.
      *
      * @param float[] $vector The vector to compare to
+     * @param string $lang Limit results to this language. When empty consider all languages
      * @param int $limit The number of results to return, see note above
      * @return Chunk[]
      */
-    abstract public function getSimilarChunks($vector, $limit = 4);
+    abstract public function getSimilarChunks($vector, $lang='', $limit = 4);
 
     /**
      * Get information about the storage
