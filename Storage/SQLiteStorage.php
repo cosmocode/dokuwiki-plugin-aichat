@@ -221,7 +221,7 @@ class SQLiteStorage extends AbstractStorage
      */
     protected function createClusters()
     {
-        if($this->useLanguageClusters) {
+        if ($this->useLanguageClusters) {
             $result = $this->db->queryAll('SELECT DISTINCT lang FROM embeddings');
             $langs = array_column($result, 'lang');
             foreach ($langs as $lang) {
@@ -240,8 +240,8 @@ class SQLiteStorage extends AbstractStorage
      */
     protected function createLanguageClusters($lang)
     {
-        if($lang != '') {
-            $where = 'WHERE lang = '. $this->db->getPdo()->quote($lang);
+        if ($lang != '') {
+            $where = 'WHERE lang = ' . $this->db->getPdo()->quote($lang);
         } else {
             $where = '';
         }
@@ -261,10 +261,16 @@ class SQLiteStorage extends AbstractStorage
             if (!$result) return; // no data to cluster
             $dimensions = count(json_decode($result[0]['embedding'], true));
 
-            // get the number of all chunks, to calculate the number of clusters
-            $query = "SELECT COUNT(*) FROM embeddings $where";
-            $total = $this->db->queryValue($query);
-            $clustercount = ceil($total / self::CLUSTER_SIZE);
+            // how many clusters?
+            if (count($result) < self::CLUSTER_SIZE * 3) {
+                // there would be less than 3 clusters, so just use one
+                $clustercount = 1;
+            } else {
+                // get the number of all chunks, to calculate the number of clusters
+                $query = "SELECT COUNT(*) FROM embeddings $where";
+                $total = $this->db->queryValue($query);
+                $clustercount = ceil($total / self::CLUSTER_SIZE);
+            }
             if ($this->logger) $this->logger->info('Creating {clusters} clusters', ['clusters' => $clustercount]);
 
             // cluster them using kmeans
@@ -295,7 +301,7 @@ class SQLiteStorage extends AbstractStorage
             if ($this->logger) $this->logger->success('Created {clusters} clusters', ['clusters' => count($clusters)]);
         } catch (\Exception $e) {
             $this->db->getPdo()->rollBack();
-            throw new \RuntimeException('Clustering failed: '.$e->getMessage(), 0, $e);
+            throw new \RuntimeException('Clustering failed: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -330,8 +336,8 @@ class SQLiteStorage extends AbstractStorage
      */
     protected function getCluster($vector, $lang)
     {
-        if($lang != '') {
-            $where = 'WHERE lang = '. $this->db->getPdo()->quote($lang);
+        if ($lang != '') {
+            $where = 'WHERE lang = ' . $this->db->getPdo()->quote($lang);
         } else {
             $where = '';
         }
