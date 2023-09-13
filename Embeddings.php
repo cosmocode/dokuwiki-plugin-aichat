@@ -163,7 +163,10 @@ class Embeddings
         }
         if ($this->logger instanceof CLI) {
             if ($chunkList !== []) {
-                $this->logger->success('{id} split into {count} chunks', ['id' => $page, 'count' => count($chunkList)]);
+                $this->logger->success(
+                    '{id} split into {count} chunks',
+                    ['id' => $page, 'count' => count($chunkList)]
+                );
             } else {
                 $this->logger->warning('{id} could not be split into chunks', ['id' => $page]);
             }
@@ -237,7 +240,9 @@ class Embeddings
             $slen = count($tiktok->encode($sentence));
             if ($slen > $this->model->getMaxEmbeddingTokenLength()) {
                 // sentence is too long, we need to split it further
-                if ($this->logger instanceof CLI) $this->logger->warning('Sentence too long, splitting not implemented yet');
+                if ($this->logger instanceof CLI) $this->logger->warning(
+                    'Sentence too long, splitting not implemented yet'
+                );
                 continue;
             }
 

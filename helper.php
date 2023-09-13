@@ -11,8 +11,6 @@ use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\PineconeStorage;
 use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
-require_once __DIR__ . '/vendor/autoload.php';
-
 /**
  * DokuWiki Plugin aichat (Helper Component)
  *
@@ -29,6 +27,14 @@ class helper_plugin_aichat extends Plugin
     protected $embeddings;
     /** @var AbstractStorage */
     protected $storage;
+
+    /**
+     * Constructor. Initializes vendor autoloader
+     */
+    public function __construct()
+    {
+        require_once __DIR__ . '/vendor/autoload.php';
+    }
 
     /**
      * Use the given CLI plugin for logging

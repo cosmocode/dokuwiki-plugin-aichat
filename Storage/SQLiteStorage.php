@@ -176,7 +176,10 @@ class SQLiteStorage extends AbstractStorage
         $size = $this->db->queryValue(
             'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()'
         );
-        $query = "SELECT cluster || ' ' || lang, COUNT(*) || ' chunks' as cnt FROM embeddings GROUP BY cluster ORDER BY cluster";
+        $query = "SELECT cluster || ' ' || lang, COUNT(*) || ' chunks' as cnt
+                    FROM embeddings
+                GROUP BY cluster
+                ORDER BY cluster";
         $clusters = $this->db->queryKeyValueList($query);
 
         return [
