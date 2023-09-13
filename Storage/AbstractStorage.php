@@ -21,7 +21,8 @@ abstract class AbstractStorage
      * @param CLIPlugin $logger
      * @return void
      */
-    public function setLogger($logger) {
+    public function setLogger($logger)
+    {
         $this->logger = $logger;
     }
 
@@ -112,7 +113,7 @@ abstract class AbstractStorage
      * @param int $limit The number of results to return, see note above
      * @return Chunk[]
      */
-    abstract public function getSimilarChunks($vector, $lang='', $limit = 4);
+    abstract public function getSimilarChunks($vector, $lang = '', $limit = 4);
 
     /**
      * Get information about the storage
@@ -130,7 +131,8 @@ abstract class AbstractStorage
      * @param string $metafile path to the file with the metadata
      * @return void
      */
-    public function dumpTSV($vectorfile, $metafile) {
+    public function dumpTSV($vectorfile, $metafile)
+    {
         throw new \RuntimeException('Not implemented for current storage');
     }
 }

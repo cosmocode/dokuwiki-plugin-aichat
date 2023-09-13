@@ -45,7 +45,7 @@ class PineconeStorage extends AbstractStorage
     {
         $url = $this->baseurl . $endpoint;
 
-        if (is_array($data) && !count($data)) {
+        if (is_array($data) && $data === []) {
             $json = '{}';
         } else {
             $json = json_encode($data);
@@ -197,7 +197,7 @@ class PineconeStorage extends AbstractStorage
     /** @inheritdoc */
     public function getSimilarChunks($vector, $lang = '', $limit = 4)
     {
-        $limit = $limit * 2; // we can't check ACLs, so we return more than requested
+        $limit *= 2; // we can't check ACLs, so we return more than requested
 
         if ($lang) {
             $filter = ['language' => ['$eq', $lang]];

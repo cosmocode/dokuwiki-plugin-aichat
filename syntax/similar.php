@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\Search\Indexer;
 
@@ -9,7 +10,7 @@ use dokuwiki\Search\Indexer;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class syntax_plugin_aichat_similar extends \dokuwiki\Extension\SyntaxPlugin
+class syntax_plugin_aichat_similar extends SyntaxPlugin
 {
     /** @inheritDoc */
     public function getType()
@@ -54,10 +55,10 @@ class syntax_plugin_aichat_similar extends \dokuwiki\Extension\SyntaxPlugin
 
         $pages = (new Indexer())->getPages();
         $pos = array_search($id, $pages);
-        if($pos === false) return true;
+        if ($pos === false) return true;
 
         $storage = $helper->getStorage();
-        $chunks = $storage->getPageChunks($id, $pos*100);
+        $chunks = $storage->getPageChunks($id, $pos * 100);
         $similar = [];
         foreach ($chunks as $chunk) {
             $similar += $storage->getSimilarChunks($chunk->getEmbedding(), 10);
@@ -72,13 +73,12 @@ class syntax_plugin_aichat_similar extends \dokuwiki\Extension\SyntaxPlugin
             return $b->getScore() <=> $a->getScore();
         });
 
-        if(!$similar) return true;
+        if (!$similar) return true;
 
         $similar = array_slice($similar, 0, 5);
 
         $renderer->listu_open();
         foreach ($similar as $chunk) {
-            /** @var Chunk $chunk */
             $renderer->listitem_open(1);
             $renderer->listcontent_open();
             $renderer->internallink($chunk->getPage(), null, null, false, 'navigation');
@@ -90,4 +90,3 @@ class syntax_plugin_aichat_similar extends \dokuwiki\Extension\SyntaxPlugin
         return true;
     }
 }
-

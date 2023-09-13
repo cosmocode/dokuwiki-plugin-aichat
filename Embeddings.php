@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\aichat;
 
+use dokuwiki\Extension\PluginInterface;
 use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\Search\Indexer;
@@ -18,7 +19,7 @@ use Vanderlee\Sentence\Sentence;
 class Embeddings
 {
     /** @var int maximum overlap between chunks in tokens */
-    const MAX_OVERLAP_LEN = 200;
+    public const MAX_OVERLAP_LEN = 200;
 
     /** @var AbstractModel */
     protected $model;
@@ -70,7 +71,7 @@ class Embeddings
      */
     public function getTokenEncoder()
     {
-        if ($this->tokenEncoder === null) {
+        if (!$this->tokenEncoder instanceof Encoder) {
             $this->tokenEncoder = new Encoder();
         }
         return $this->tokenEncoder;
@@ -108,7 +109,7 @@ class Embeddings
             if ($firstChunk && @filemtime(wikiFN($page)) < $firstChunk->getCreated()) {
                 // page is older than the chunks we have, reuse the existing chunks
                 $this->storage->reusePageChunks($page, $chunkID);
-                if ($this->logger) $this->logger->info("Reusing chunks for $page");
+                if ($this->logger instanceof CLI) $this->logger->info("Reusing chunks for $page");
             } else {
                 // page is newer than the chunks we have, create new chunks
                 $this->storage->deletePageChunks($page, $chunkID);
@@ -134,7 +135,7 @@ class Embeddings
         $chunkList = [];
 
         $textRenderer = plugin_load('renderer', 'text');
-        if ($textRenderer) {
+        if ($textRenderer instanceof PluginInterface) {
             global $ID;
             $ID = $page;
             $text = p_cached_output(wikiFN($page), 'text', $page);
@@ -149,7 +150,7 @@ class Embeddings
             try {
                 $embedding = $this->model->getEmbedding($part);
             } catch (\Exception $e) {
-                if ($this->logger) {
+                if ($this->logger instanceof CLI) {
                     $this->logger->error(
                         'Failed to get embedding for chunk of page {page}: {msg}',
                         ['page' => $page, 'msg' => $e->getMessage()]
@@ -160,8 +161,8 @@ class Embeddings
             $chunkList[] = new Chunk($page, $firstChunkID, $part, $embedding);
             $firstChunkID++;
         }
-        if ($this->logger) {
-            if (count($chunkList)) {
+        if ($this->logger instanceof CLI) {
+            if ($chunkList !== []) {
                 $this->logger->success('{id} split into {count} chunks', ['id' => $page, 'count' => count($chunkList)]);
             } else {
                 $this->logger->warning('{id} could not be split into chunks', ['id' => $page]);
@@ -181,7 +182,7 @@ class Embeddings
      * @return Chunk[]
      * @throws \Exception
      */
-    public function getSimilarChunks($query, $lang='')
+    public function getSimilarChunks($query, $lang = '')
     {
         global $auth;
         $vector = $this->model->getEmbedding($query);
@@ -193,7 +194,7 @@ class Embeddings
 
         $time = microtime(true);
         $chunks = $this->storage->getSimilarChunks($vector, $lang, $fetch);
-        if ($this->logger) {
+        if ($this->logger instanceof CLI) {
             $this->logger->info(
                 'Fetched {count} similar chunks from store in {time} seconds',
                 ['count' => count($chunks), 'time' => round(microtime(true) - $time, 2)]
@@ -236,7 +237,7 @@ class Embeddings
             $slen = count($tiktok->encode($sentence));
             if ($slen > $this->model->getMaxEmbeddingTokenLength()) {
                 // sentence is too long, we need to split it further
-                if ($this->logger) $this->logger->warning('Sentence too long, splitting not implemented yet');
+                if ($this->logger instanceof CLI) $this->logger->warning('Sentence too long, splitting not implemented yet');
                 continue;
             }
 
@@ -251,7 +252,7 @@ class Embeddings
                 $chunks[] = $chunk;
 
                 // start new chunk with remembered sentences
-                $chunk = join(' ', $this->sentenceQueue);
+                $chunk = implode(' ', $this->sentenceQueue);
                 $chunk .= $sentence;
                 $chunklen = count($tiktok->encode($chunk));
             }
@@ -274,7 +275,7 @@ class Embeddings
 
         // remove oldest sentences from queue until we are below the max overlap
         $encoder = $this->getTokenEncoder();
-        while (count($encoder->encode(join(' ', $this->sentenceQueue))) > self::MAX_OVERLAP_LEN) {
+        while (count($encoder->encode(implode(' ', $this->sentenceQueue))) > self::MAX_OVERLAP_LEN) {
             array_shift($this->sentenceQueue);
         }
     }

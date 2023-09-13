@@ -13,7 +13,7 @@ use dokuwiki\plugin\aichat\Model\AbstractModel;
 class GPT35Turbo extends AbstractModel
 {
     /** @var int[] real 1K cost multiplied by 10000 to avoid floating point issues, as of 2023-06-14 */
-    static protected $prices = [
+    protected static $prices = [
         'text-embedding-ada-002' => 1, // $0.0001 per 1k token
         'gpt-3.5-turbo' => 15, // $0.0015 per 1k token
         'gpt-3.5-turbo-16k' => 30, // $0.003 per 1k token
@@ -22,14 +22,14 @@ class GPT35Turbo extends AbstractModel
     ];
 
     /** @var array[] The models and limits for the different use cases */
-    static protected $setup = [
+    protected static $setup = [
         'embedding' => ['text-embedding-ada-002', 1000], // chunk size
         'rephrase' => ['gpt-3.5-turbo', 3500], // rephrasing context size
         'chat' => ['gpt-3.5-turbo', 3500], // question context size
     ];
 
     /** @var int How often to retry a request if it fails */
-    const MAX_RETRIES = 3;
+    public const MAX_RETRIES = 3;
 
     /** @var DokuHTTPClient */
     protected $http;
@@ -97,7 +97,8 @@ class GPT35Turbo extends AbstractModel
     /**
      * @internal for checking available models
      */
-    public function listUpstreamModels() {
+    public function listUpstreamModels()
+    {
         $url = 'https://api.openai.com/v1/models';
         $result = $this->http->get($url);
         return $result;
@@ -167,7 +168,7 @@ class GPT35Turbo extends AbstractModel
         }
 
         // update usage statistics
-        if(isset($result['usage'])) {
+        if (isset($result['usage'])) {
             $price = self::$prices[$data['model']] ?? 0;
             $this->tokensUsed += $result['usage']['total_tokens'];
             $this->costEstimate += $result['usage']['total_tokens'] * $price;

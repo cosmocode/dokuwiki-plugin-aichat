@@ -9,7 +9,7 @@ namespace dokuwiki\plugin\aichat\Model\OpenAI;
  */
 class GPT4 extends GPT35Turbo
 {
-    static protected $setup = [
+    protected static $setup = [
         'embedding' => ['text-embedding-ada-002', 2000],
         'rephrase' => ['gpt-4', 3500],
         'chat' => ['gpt-4', 3000],
