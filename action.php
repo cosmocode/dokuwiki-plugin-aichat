@@ -1,5 +1,9 @@
 <?php
 
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Extension\Event;
+use dokuwiki\Logger;
 use dokuwiki\ErrorHandler;
 use dokuwiki\plugin\aichat\Chunk;
 
@@ -9,11 +13,10 @@ use dokuwiki\plugin\aichat\Chunk;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
+class action_plugin_aichat extends ActionPlugin
 {
-
     /** @inheritDoc */
-    public function register(Doku_Event_Handler $controller)
+    public function register(EventHandler $controller)
     {
         $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE', $this, 'handleQuestion');
     }
@@ -27,7 +30,7 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
      * @param mixed $param optional parameter passed when event was registered
      * @return void
      */
-    public function handleQuestion(Doku_Event $event, $param)
+    public function handleQuestion(Event $event, $param)
     {
         if ($event->data !== 'aichat') return;
         $event->preventDefault();
@@ -67,7 +70,7 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
             ]);
 
             if ($this->getConf('logging')) {
-                \dokuwiki\Logger::getInstance('aichat')->log(
+                Logger::getInstance('aichat')->log(
                     $question,
                     [
                         'interpretation' => $result['question'],
@@ -88,6 +91,4 @@ class action_plugin_aichat extends \dokuwiki\Extension\ActionPlugin
             ]);
         }
     }
-
 }
-

@@ -1,12 +1,14 @@
 <?php
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * DokuWiki Plugin aichat (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class syntax_plugin_aichat_chat extends \dokuwiki\Extension\SyntaxPlugin
+class syntax_plugin_aichat_chat extends SyntaxPlugin
 {
     /** @inheritDoc */
     public function getType()
@@ -50,9 +52,9 @@ class syntax_plugin_aichat_chat extends \dokuwiki\Extension\SyntaxPlugin
             return false;
         }
 
-        if($this->getConf('restricted')) $renderer->nocache();
+        if ($this->getConf('restricted')) $renderer->nocache();
         $helper = plugin_load('helper', 'aichat');
-        if(!$helper->userMayAccess()) {
+        if (!$helper->userMayAccess()) {
             return true;
         }
 
@@ -67,7 +69,7 @@ class syntax_plugin_aichat_chat extends \dokuwiki\Extension\SyntaxPlugin
             $opts = [
                 'label' => $this->getLang('title'),
             ];
-            if(in_array('float', $data['params'])) $opts['class'] = 'float';
+            if (in_array('float', $data['params'])) $opts['class'] = 'float';
 
             $html = '<aichat-button ' . buildAttributes($opts) . '>' . $html . '</aichat-button>';
         }
@@ -76,4 +78,3 @@ class syntax_plugin_aichat_chat extends \dokuwiki\Extension\SyntaxPlugin
         return true;
     }
 }
-

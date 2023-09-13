@@ -1,4 +1,5 @@
 <?php
+
 return [
     'aa' => 'Afar',
     'ab' => 'Abkhaz',

@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\CLIPlugin;
 use dokuwiki\plugin\aichat\AIChat;
 use dokuwiki\plugin\aichat\Chunk;
@@ -18,7 +19,7 @@ require_once __DIR__ . '/vendor/autoload.php';
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
+class helper_plugin_aichat extends Plugin
 {
     /** @var CLIPlugin $logger */
     protected $logger;
@@ -65,7 +66,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      */
     public function getModel()
     {
-        if ($this->model === null) {
+        if (!$this->model instanceof AbstractModel) {
             $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
 
             if (!class_exists($class)) {
@@ -88,7 +89,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      */
     public function getEmbeddings()
     {
-        if ($this->embeddings === null) {
+        if (!$this->embeddings instanceof Embeddings) {
             $this->embeddings = new Embeddings($this->getModel(), $this->getStorage());
             if ($this->logger) {
                 $this->embeddings->setLogger($this->logger);
@@ -105,7 +106,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
      */
     public function getStorage()
     {
-        if ($this->storage === null) {
+        if (!$this->storage instanceof AbstractStorage) {
             if ($this->getConf('pinecone_apikey')) {
                 $this->storage = new PineconeStorage();
             } else {
@@ -238,7 +239,7 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
     {
         $template = file_get_contents($this->localFN('prompt_' . $type));
 
-        $replace = array();
+        $replace = [];
         foreach ($vars as $key => $val) {
             $replace['{{' . strtoupper($key) . '}}'] = $val;
         }
@@ -282,4 +283,3 @@ class helper_plugin_aichat extends \dokuwiki\Extension\Plugin
         }
     }
 }
-

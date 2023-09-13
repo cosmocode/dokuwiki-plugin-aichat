@@ -138,9 +138,6 @@ class Chunk implements \JsonSerializable
         $this->score = $score;
     }
 
-    /**
-     * @return string
-     */
     public function getLanguage(): string
     {
         return $this->language;
@@ -182,7 +179,7 @@ class Chunk implements \JsonSerializable
      * @param string $json
      * @return Chunk
      */
-    static public function fromJSON($json)
+    public static function fromJSON($json)
     {
         $data = json_decode($json, true);
         return new self(

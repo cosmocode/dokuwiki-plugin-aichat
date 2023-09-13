@@ -2,10 +2,8 @@
 
 namespace dokuwiki\plugin\aichat\Model;
 
-
-abstract class AbstractModel {
-
-
+abstract class AbstractModel
+{
     /** @var int total tokens used by this instance */
     protected $tokensUsed = 0;
     /** @var int total cost used by this instance (multiplied by 1000*10000) */
@@ -43,7 +41,8 @@ abstract class AbstractModel {
      *
      * @return int
      */
-    public function getMaxRephrasingTokenLength() {
+    public function getMaxRephrasingTokenLength()
+    {
         return $this->getMaxContextTokenLength();
     }
 
@@ -77,7 +76,8 @@ abstract class AbstractModel {
      * @return string The new question
      * @throws \Exception
      */
-    public function getRephrasedQuestion($messages) {
+    public function getRephrasedQuestion($messages)
+    {
         return $this->getAnswer($messages);
     }
 

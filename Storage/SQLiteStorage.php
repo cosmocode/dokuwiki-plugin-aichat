@@ -1,4 +1,6 @@
-<?php /** @noinspection SqlResolve */
+<?php
+
+/** @noinspection SqlResolve */
 
 namespace dokuwiki\plugin\aichat\Storage;
 
@@ -16,12 +18,12 @@ use KMeans\Space;
 class SQLiteStorage extends AbstractStorage
 {
     /** @var float minimum similarity to consider a chunk a match */
-    const SIMILARITY_THRESHOLD = 0.75;
+    public const SIMILARITY_THRESHOLD = 0.75;
 
     /** @var int Number of documents to randomly sample to create the clusters */
-    const SAMPLE_SIZE = 2000;
+    public const SAMPLE_SIZE = 2000;
     /** @var int The average size of each cluster */
-    const CLUSTER_SIZE = 400;
+    public const CLUSTER_SIZE = 400;
 
     /** @var SQLiteDB */
     protected $db;
@@ -138,7 +140,8 @@ class SQLiteStorage extends AbstractStorage
     {
         $cluster = $this->getCluster($vector, $lang);
         if ($this->logger) $this->logger->info(
-            'Using cluster {cluster} for similarity search', ['cluster' => $cluster]
+            'Using cluster {cluster} for similarity search',
+            ['cluster' => $cluster]
         );
 
         $result = $this->db->queryAll(
@@ -282,7 +285,7 @@ class SQLiteStorage extends AbstractStorage
                 static $iterations = 0;
                 ++$iterations;
                 if ($this->logger) {
-                    $clustercounts = join(',', array_map('count', $clusters));
+                    $clustercounts = implode(',', array_map('count', $clusters));
                     $this->logger->info('Iteration {iteration}: [{clusters}]', [
                         'iteration' => $iterations, 'clusters' => $clustercounts
                     ]);
@@ -290,7 +293,7 @@ class SQLiteStorage extends AbstractStorage
             }, Cluster::INIT_KMEANS_PLUS_PLUS);
 
             // store the clusters
-            foreach ($clusters as $clusterID => $cluster) {
+            foreach ($clusters as $cluster) {
                 /** @var Cluster $cluster */
                 $centroid = $cluster->getCoordinates();
                 $query = 'INSERT INTO clusters (lang, centroid) VALUES (?, ?)';
@@ -322,7 +325,8 @@ class SQLiteStorage extends AbstractStorage
             $query = 'UPDATE embeddings SET cluster = ? WHERE id = ?';
             $this->db->exec($query, [$cluster, $record['id']]);
             if ($this->logger) $this->logger->success(
-                'Chunk {id} assigned to cluster {cluster}', ['id' => $record['id'], 'cluster' => $cluster]
+                'Chunk {id} assigned to cluster {cluster}',
+                ['id' => $record['id'], 'cluster' => $cluster]
             );
         }
         $handle->closeCursor();

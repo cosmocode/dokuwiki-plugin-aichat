@@ -7,7 +7,6 @@ use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 use splitbrain\phpcli\TableFormatter;
 
-
 /**
  * DokuWiki Plugin aichat (CLI Component)
  *
@@ -43,7 +42,9 @@ class cli_plugin_aichat extends CLIPlugin
         $options->registerOption(
             'clear',
             'Clear all existing embeddings before creating new ones',
-            'c', false, 'embed'
+            'c',
+            false,
+            'embed'
         );
 
         $options->registerCommand('maintenance', 'Run storage maintenance. Refert to the documentation for details.');
@@ -68,7 +69,6 @@ class cli_plugin_aichat extends CLIPlugin
             ' Not supported on all storages.');
         $options->registerArgument('vector.tsv', 'The vector file', false, 'tsv');
         $options->registerArgument('meta.tsv', 'The meta file', false, 'tsv');
-
     }
 
     /** @inheritDoc */
@@ -76,7 +76,6 @@ class cli_plugin_aichat extends CLIPlugin
     {
         ini_set('memory_limit', -1);
         switch ($options->getCmd()) {
-
             case 'embed':
                 $this->createEmbeddings($options->getOpt('clear'));
                 break;
