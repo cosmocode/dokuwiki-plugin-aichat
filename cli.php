@@ -64,6 +64,7 @@ class cli_plugin_aichat extends CLIPlugin
 
         $options->registerCommand('page', 'Check if chunks for a given page are available (for debugging)');
         $options->registerArgument('page', 'The page to check', true, 'page');
+        $options->registerOption('dump', 'Dump the chunks', 'd', false, 'page');
 
         $options->registerCommand('tsv', 'Create TSV files for visualizing at http://projector.tensorflow.org/' .
             ' Not supported on all storages.');
@@ -95,7 +96,7 @@ class cli_plugin_aichat extends CLIPlugin
                 $this->split($options->getArgs()[0]);
                 break;
             case 'page':
-                $this->page($options->getArgs()[0]);
+                $this->page($options->getArgs()[0], $options->getOpt('dump'));
                 break;
             case 'info':
                 $this->showinfo();
@@ -157,7 +158,7 @@ class cli_plugin_aichat extends CLIPlugin
      * @param string $page
      * @return void
      */
-    protected function page($page)
+    protected function page($page, $dump = false)
     {
         $indexer = new Indexer();
         $pages = $indexer->getPages();
@@ -172,6 +173,9 @@ class cli_plugin_aichat extends CLIPlugin
         $chunks = $storage->getPageChunks($page, $pos * 100);
         if ($chunks) {
             $this->success('Found ' . count($chunks) . ' chunks');
+            if ($dump) {
+                echo json_encode($chunks, JSON_PRETTY_PRINT);
+            }
         } else {
             $this->error('No chunks found');
         }
