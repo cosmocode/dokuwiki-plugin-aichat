@@ -199,7 +199,10 @@ class SQLiteStorage extends AbstractStorage
      */
     public function sqliteCosineSimilarityCallback($query, $embedding)
     {
-        return (float)$this->cosineSimilarity(json_decode($query, null, 512, JSON_THROW_ON_ERROR), json_decode($embedding, null, 512, JSON_THROW_ON_ERROR));
+        return (float)$this->cosineSimilarity(
+            json_decode($query, true, 512, JSON_THROW_ON_ERROR),
+            json_decode($embedding, true, 512, JSON_THROW_ON_ERROR)
+        );
     }
 
     /**

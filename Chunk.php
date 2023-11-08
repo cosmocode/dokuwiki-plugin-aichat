@@ -17,7 +17,15 @@ class Chunk implements \JsonSerializable, \Stringable
      * @param int $created
      * @param int $score
      */
-    public function __construct(protected $page, protected $id, protected $text, protected $embedding, $lang = '', $created = '', protected $score = 0)
+    public function __construct(
+        protected $page,
+        protected $id,
+        protected $text,
+        protected $embedding,
+                  $lang = '',
+                  $created = '',
+        protected $score = 0
+    )
     {
         $this->language = $lang ?: $this->determineLanguage();
         $this->created = $created ?: time();
