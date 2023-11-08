@@ -1,13 +1,14 @@
 <?php
 
-use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\CLIPlugin;
+use dokuwiki\Extension\Plugin;
 use dokuwiki\plugin\aichat\AIChat;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
+use dokuwiki\plugin\aichat\Storage\ChromaStorage;
 use dokuwiki\plugin\aichat\Storage\PineconeStorage;
 use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
@@ -115,6 +116,8 @@ class helper_plugin_aichat extends Plugin
         if (!$this->storage instanceof AbstractStorage) {
             if ($this->getConf('pinecone_apikey')) {
                 $this->storage = new PineconeStorage();
+            } elseif ($this->getConf('chroma_baseurl')) {
+                $this->storage = new ChromaStorage();
             } else {
                 $this->storage = new SQLiteStorage();
             }

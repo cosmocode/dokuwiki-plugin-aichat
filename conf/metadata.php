@@ -20,6 +20,12 @@ $meta['model'] = array('multichoice',
 $meta['pinecone_apikey'] = array('string');
 $meta['pinecone_baseurl'] = array('string');
 
+$meta['chroma_baseurl'] = array('string');
+$meta['chroma_apikey'] = array('string');
+$meta['chroma_tenant'] = array('string');
+$meta['chroma_database'] = array('string');
+$meta['chroma_collection'] = array('string');
+
 $meta['logging'] = array('onoff');
 $meta['restrict'] = array('string');
 $meta['preferUIlanguage'] = array('multichoice', '_choices' => array(
