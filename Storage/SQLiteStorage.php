@@ -18,12 +18,12 @@ use KMeans\Space;
 class SQLiteStorage extends AbstractStorage
 {
     /** @var float minimum similarity to consider a chunk a match */
-    public const SIMILARITY_THRESHOLD = 0.75;
+    final public const SIMILARITY_THRESHOLD = 0.75;
 
     /** @var int Number of documents to randomly sample to create the clusters */
-    public const SAMPLE_SIZE = 2000;
+    final public const SAMPLE_SIZE = 2000;
     /** @var int The average size of each cluster */
-    public const CLUSTER_SIZE = 400;
+    final public const CLUSTER_SIZE = 400;
 
     /** @var SQLiteDB */
     protected $db;
@@ -38,7 +38,7 @@ class SQLiteStorage extends AbstractStorage
     public function __construct()
     {
         $this->db = new SQLiteDB('aichat', DOKU_PLUGIN . 'aichat/db/');
-        $this->db->getPdo()->sqliteCreateFunction('COSIM', [$this, 'sqliteCosineSimilarityCallback'], 2);
+        $this->db->getPdo()->sqliteCreateFunction('COSIM', $this->sqliteCosineSimilarityCallback(...), 2);
 
         $helper = plugin_load('helper', 'aichat');
         $this->useLanguageClusters = $helper->getConf('preferUIlanguage') >= AIChat::LANG_UI_LIMITED;
@@ -54,7 +54,7 @@ class SQLiteStorage extends AbstractStorage
             $record['page'],
             $record['id'],
             $record['chunk'],
-            json_decode($record['embedding'], true),
+            json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR),
             $record['lang'],
             $record['created']
         );
@@ -89,7 +89,7 @@ class SQLiteStorage extends AbstractStorage
                 'page' => $chunk->getPage(),
                 'id' => $chunk->getId(),
                 'chunk' => $chunk->getText(),
-                'embedding' => json_encode($chunk->getEmbedding()),
+                'embedding' => json_encode($chunk->getEmbedding(), JSON_THROW_ON_ERROR),
                 'created' => $chunk->getCreated(),
                 'lang' => $chunk->getLanguage(),
             ]);
@@ -127,7 +127,7 @@ class SQLiteStorage extends AbstractStorage
                 $record['page'],
                 $record['id'],
                 $record['chunk'],
-                json_decode($record['embedding'], true),
+                json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR),
                 $record['lang'],
                 $record['created']
             );
@@ -152,7 +152,7 @@ class SQLiteStorage extends AbstractStorage
                 AND similarity > CAST(? AS FLOAT)
            ORDER BY similarity DESC
               LIMIT ?',
-            [json_encode($vector), $cluster, self::SIMILARITY_THRESHOLD, $limit]
+            [json_encode($vector, JSON_THROW_ON_ERROR), $cluster, self::SIMILARITY_THRESHOLD, $limit]
         );
         $chunks = [];
         foreach ($result as $record) {
@@ -160,7 +160,7 @@ class SQLiteStorage extends AbstractStorage
                 $record['page'],
                 $record['id'],
                 $record['chunk'],
-                json_decode($record['embedding'], true),
+                json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR),
                 $record['lang'],
                 $record['created'],
                 $record['similarity']
@@ -199,7 +199,7 @@ class SQLiteStorage extends AbstractStorage
      */
     public function sqliteCosineSimilarityCallback($query, $embedding)
     {
-        return (float)$this->cosineSimilarity(json_decode($query), json_decode($embedding));
+        return (float)$this->cosineSimilarity(json_decode($query, null, 512, JSON_THROW_ON_ERROR), json_decode($embedding, null, 512, JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -265,7 +265,7 @@ class SQLiteStorage extends AbstractStorage
             $query = "SELECT id, embedding FROM embeddings $where ORDER BY RANDOM() LIMIT ?";
             $result = $this->db->queryAll($query, [self::SAMPLE_SIZE]);
             if (!$result) return; // no data to cluster
-            $dimensions = count(json_decode($result[0]['embedding'], true));
+            $dimensions = count(json_decode((string) $result[0]['embedding'], true, 512, JSON_THROW_ON_ERROR));
 
             // how many clusters?
             if (count($result) < self::CLUSTER_SIZE * 3) {
@@ -282,7 +282,7 @@ class SQLiteStorage extends AbstractStorage
             // cluster them using kmeans
             $space = new Space($dimensions);
             foreach ($result as $record) {
-                $space->addPoint(json_decode($record['embedding'], true));
+                $space->addPoint(json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR));
             }
             $clusters = $space->solve($clustercount, function ($space, $clusters) {
                 static $iterations = 0;
@@ -300,7 +300,7 @@ class SQLiteStorage extends AbstractStorage
                 /** @var Cluster $cluster */
                 $centroid = $cluster->getCoordinates();
                 $query = 'INSERT INTO clusters (lang, centroid) VALUES (?, ?)';
-                $this->db->exec($query, [$lang, json_encode($centroid)]);
+                $this->db->exec($query, [$lang, json_encode($centroid, JSON_THROW_ON_ERROR)]);
             }
 
             $this->db->getPdo()->commit();
@@ -323,7 +323,7 @@ class SQLiteStorage extends AbstractStorage
         $handle = $this->db->query($query);
 
         while ($record = $handle->fetch(\PDO::FETCH_ASSOC)) {
-            $vector = json_decode($record['embedding'], true);
+            $vector = json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR);
             $cluster = $this->getCluster($vector, $this->useLanguageClusters ? $record['lang'] : '');
             $query = 'UPDATE embeddings SET cluster = ? WHERE id = ?';
             $this->db->exec($query, [$cluster, $record['id']]);
@@ -355,7 +355,7 @@ class SQLiteStorage extends AbstractStorage
                 ORDER BY COSIM(centroid, ?) DESC
                    LIMIT 1";
 
-        $result = $this->db->queryRecord($query, [json_encode($vector)]);
+        $result = $this->db->queryRecord($query, [json_encode($vector, JSON_THROW_ON_ERROR)]);
         if (!$result) return null;
         return $result['cluster'];
     }
@@ -386,7 +386,7 @@ class SQLiteStorage extends AbstractStorage
         file_put_contents($metafile, $header . "\n", FILE_APPEND);
 
         while ($row = $handle->fetch(\PDO::FETCH_ASSOC)) {
-            $vector = json_decode($row['embedding'], true);
+            $vector = json_decode((string) $row['embedding'], true, 512, JSON_THROW_ON_ERROR);
             $vector = implode("\t", $vector);
 
             $meta = implode("\t", [$row['id'], $row['page'], $row['created']]);

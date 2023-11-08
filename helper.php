@@ -162,9 +162,7 @@ class helper_plugin_aichat extends Plugin
     {
         $similar = $this->getEmbeddings()->getSimilarChunks($question, $this->getLanguageLimit());
         if ($similar) {
-            $context = implode("\n", array_map(function (Chunk $chunk) {
-                return "\n```\n" . $chunk->getText() . "\n```\n";
-            }, $similar));
+            $context = implode("\n", array_map(static fn(Chunk $chunk) => "\n```\n" . $chunk->getText() . "\n```\n", $similar));
             $prompt = $this->getPrompt('question', [
                 'context' => $context,
                 'language' => $this->getLanguagePrompt()

@@ -41,14 +41,14 @@ class PineconeStorage extends AbstractStorage
      * @return mixed
      * @throws \Exception
      */
-    protected function runQuery($endpoint, $data, $method = 'POST')
+    protected function runQuery($endpoint, mixed $data, $method = 'POST')
     {
         $url = $this->baseurl . $endpoint;
 
         if (is_array($data) && $data === []) {
             $json = '{}';
         } else {
-            $json = json_encode($data);
+            $json = json_encode($data, JSON_THROW_ON_ERROR);
         }
 
         $this->http->sendRequest($url, $json, $method);
@@ -57,7 +57,7 @@ class PineconeStorage extends AbstractStorage
             throw new \Exception('Pinecone API returned no response. ' . $this->http->error);
         }
 
-        $result = json_decode($response, true);
+        $result = json_decode((string) $response, true, 512, JSON_THROW_ON_ERROR);
         if ($result === null) {
             throw new \Exception('Pinecone API returned invalid JSON. ' . $response);
         }
@@ -104,7 +104,7 @@ class PineconeStorage extends AbstractStorage
         if ($clear) {
             try {
                 $this->runQuery('/vectors/delete', ['delete_all' => 'True']);
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // delete all seems not supported -> starter edition
                 $this->overwrite = true;
             }
@@ -122,9 +122,7 @@ class PineconeStorage extends AbstractStorage
     {
         // delete all possible chunk IDs
         $ids = range($firstChunkID, $firstChunkID + 99, 1);
-        $ids = array_map(function ($id) {
-            return (string)$id;
-        }, $ids);
+        $ids = array_map(static fn($id) => (string)$id, $ids);
         $this->runQuery('/vectors/delete', ['ids' => $ids]);
     }
 
@@ -169,9 +167,7 @@ class PineconeStorage extends AbstractStorage
     public function getPageChunks($page, $firstChunkID)
     {
         $ids = range($firstChunkID, $firstChunkID + 99, 1);
-        $ids = array_reduce($ids, function ($carry, $item) {
-            return $carry . '&ids=' . $item;
-        });
+        $ids = array_reduce($ids, static fn($carry, $item) => $carry . '&ids=' . $item);
 
         $data = $this->runQuery(
             '/vectors/fetch?' . $ids,

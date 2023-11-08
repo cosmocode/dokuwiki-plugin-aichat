@@ -29,7 +29,7 @@ class GPT35Turbo extends AbstractModel
     ];
 
     /** @var int How often to retry a request if it fails */
-    public const MAX_RETRIES = 3;
+    final public const MAX_RETRIES = 3;
 
     /** @var DokuHTTPClient */
     protected $http;
@@ -143,7 +143,7 @@ class GPT35Turbo extends AbstractModel
         $url = 'https://api.openai.com/v1/' . $endpoint;
 
         /** @noinspection PhpParamsInspection */
-        $this->http->post($url, json_encode($data));
+        $this->http->post($url, json_encode($data, JSON_THROW_ON_ERROR));
         $response = $this->http->resp_body;
         if ($response === false || $this->http->error) {
             if ($retry < self::MAX_RETRIES) {
@@ -154,7 +154,7 @@ class GPT35Turbo extends AbstractModel
             throw new \Exception('OpenAI API returned no response. ' . $this->http->error);
         }
 
-        $result = json_decode($response, true);
+        $result = json_decode((string) $response, true, 512, JSON_THROW_ON_ERROR);
         if (!$result) {
             $this->requestStart = 0;
             throw new \Exception('OpenAI API returned invalid JSON: ' . $response);

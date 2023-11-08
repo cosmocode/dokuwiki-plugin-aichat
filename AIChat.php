@@ -8,9 +8,9 @@ namespace dokuwiki\plugin\aichat;
 class AIChat
 {
     /** @var int preferUIlanguage config: guess language use, all sources */
-    public const LANG_AUTO_ALL = 0;
+    final public const LANG_AUTO_ALL = 0;
     /** @var int preferUIlanguage config: use UI language, all sources */
-    public const LANG_UI_ALL = 1;
+    final public const LANG_UI_ALL = 1;
     /** @var int preferUIlanguage config: use UI language, limit sources */
-    public const LANG_UI_LIMITED = 2;
+    final public const LANG_UI_LIMITED = 2;
 }

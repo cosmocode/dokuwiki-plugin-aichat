@@ -39,7 +39,7 @@ class ChromaStorage extends AbstractStorage
         $this->http->keep_alive = false;
         $this->http->timeout = 30;
 
-        if($helper->getConf('chroma_apikey')) {
+        if ($helper->getConf('chroma_apikey')) {
             $this->http->headers['Authorization'] = 'Bearer ' . $helper->getConf('chroma_apikey');
         }
     }
@@ -53,14 +53,14 @@ class ChromaStorage extends AbstractStorage
      * @return mixed
      * @throws \Exception
      */
-    protected function runQuery($endpoint, $data, $method = 'POST')
+    protected function runQuery($endpoint, mixed $data, $method = 'POST')
     {
         $url = $this->baseurl . '/api/v1' . $endpoint . '?tenant=' . $this->tenant . '&database=' . $this->database;
 
         if (is_array($data) && $data === []) {
             $json = '{}';
         } else {
-            $json = json_encode($data);
+            $json = json_encode($data, JSON_THROW_ON_ERROR);
         }
 
         $this->http->sendRequest($url, $json, $method);
@@ -71,19 +71,19 @@ class ChromaStorage extends AbstractStorage
         }
 
         try {
-            $result = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\Exception $e) {
+            $result = json_decode((string) $response, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Exception) {
             throw new \Exception('Chroma API returned invalid JSON. ' . $response);
         }
 
         if ((int)$this->http->status !== 200) {
             if (isset($result['detail'][0]['msg'])) {
                 $error = $result['detail'][0]['msg'];
-            } else if (isset($result['detail']['msg'])) {
+            } elseif (isset($result['detail']['msg'])) {
                 $error = $result['detail']['msg'];
-            } else if (isset($result['detail']) && is_string($result['detail'])) {
+            } elseif (isset($result['detail']) && is_string($result['detail'])) {
                 $error = $result['detail'];
-            } else if (isset($result['error'])) {
+            } elseif (isset($result['error'])) {
                 $error = $result['error'];
             } else {
                 $error = $this->http->error;
@@ -164,9 +164,7 @@ class ChromaStorage extends AbstractStorage
     {
         // delete all possible chunk IDs
         $ids = range($firstChunkID, $firstChunkID + 99, 1);
-        $ids = array_map(function ($id) {
-            return (string)$id;
-        }, $ids);
+        $ids = array_map(static fn($id) => (string)$id, $ids);
         $this->runQuery(
             '/collections/' . $this->getCollectionID() . '/delete',
             [
@@ -192,7 +190,6 @@ class ChromaStorage extends AbstractStorage
                 'language' => $chunk->getLanguage()
             ];
             $documents[] = $chunk->getText();
-
         }
 
         $this->runQuery(
@@ -222,9 +219,7 @@ class ChromaStorage extends AbstractStorage
     public function getPageChunks($page, $firstChunkID)
     {
         $ids = range($firstChunkID, $firstChunkID + 99, 1);
-        $ids = array_map(function ($id) {
-            return (string)$id;
-        }, $ids);
+        $ids = array_map(static fn($id) => (string)$id, $ids);
 
         $data = $this->runQuery(
             '/collections/' . $this->getCollectionID() . '/get',

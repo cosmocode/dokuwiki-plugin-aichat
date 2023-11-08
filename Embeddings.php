@@ -19,7 +19,7 @@ use Vanderlee\Sentence\Sentence;
 class Embeddings
 {
     /** @var int maximum overlap between chunks in tokens */
-    public const MAX_OVERLAP_LEN = 200;
+    final public const MAX_OVERLAP_LEN = 200;
 
     /** @var AbstractModel */
     protected $model;
@@ -34,9 +34,6 @@ class Embeddings
     /** @var array remember sentences when chunking */
     private $sentenceQueue = [];
 
-    /**
-     * @param AbstractModel $model
-     */
     public function __construct(AbstractModel $model, AbstractStorage $storage)
     {
         $this->model = $model;
@@ -56,7 +53,6 @@ class Embeddings
     /**
      * Add a logger instance
      *
-     * @param CLI $logger
      * @return void
      */
     public function setLogger(CLI $logger)
@@ -98,7 +94,7 @@ class Embeddings
                 !page_exists($page) ||
                 isHiddenPage($page) ||
                 filesize(wikiFN($page)) < 150 || // skip very small pages
-                ($skipRE && preg_match($skipRE, $page))
+                ($skipRE && preg_match($skipRE, (string) $page))
             ) {
                 // this page should not be in the index (anymore)
                 $this->storage->deletePageChunks($page, $chunkID);
@@ -145,7 +141,7 @@ class Embeddings
 
         $parts = $this->splitIntoChunks($text);
         foreach ($parts as $part) {
-            if (trim($part) == '') continue; // skip empty chunks
+            if (trim((string) $part) == '') continue; // skip empty chunks
 
             try {
                 $embedding = $this->model->getEmbedding($part);

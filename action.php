@@ -30,7 +30,7 @@ class action_plugin_aichat extends ActionPlugin
      * @param mixed $param optional parameter passed when event was registered
      * @return void
      */
-    public function handleQuestion(Event $event, $param)
+    public function handleQuestion(Event $event, mixed $param)
     {
         if ($event->data !== 'aichat') return;
         $event->preventDefault();
@@ -41,7 +41,7 @@ class action_plugin_aichat extends ActionPlugin
         $helper = plugin_load('helper', 'aichat');
 
         $question = $INPUT->post->str('question');
-        $history = json_decode($INPUT->post->str('history'));
+        $history = json_decode((string) $INPUT->post->str('history'), null, 512, JSON_THROW_ON_ERROR);
         header('Content-Type: application/json');
 
         if (!$helper->userMayAccess()) {
@@ -49,7 +49,7 @@ class action_plugin_aichat extends ActionPlugin
                 'question' => $question,
                 'answer' => $this->getLang('restricted'),
                 'sources' => [],
-            ]);
+            ], JSON_THROW_ON_ERROR);
             return;
         }
 
@@ -67,7 +67,7 @@ class action_plugin_aichat extends ActionPlugin
                 'question' => $result['question'],
                 'answer' => $parseDown->text($result['answer']),
                 'sources' => $sources,
-            ]);
+            ], JSON_THROW_ON_ERROR);
 
             if ($this->getConf('logging')) {
                 Logger::getInstance('aichat')->log(
@@ -88,7 +88,7 @@ class action_plugin_aichat extends ActionPlugin
                 'question' => $question,
                 'answer' => 'An error occurred. More info may be available in the error log. ' . $e->getMessage(),
                 'sources' => [],
-            ]);
+            ], JSON_THROW_ON_ERROR);
         }
     }
 }
