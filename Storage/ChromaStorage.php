@@ -22,7 +22,7 @@ class ChromaStorage extends AbstractStorage
     protected $collectionID = '';
 
     /**
-     * PineconeStorage constructor.
+     * ChromaStorage constructor.
      */
     public function __construct()
     {
@@ -57,7 +57,7 @@ class ChromaStorage extends AbstractStorage
     {
         $url = $this->baseurl . '/api/v1' . $endpoint . '?tenant=' . $this->tenant . '&database=' . $this->database;
 
-        if (is_array($data) && $data === []) {
+        if ($data === []) {
             $json = '{}';
         } else {
             $json = json_encode($data, JSON_THROW_ON_ERROR);
@@ -257,7 +257,7 @@ class ChromaStorage extends AbstractStorage
         $limit *= 2; // we can't check ACLs, so we return more than requested
 
         if ($lang) {
-            $filter = ['language' => ['$eq', $lang]];
+            $filter = ['language' => $lang];
         } else {
             $filter = null;
         }

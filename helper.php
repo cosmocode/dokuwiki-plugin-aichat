@@ -10,6 +10,7 @@ use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\ChromaStorage;
 use dokuwiki\plugin\aichat\Storage\PineconeStorage;
+use dokuwiki\plugin\aichat\Storage\QdrantStorage;
 use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
 /**
@@ -118,6 +119,8 @@ class helper_plugin_aichat extends Plugin
                 $this->storage = new PineconeStorage();
             } elseif ($this->getConf('chroma_baseurl')) {
                 $this->storage = new ChromaStorage();
+            } elseif ($this->getConf('qdrant_baseurl')) {
+                $this->storage = new QdrantStorage();
             } else {
                 $this->storage = new SQLiteStorage();
             }

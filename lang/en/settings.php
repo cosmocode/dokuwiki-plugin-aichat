@@ -18,6 +18,10 @@ $lang['chroma_tenant'] = 'Your Chroma tenant name.';
 $lang['chroma_database'] = 'Your Chroma database name.';
 $lang['chroma_collection'] = 'The collection to use. Will be created.';
 
+$lang['qdrant_baseurl'] = 'Your Qdrant base URL if you want to use Qdrant as a storage backend.';
+$lang['qdrant_apikey'] = 'Your Qdrant API key. Empty if no authentication is required.';
+$lang['qdrant_collection'] = 'The collection to use. Will be created.';
+
 $lang['logging'] = 'Log all questions and answers. Use the <a href="?do=admin&page=logviewer&facility=aichat">Log Viewer</a> to access.';
 $lang['restrict'] = 'Restrict access to these users and groups (comma separated). Leave empty to allow all users.';
 $lang['preferUIlanguage'] = 'How to work with multilingual wikis? (Requires the translation plugin)';

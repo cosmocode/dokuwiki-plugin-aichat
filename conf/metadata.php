@@ -26,6 +26,10 @@ $meta['chroma_tenant'] = array('string');
 $meta['chroma_database'] = array('string');
 $meta['chroma_collection'] = array('string');
 
+$meta['qdrant_baseurl'] = array('string');
+$meta['qdrant_apikey'] = array('string');
+$meta['qdrant_collection'] = array('string');
+
 $meta['logging'] = array('onoff');
 $meta['restrict'] = array('string');
 $meta['preferUIlanguage'] = array('multichoice', '_choices' => array(

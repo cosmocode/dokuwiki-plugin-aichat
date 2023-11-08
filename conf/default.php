@@ -19,6 +19,10 @@ $conf['chroma_tenant'] = 'default_tenant';
 $conf['chroma_database'] = 'default_database';
 $conf['chroma_collection'] = 'aichat';
 
+$conf['qdrant_baseurl'] = '';
+$conf['qdrant_apikey'] = '';
+$conf['qdrant_collection'] = 'aichat';
+
 $conf['logging'] = 0;
 $conf['restrict'] = '';
 $conf['preferUIlanguage'] = 0;
