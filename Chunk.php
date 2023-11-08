@@ -22,11 +22,10 @@ class Chunk implements \JsonSerializable, \Stringable
         protected $id,
         protected $text,
         protected $embedding,
-                  $lang = '',
-                  $created = '',
+        $lang = '',
+        $created = '',
         protected $score = 0
-    )
-    {
+    ) {
         $this->language = $lang ?: $this->determineLanguage();
         $this->created = $created ?: time();
     }
