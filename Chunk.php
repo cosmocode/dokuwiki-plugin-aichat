@@ -2,20 +2,10 @@
 
 namespace dokuwiki\plugin\aichat;
 
-class Chunk implements \JsonSerializable
+class Chunk implements \JsonSerializable, \Stringable
 {
-    /** @var string */
-    protected $page;
-    /** @var int */
-    protected $id;
-    /** @var string */
-    protected $text;
-    /** @var float[] */
-    protected $embedding;
     /** @var int */
     protected $created;
-    /** @var int */
-    protected $score;
     /** @var string */
     protected $language;
 
@@ -25,19 +15,15 @@ class Chunk implements \JsonSerializable
      * @param string $text
      * @param float[] $embedding
      * @param int $created
+     * @param int $score
      */
-    public function __construct($page, $id, $text, $embedding, $lang = '', $created = '', $score = 0)
+    public function __construct(protected $page, protected $id, protected $text, protected $embedding, $lang = '', $created = '', protected $score = 0)
     {
-        $this->page = $page;
-        $this->id = $id;
-        $this->text = $text;
-        $this->embedding = $embedding;
         $this->language = $lang ?: $this->determineLanguage();
         $this->created = $created ?: time();
-        $this->score = $score;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->page . '#' . $this->id;
     }
@@ -181,7 +167,7 @@ class Chunk implements \JsonSerializable
      */
     public static function fromJSON($json)
     {
-        $data = json_decode($json, true);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         return new self(
             $data['page'],
             $data['id'],

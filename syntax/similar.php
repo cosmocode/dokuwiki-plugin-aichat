@@ -64,14 +64,11 @@ class syntax_plugin_aichat_similar extends SyntaxPlugin
             $similar += $storage->getSimilarChunks($chunk->getEmbedding(), 10);
         }
         $similar = array_unique($similar);
-        $similar = array_filter($similar, function ($chunk) use ($id) {
-            return $chunk->getPage() !== $id;
-        });
-        usort($similar, function ($a, $b) {
+        $similar = array_filter($similar, static fn($chunk) => $chunk->getPage() !== $id);
+        usort($similar, static fn($a, $b) =>
             /** @var Chunk $a */
             /** @var Chunk $b */
-            return $b->getScore() <=> $a->getScore();
-        });
+            $b->getScore() <=> $a->getScore());
 
         if (!$similar) return true;
 

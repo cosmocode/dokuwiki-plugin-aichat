@@ -59,7 +59,7 @@ class syntax_plugin_aichat_chat extends SyntaxPlugin
         }
 
         $opts = [
-            'hello' => trim($data['body']),
+            'hello' => trim((string) $data['body']),
             'placeholder' => $this->getLang('placeholder'),
             'url' => DOKU_BASE . 'lib/exe/ajax.php?call=aichat',
         ];
