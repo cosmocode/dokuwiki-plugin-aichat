@@ -26,7 +26,7 @@ class action_plugin_aichat extends ActionPlugin
      * Event handler for AJAX_CALL_UNKNOWN event
      *
      * @see https://www.dokuwiki.org/devel:events:ajax_call_unknown
-     * @param Doku_Event $event Event object
+     * @param Event $event Event object
      * @param mixed $param optional parameter passed when event was registered
      * @return void
      */
