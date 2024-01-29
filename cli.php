@@ -372,7 +372,7 @@ class cli_plugin_aichat extends CLIPlugin
 
         if ($skip) {
             $skipRE = '/' . $skip . '/';
-            if (@preg_match($skipRE, null) === false) {
+            if (@preg_match($skipRE, '') === false) {
                 $this->error(preg_last_error_msg());
                 $this->error('Invalid regular expression in $conf[\'skipRegex\']. Ignored.');
                 $skipRE = '';
@@ -383,7 +383,7 @@ class cli_plugin_aichat extends CLIPlugin
 
         if ($match) {
             $matchRE = '/' . $match . '/';
-            if (@preg_match($matchRE, null) === false) {
+            if (@preg_match($matchRE, '') === false) {
                 $this->error(preg_last_error_msg());
                 $this->error('Invalid regular expression in $conf[\'matchRegex\']. Ignored.');
                 $matchRE = '';
