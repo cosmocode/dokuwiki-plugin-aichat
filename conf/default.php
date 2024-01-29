@@ -25,4 +25,6 @@ $conf['qdrant_collection'] = 'aichat';
 
 $conf['logging'] = 0;
 $conf['restrict'] = '';
+$conf['skipRegex'] = ':(playground|sandbox)(:|$)';
+$conf['matchRegex'] = '';
 $conf['preferUIlanguage'] = 0;

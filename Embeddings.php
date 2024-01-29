@@ -77,11 +77,12 @@ class Embeddings
      * Update the embeddings storage
      *
      * @param string $skipRE Regular expression to filter out pages (full RE with delimiters)
+     * @param string $matchRE Regular expression pages have to match to be included (full RE with delimiters)
      * @param bool $clear Should any existing storage be cleared before updating?
      * @return void
      * @throws \Exception
      */
-    public function createNewIndex($skipRE = '', $clear = false)
+    public function createNewIndex($skipRE = '', $matchRE = '', $clear = false)
     {
         $indexer = new Indexer();
         $pages = $indexer->getPages();
@@ -94,7 +95,8 @@ class Embeddings
                 !page_exists($page) ||
                 isHiddenPage($page) ||
                 filesize(wikiFN($page)) < 150 || // skip very small pages
-                ($skipRE && preg_match($skipRE, (string) $page))
+                ($skipRE && preg_match($skipRE, (string) $page)) ||
+                ($matchRE && !preg_match($matchRE, ":$page"))
             ) {
                 // this page should not be in the index (anymore)
                 $this->storage->deletePageChunks($page, $chunkID);

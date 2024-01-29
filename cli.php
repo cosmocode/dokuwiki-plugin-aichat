@@ -265,12 +265,13 @@ class cli_plugin_aichat extends CLIPlugin
      * Recreate chunks and embeddings for all pages
      *
      * @return void
-     * @todo make skip regex configurable
      */
     protected function createEmbeddings($clear)
     {
+        [$skipRE, $matchRE] = $this->getRegexps();
+
         $start = time();
-        $this->helper->getEmbeddings()->createNewIndex('/(^|:)(playground|sandbox)(:|$)/', $clear);
+        $this->helper->getEmbeddings()->createNewIndex($skipRE, $matchRE, $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
     }
@@ -353,5 +354,43 @@ class cli_plugin_aichat extends CLIPlugin
         }
 
         return $value;
+    }
+
+    /**
+     * Read the skip and match regex from the config
+     *
+     * Ensures the regular expressions are valid
+     *
+     * @return string[] [$skipRE, $matchRE]
+     */
+    protected function getRegexps()
+    {
+        $skip = $this->getConf('skipRegex');
+        $skipRE = '';
+        $match = $this->getConf('matchRegex');
+        $matchRE = '';
+
+        if ($skip) {
+            $skipRE = '/' . $skip . '/';
+            if (@preg_match($skipRE, null) === false) {
+                $this->error(preg_last_error_msg());
+                $this->error('Invalid regular expression in $conf[\'skipRegex\']. Ignored.');
+                $skipRE = '';
+            } else {
+                $this->success('Skipping pages matching ' . $skipRE);
+            }
+        }
+
+        if ($match) {
+            $matchRE = '/' . $match . '/';
+            if (@preg_match($matchRE, null) === false) {
+                $this->error(preg_last_error_msg());
+                $this->error('Invalid regular expression in $conf[\'matchRegex\']. Ignored.');
+                $matchRE = '';
+            } else {
+                $this->success('Only indexing pages matching ' . $matchRE);
+            }
+        }
+        return [$skipRE, $matchRE];
     }
 }

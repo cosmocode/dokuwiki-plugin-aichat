@@ -24,6 +24,8 @@ $lang['qdrant_collection'] = 'The collection to use. Will be created.';
 
 $lang['logging'] = 'Log all questions and answers. Use the <a href="?do=admin&page=logviewer&facility=aichat">Log Viewer</a> to access.';
 $lang['restrict'] = 'Restrict access to these users and groups (comma separated). Leave empty to allow all users.';
+$lang['skipRegex'] = 'Skip indexing pages matching this regular expression (no delimiters).';
+$lang['matchRegex'] = 'Only index pages matching this regular expression (no delimiters).';
 $lang['preferUIlanguage'] = 'How to work with multilingual wikis? (Requires the translation plugin)';
 
 $lang['preferUIlanguage_o_0'] = 'Guess language, use all sources';

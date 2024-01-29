@@ -32,6 +32,8 @@ $meta['qdrant_collection'] = array('string');
 
 $meta['logging'] = array('onoff');
 $meta['restrict'] = array('string');
+$meta['skipRegex'] = array('string');
+$meta['matchRegex'] = array('string');
 $meta['preferUIlanguage'] = array('multichoice', '_choices' => array(
     \dokuwiki\plugin\aichat\AIChat::LANG_AUTO_ALL,
     \dokuwiki\plugin\aichat\AIChat::LANG_UI_ALL,
