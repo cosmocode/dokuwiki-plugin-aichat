@@ -57,7 +57,7 @@ class cli_plugin_aichat extends CLIPlugin
 
         $options->registerCommand('chat', 'Start an interactive chat session');
 
-        $options->registerCommand('info', 'Get Info about the vector storage');
+        $options->registerCommand('info', 'Get Info about the vector storage and other stats');
 
         $options->registerCommand('split', 'Split a page into chunks (for debugging)');
         $options->registerArgument('page', 'The page to split', true, 'split');
@@ -120,7 +120,11 @@ class cli_plugin_aichat extends CLIPlugin
         $stats = [
             'model' => $this->getConf('model'),
         ];
-        $stats = array_merge($stats, $this->helper->getStorage()->statistics());
+        $stats = array_merge(
+            $stats,
+            array_map('dformat', $this->helper->getRunData()),
+            $this->helper->getStorage()->statistics()
+        );
         $this->printTable($stats);
     }
 
@@ -137,14 +141,14 @@ class cli_plugin_aichat extends CLIPlugin
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 echo $tf->format(
-                    [$level * 2, 15, '*'],
+                    [$level * 2, 20, '*'],
                     ['', $key, ''],
                     [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
                 );
                 $this->printTable($value, $level + 1);
             } else {
                 echo $tf->format(
-                    [$level * 2, 15, '*'],
+                    [$level * 2, 20, '*'],
                     ['', $key, $value],
                     [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTGRAY]
                 );
@@ -259,6 +263,10 @@ class cli_plugin_aichat extends CLIPlugin
         $this->helper->getStorage()->runMaintenance();
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
+
+        $data = $this->helper->getRunData();
+        $data['maintenance ran at'] = time();
+        $this->helper->setRunData($data);
     }
 
     /**
@@ -274,6 +282,10 @@ class cli_plugin_aichat extends CLIPlugin
         $this->helper->getEmbeddings()->createNewIndex($skipRE, $matchRE, $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
+
+        $data = $this->helper->getRunData();
+        $data['embed ran at'] = time();
+        $this->helper->setRunData($data);
     }
 
     /**

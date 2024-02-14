@@ -30,12 +30,17 @@ class helper_plugin_aichat extends Plugin
     /** @var AbstractStorage */
     protected $storage;
 
+    /** @var array where to store meta data on the last run */
+    protected $runDataFile;
+
     /**
      * Constructor. Initializes vendor autoloader
      */
     public function __construct()
     {
-        require_once __DIR__ . '/vendor/autoload.php';
+        require_once __DIR__ . '/vendor/autoload.php'; // FIXME obsolete from Kaos onwards
+        global $conf;
+        $this->runDataFile = $conf['metadir'] . '/aichat__run.json';
     }
 
     /**
@@ -294,5 +299,29 @@ class helper_plugin_aichat extends Plugin
         } else {
             return '';
         }
+    }
+
+    /**
+     * Store info about the last run
+     *
+     * @param array $data
+     * @return void
+     */
+    public function setRunData(array $data)
+    {
+        file_put_contents($this->runDataFile, json_encode($data, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Get info about the last run
+     *
+     * @return array
+     */
+    public function getRunData()
+    {
+        if (!file_exists($this->runDataFile)) {
+            return [];
+        }
+        return json_decode(file_get_contents($this->runDataFile), true);
     }
 }
