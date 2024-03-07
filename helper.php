@@ -179,7 +179,7 @@ class helper_plugin_aichat extends Plugin
                 'language' => $this->getLanguagePrompt()
             ]);
         } else {
-            $prompt = $this->getPrompt('noanswer');
+            $prompt = $this->getPrompt('noanswer') . ' ' . $this->getLanguagePrompt();
         }
 
         $messages = [
@@ -273,16 +273,19 @@ class helper_plugin_aichat extends Plugin
     protected function getLanguagePrompt()
     {
         global $conf;
+        $isoLangnames = include(__DIR__ . '/lang/languages.php');
+
+        $currentLang = $isoLangnames[$conf['lang']] ?? 'English';
 
         if ($this->getConf('preferUIlanguage') > AIChat::LANG_AUTO_ALL) {
-            $isoLangnames = include(__DIR__ . '/lang/languages.php');
             if (isset($isoLangnames[$conf['lang']])) {
                 $languagePrompt = 'Always answer in ' . $isoLangnames[$conf['lang']] . '.';
                 return $languagePrompt;
             }
         }
 
-        $languagePrompt = 'Always answer in the user\'s language.';
+        $languagePrompt = 'Always answer in the user\'s language.' .
+            "If you are unsure about the language, speak $currentLang.";
         return $languagePrompt;
     }
 
