@@ -62,12 +62,16 @@ class syntax_plugin_aichat_chat extends SyntaxPlugin
             'hello' => trim((string) $data['body']),
             'placeholder' => $this->getLang('placeholder'),
             'url' => DOKU_BASE . 'lib/exe/ajax.php?call=aichat',
+            'title-send' => $this->getLang('send-button'),
+            'title-restart' => $this->getLang('restart-button'),
         ];
         $html = '<aichat-chat ' . buildAttributes($opts) . '></aichat-chat>';
 
         if (in_array('button', $data['params'])) {
             $opts = [
                 'label' => $this->getLang('title'),
+                'title-close' => $this->getLang('close-button'),
+                'title-fullscreen' => $this->getLang('fullscreen-button'),
             ];
             if (in_array('float', $data['params'])) $opts['class'] = 'float';
 

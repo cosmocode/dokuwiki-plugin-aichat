@@ -7,3 +7,8 @@
 
 $lang['title'] = 'KI Chat';
 $lang['placeholder'] = 'Ihre Frage…';
+$lang['restricted'] = 'Entschuldigung, der KI-Chat wurde für Sie nicht aktiviert.';
+$lang['send-button'] = 'Frage senden [Enter]';
+$lang['restart-button'] = 'Gespräch neu starten';
+$lang['close-button'] = 'Schließen';
+$lang['fullscreen-button'] = 'Vollbild umschalten';
