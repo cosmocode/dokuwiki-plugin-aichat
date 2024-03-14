@@ -9,9 +9,33 @@ namespace dokuwiki\plugin\aichat\Model\OpenAI;
  */
 class GPT35Turbo16K extends GPT35Turbo
 {
-    protected static $setup = [
-        'embedding' => ['text-embedding-ada-002', 3000],
-        'rephrase' => ['gpt-3.5-turbo', 3500],
-        'chat' => ['gpt-3.5-turbo-16k', 6000],
-    ];
+    /** @inheritdoc */
+    public function getModelName()
+    {
+        return 'gpt-3.5-turbo-16k';
+    }
+
+    /** @inheritdoc */
+    public function get1kTokenPrice()
+    {
+        return 0.003;
+    }
+
+    /** @inheritdoc */
+    public function getMaxContextTokenLength()
+    {
+        return 6000;
+    }
+
+    /** @inheritdoc */
+    public function getMaxRephrasingTokenLength()
+    {
+        return 3500;
+    }
+
+    /** @inheritdoc */
+    public function getMaxEmbeddingTokenLength()
+    {
+        return 3000;
+    }
 }

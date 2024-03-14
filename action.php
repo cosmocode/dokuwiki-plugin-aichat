@@ -78,7 +78,7 @@ class action_plugin_aichat extends ActionPlugin
                         'sources' => $sources,
                         'ip' => $INPUT->server->str('REMOTE_ADDR'),
                         'user' => $INPUT->server->str('REMOTE_USER'),
-                        'stats' => $helper->getModel()->getUsageStats()
+                        'stats' => $helper->getChatModel()->getUsageStats()
                     ]
                 );
             }

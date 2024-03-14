@@ -214,7 +214,7 @@ class cli_plugin_aichat extends CLIPlugin
     {
         $history = [];
         while ($q = $this->readLine('Your Question')) {
-            $this->helper->getModel()->resetUsageStats();
+            $this->helper->getChatModel()->resetUsageStats();
             $result = $this->helper->askChatQuestion($q, $history);
             $this->colors->ptln("Interpretation: {$result['question']}", Colors::C_LIGHTPURPLE);
             $history[] = [$result['question'], $result['answer']];
@@ -342,7 +342,7 @@ class cli_plugin_aichat extends CLIPlugin
     {
         $this->info(
             'Made {requests} requests in {time}s to Model. Used {tokens} tokens for about ${cost}.',
-            $this->helper->getModel()->getUsageStats()
+            $this->helper->getChatModel()->getUsageStats()
         );
     }
 

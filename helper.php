@@ -5,8 +5,9 @@ use dokuwiki\Extension\Plugin;
 use dokuwiki\plugin\aichat\AIChat;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
-use dokuwiki\plugin\aichat\Model\AbstractModel;
-use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
+use dokuwiki\plugin\aichat\Model\AbstractChatModel;
+use dokuwiki\plugin\aichat\Model\AbstractEmbeddingModel;
+use dokuwiki\plugin\aichat\Model\OpenAI\EmbeddingAda02;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\ChromaStorage;
 use dokuwiki\plugin\aichat\Storage\PineconeStorage;
@@ -23,8 +24,10 @@ class helper_plugin_aichat extends Plugin
 {
     /** @var CLIPlugin $logger */
     protected $logger;
-    /** @var AbstractModel */
-    protected $model;
+    /** @var AbstractChatModel */
+    protected $chatModel;
+    /** @var AbstractEmbeddingModel */
+    protected $embedModel;
     /** @var Embeddings */
     protected $embeddings;
     /** @var AbstractStorage */
@@ -73,27 +76,51 @@ class helper_plugin_aichat extends Plugin
     }
 
     /**
-     * Access the OpenAI client
+     * Access the Chat Model
      *
-     * @return GPT35Turbo
+     * @return AbstractChatModel
      */
-    public function getModel()
+    public function getChatModel()
     {
-        if (!$this->model instanceof AbstractModel) {
-            $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
-
-            if (!class_exists($class)) {
-                throw new \RuntimeException('Configured model not found: ' . $class);
-            }
-            // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
-            $this->model = new $class([
-                'key' => $this->getConf('openaikey'),
-                'org' => $this->getConf('openaiorg')
-            ]);
+        if ($this->chatModel instanceof AbstractChatModel) {
+            return $this->chatModel;
         }
 
-        return $this->model;
+        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
+
+        if (!class_exists($class)) {
+            throw new \RuntimeException('Configured model not found: ' . $class);
+        }
+        // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
+        $this->chatModel = new $class([
+            'key' => $this->getConf('openaikey'),
+            'org' => $this->getConf('openaiorg')
+        ]);
+
+        return $this->chatModel;
     }
+
+    /**
+     * Access the Embedding Model
+     *
+     * @return AbstractEmbeddingModel
+     */
+    public function getEmbedModel()
+    {
+        // FIXME this is hardcoded to OpenAI for now
+        if ($this->embedModel instanceof AbstractEmbeddingModel) {
+            return $this->embedModel;
+        }
+
+
+        $this->embedModel = new EmbeddingAda02([
+            'key' => $this->getConf('openaikey'),
+            'org' => $this->getConf('openaiorg')
+        ]);
+
+        return $this->embedModel;
+    }
+
 
     /**
      * Access the Embeddings interface
@@ -102,11 +129,13 @@ class helper_plugin_aichat extends Plugin
      */
     public function getEmbeddings()
     {
-        if (!$this->embeddings instanceof Embeddings) {
-            $this->embeddings = new Embeddings($this->getModel(), $this->getStorage());
-            if ($this->logger) {
-                $this->embeddings->setLogger($this->logger);
-            }
+        if ($this->embeddings instanceof Embeddings) {
+            return $this->embeddings;
+        }
+
+        $this->embeddings = new Embeddings($this->getChatModel(), $this->getEmbedModel(), $this->getStorage());
+        if ($this->logger) {
+            $this->embeddings->setLogger($this->logger);
         }
 
         return $this->embeddings;
@@ -119,20 +148,22 @@ class helper_plugin_aichat extends Plugin
      */
     public function getStorage()
     {
-        if (!$this->storage instanceof AbstractStorage) {
-            if ($this->getConf('pinecone_apikey')) {
-                $this->storage = new PineconeStorage();
-            } elseif ($this->getConf('chroma_baseurl')) {
-                $this->storage = new ChromaStorage();
-            } elseif ($this->getConf('qdrant_baseurl')) {
-                $this->storage = new QdrantStorage();
-            } else {
-                $this->storage = new SQLiteStorage();
-            }
+        if ($this->storage instanceof AbstractStorage) {
+            return $this->storage;
+        }
 
-            if ($this->logger) {
-                $this->storage->setLogger($this->logger);
-            }
+        if ($this->getConf('pinecone_apikey')) {
+            $this->storage = new PineconeStorage();
+        } elseif ($this->getConf('chroma_baseurl')) {
+            $this->storage = new ChromaStorage();
+        } elseif ($this->getConf('qdrant_baseurl')) {
+            $this->storage = new QdrantStorage();
+        } else {
+            $this->storage = new SQLiteStorage();
+        }
+
+        if ($this->logger) {
+            $this->storage->setLogger($this->logger);
         }
 
         return $this->storage;
@@ -204,7 +235,7 @@ class helper_plugin_aichat extends Plugin
             ]);
         }
 
-        $answer = $this->getModel()->getAnswer($messages);
+        $answer = $this->getChatModel()->getAnswer($messages);
 
         return [
             'question' => $question,
@@ -229,7 +260,7 @@ class helper_plugin_aichat extends Plugin
         foreach ($history as $row) {
             if (
                 count($this->getEmbeddings()->getTokenEncoder()->encode($chatHistory)) >
-                $this->getModel()->getMaxRephrasingTokenLength()
+                $this->getChatModel()->getMaxRephrasingTokenLength()
             ) {
                 break;
             }
@@ -243,7 +274,7 @@ class helper_plugin_aichat extends Plugin
         // ask openAI to rephrase the question
         $prompt = $this->getPrompt('rephrase', ['history' => $chatHistory, 'question' => $question]);
         $messages = [['role' => 'user', 'content' => $prompt]];
-        return $this->getModel()->getRephrasedQuestion($messages);
+        return $this->getChatModel()->getRephrasedQuestion($messages);
     }
 
     /**

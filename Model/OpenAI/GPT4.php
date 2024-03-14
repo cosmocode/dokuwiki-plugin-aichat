@@ -9,9 +9,33 @@ namespace dokuwiki\plugin\aichat\Model\OpenAI;
  */
 class GPT4 extends GPT35Turbo
 {
-    protected static $setup = [
-        'embedding' => ['text-embedding-ada-002', 2000],
-        'rephrase' => ['gpt-4', 3500],
-        'chat' => ['gpt-4', 3000],
-    ];
+    /** @inheritdoc */
+    public function getModelName()
+    {
+        return 'gpt-4';
+    }
+
+    /** @inheritdoc */
+    public function get1kTokenPrice()
+    {
+        return 0.03;
+    }
+
+    /** @inheritdoc */
+    public function getMaxContextTokenLength()
+    {
+        return 3000;
+    }
+
+    /** @inheritdoc */
+    public function getMaxRephrasingTokenLength()
+    {
+        return 3500;
+    }
+
+    /** @inheritdoc */
+    public function getMaxEmbeddingTokenLength()
+    {
+        return 2000;
+    }
 }

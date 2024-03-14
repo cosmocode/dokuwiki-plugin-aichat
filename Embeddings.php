@@ -3,7 +3,8 @@
 namespace dokuwiki\plugin\aichat;
 
 use dokuwiki\Extension\PluginInterface;
-use dokuwiki\plugin\aichat\Model\AbstractModel;
+use dokuwiki\plugin\aichat\Model\AbstractChatModel;
+use dokuwiki\plugin\aichat\Model\AbstractEmbeddingModel;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\CLI;
@@ -21,8 +22,12 @@ class Embeddings
     /** @var int maximum overlap between chunks in tokens */
     final public const MAX_OVERLAP_LEN = 200;
 
-    /** @var AbstractModel */
-    protected $model;
+    /** @var AbstractChatModel */
+    protected $chatModel;
+
+    /** @var AbstractEmbeddingModel */
+    protected $embedModel;
+
     /** @var CLI|null */
     protected $logger;
     /** @var Encoder */
@@ -34,9 +39,13 @@ class Embeddings
     /** @var array remember sentences when chunking */
     private $sentenceQueue = [];
 
-    public function __construct(AbstractModel $model, AbstractStorage $storage)
-    {
-        $this->model = $model;
+    public function __construct(
+        AbstractChatModel $chatModel,
+        AbstractEmbeddingModel $embedModel,
+        AbstractStorage $storage
+    ) {
+        $this->chatModel = $chatModel;
+        $this->embedModel = $embedModel;
         $this->storage = $storage;
     }
 
@@ -71,6 +80,19 @@ class Embeddings
             $this->tokenEncoder = new Encoder();
         }
         return $this->tokenEncoder;
+    }
+
+    /**
+     * Return the chunk size to use
+     *
+     * @return int
+     */
+    public function getChunkSize()
+    {
+        return min(
+            $this->chatModel->getMaxEmbeddingTokenLength(),
+            $this->embedModel->getMaxEmbeddingTokenLength()
+        );
     }
 
     /**
@@ -146,7 +168,7 @@ class Embeddings
             if (trim((string) $part) == '') continue; // skip empty chunks
 
             try {
-                $embedding = $this->model->getEmbedding($part);
+                $embedding = $this->embedModel->getEmbedding($part);
             } catch (\Exception $e) {
                 if ($this->logger instanceof CLI) {
                     $this->logger->error(
@@ -186,10 +208,10 @@ class Embeddings
     public function getSimilarChunks($query, $lang = '')
     {
         global $auth;
-        $vector = $this->model->getEmbedding($query);
+        $vector = $this->embedModel->getEmbedding($query);
 
         $fetch = ceil(
-            ($this->model->getMaxContextTokenLength() / $this->model->getMaxEmbeddingTokenLength())
+            ($this->getChunkSize() / $this->chatModel->getMaxEmbeddingTokenLength())
             * 1.5 // fetch a few more than needed, since not all chunks are maximum length
         );
 
@@ -209,7 +231,7 @@ class Embeddings
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
 
             $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-            if ($size + $chunkSize > $this->model->getMaxContextTokenLength()) break; // we have enough
+            if ($size + $chunkSize > $this->chatModel->getMaxContextTokenLength()) break; // we have enough
 
             $result[] = $chunk;
             $size += $chunkSize;
@@ -236,7 +258,7 @@ class Embeddings
         $chunk = '';
         while ($sentence = array_shift($sentences)) {
             $slen = count($tiktok->encode($sentence));
-            if ($slen > $this->model->getMaxEmbeddingTokenLength()) {
+            if ($slen > $this->getChunkSize()) {
                 // sentence is too long, we need to split it further
                 if ($this->logger instanceof CLI) $this->logger->warning(
                     'Sentence too long, splitting not implemented yet'
@@ -244,7 +266,7 @@ class Embeddings
                 continue;
             }
 
-            if ($chunklen + $slen < $this->model->getMaxEmbeddingTokenLength()) {
+            if ($chunklen + $slen < $this->getChunkSize()) {
                 // add to current chunk
                 $chunk .= $sentence;
                 $chunklen += $slen;
