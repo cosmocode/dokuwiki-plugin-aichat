@@ -128,7 +128,7 @@ class PineconeStorage extends AbstractStorage
             $this->runQuery('/vectors/delete', ['ids' => $ids]);
         } catch (\Exception $e) {
             // 5 is the code for "namespace not found" See #12
-            if($e->getCode() !== 5) throw $e;
+            if ($e->getCode() !== 5) throw $e;
         }
     }
 
