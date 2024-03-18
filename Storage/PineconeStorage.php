@@ -57,13 +57,14 @@ class PineconeStorage extends AbstractStorage
             throw new \Exception('Pinecone API returned no response. ' . $this->http->error);
         }
 
-        $result = json_decode((string) $response, true, 512, JSON_THROW_ON_ERROR);
-        if ($result === null) {
-            throw new \Exception('Pinecone API returned invalid JSON. ' . $response);
+        try {
+            $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \Exception('Pinecone API returned invalid JSON. ' . $response, 0, $e);
         }
 
         if (isset($result['message'])) {
-            throw new \Exception('Pinecone API returned error. ' . $result['message']);
+            throw new \Exception('Pinecone API returned error. ' . $result['message'], $result['code'] ?? 0);
         }
 
         return $result;
@@ -123,7 +124,12 @@ class PineconeStorage extends AbstractStorage
         // delete all possible chunk IDs
         $ids = range($firstChunkID, $firstChunkID + 99, 1);
         $ids = array_map(static fn($id) => (string)$id, $ids);
-        $this->runQuery('/vectors/delete', ['ids' => $ids]);
+        try {
+            $this->runQuery('/vectors/delete', ['ids' => $ids]);
+        } catch (\Exception $e) {
+            // 5 is the code for "namespace not found" See #12
+            if($e->getCode() !== 5) throw $e;
+        }
     }
 
     /** @inheritdoc */
@@ -195,22 +201,18 @@ class PineconeStorage extends AbstractStorage
     {
         $limit *= 2; // we can't check ACLs, so we return more than requested
 
+        $query = [
+            'vector' => $vector,
+            'topK' => (int)$limit,
+            'includeMetadata' => true,
+            'includeValues' => true,
+        ];
+
         if ($lang) {
-            $filter = ['language' => ['$eq', $lang]];
-        } else {
-            $filter = [];
+            $query['filter'] = ['language' => ['$eq', $lang]];
         }
 
-        $response = $this->runQuery(
-            '/query',
-            [
-                'vector' => $vector,
-                'topK' => (int)$limit,
-                'include_metadata' => true,
-                'include_values' => true,
-                'filter' => $filter,
-            ]
-        );
+        $response = $this->runQuery('/query', $query);
         $chunks = [];
         foreach ($response['matches'] as $vector) {
             $chunks[] = new Chunk(
