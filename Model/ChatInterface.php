@@ -2,7 +2,10 @@
 
 namespace dokuwiki\plugin\aichat\Model;
 
-abstract class AbstractChatModel extends AbstractModel
+/**
+ * Defines a chat completion model
+ */
+interface ChatInterface
 {
     /**
      * Maximum number of tokens to use when creating context info. Should be smaller than the absolute
@@ -10,7 +13,7 @@ abstract class AbstractChatModel extends AbstractModel
      *
      * @return int
      */
-    abstract public function getMaxContextTokenLength();
+    public function getMaxContextTokenLength();
 
     /**
      * Maximum number of tokens to use as context when rephrasing a question. Should be smaller than the
@@ -18,10 +21,7 @@ abstract class AbstractChatModel extends AbstractModel
      *
      * @return int
      */
-    public function getMaxRephrasingTokenLength()
-    {
-        return $this->getMaxContextTokenLength();
-    }
+    public function getMaxRephrasingTokenLength();
 
     /**
      * Maximum size of chunks to be created for this model
@@ -30,7 +30,7 @@ abstract class AbstractChatModel extends AbstractModel
      *
      * @return int
      */
-    abstract public function getMaxEmbeddingTokenLength();
+    public function getMaxEmbeddingTokenLength();
 
     /**
      * Answer a given question.
@@ -41,20 +41,5 @@ abstract class AbstractChatModel extends AbstractModel
      * @return string The answer
      * @throws \Exception
      */
-    abstract public function getAnswer($messages);
-
-    /**
-     * This is called to let the LLM rephrase a question using given context
-     *
-     * Any prompt, chat history, context etc. will already be included in the $messages array.
-     * This calls getAnswer() by default, but you may want to use a different model instead.
-     *
-     * @param array $messages Messages in OpenAI format (with role and content)
-     * @return string The new question
-     * @throws \Exception
-     */
-    public function getRephrasedQuestion($messages)
-    {
-        return $this->getAnswer($messages);
-    }
+    public function getAnswer($messages);
 }

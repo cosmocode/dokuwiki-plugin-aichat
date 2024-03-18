@@ -5,8 +5,8 @@ use dokuwiki\Extension\Plugin;
 use dokuwiki\plugin\aichat\AIChat;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
-use dokuwiki\plugin\aichat\Model\AbstractChatModel;
-use dokuwiki\plugin\aichat\Model\AbstractEmbeddingModel;
+use dokuwiki\plugin\aichat\Model\ChatInterface;
+use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 use dokuwiki\plugin\aichat\Model\OpenAI\EmbeddingAda02;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\ChromaStorage;
@@ -24,9 +24,9 @@ class helper_plugin_aichat extends Plugin
 {
     /** @var CLIPlugin $logger */
     protected $logger;
-    /** @var AbstractChatModel */
+    /** @var ChatInterface */
     protected $chatModel;
-    /** @var AbstractEmbeddingModel */
+    /** @var EmbeddingInterface */
     protected $embedModel;
     /** @var Embeddings */
     protected $embeddings;
@@ -78,11 +78,11 @@ class helper_plugin_aichat extends Plugin
     /**
      * Access the Chat Model
      *
-     * @return AbstractChatModel
+     * @return ChatInterface
      */
     public function getChatModel()
     {
-        if ($this->chatModel instanceof AbstractChatModel) {
+        if ($this->chatModel instanceof ChatInterface) {
             return $this->chatModel;
         }
 
@@ -103,12 +103,12 @@ class helper_plugin_aichat extends Plugin
     /**
      * Access the Embedding Model
      *
-     * @return AbstractEmbeddingModel
+     * @return EmbeddingInterface
      */
     public function getEmbedModel()
     {
         // FIXME this is hardcoded to OpenAI for now
-        if ($this->embedModel instanceof AbstractEmbeddingModel) {
+        if ($this->embedModel instanceof EmbeddingInterface) {
             return $this->embedModel;
         }
 
@@ -274,7 +274,7 @@ class helper_plugin_aichat extends Plugin
         // ask openAI to rephrase the question
         $prompt = $this->getPrompt('rephrase', ['history' => $chatHistory, 'question' => $question]);
         $messages = [['role' => 'user', 'content' => $prompt]];
-        return $this->getChatModel()->getRephrasedQuestion($messages);
+        return $this->getChatModel()->getAnswer($messages);
     }
 
     /**

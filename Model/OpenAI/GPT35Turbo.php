@@ -2,26 +2,17 @@
 
 namespace dokuwiki\plugin\aichat\Model\OpenAI;
 
-use dokuwiki\plugin\aichat\Model\AbstractChatModel;
+use dokuwiki\plugin\aichat\Model\ChatInterface;
 
 /**
  * Basic OpenAI Client using the standard GPT-3.5-turbo model
  *
  * Additional OpenAI models just overwrite the $setup array
  */
-class GPT35Turbo extends AbstractChatModel
+class GPT35Turbo extends AbstractOpenAIModel implements ChatInterface
 {
-    /** @var Client */
+    /** @var AbstractOpenAIModel */
     protected $client;
-
-    /** @inheritdoc */
-    public function __construct($authConfig)
-    {
-        $this->client = new Client(
-            $authConfig['key'] ?? '',
-            $authConfig['org'] ?? ''
-        );
-    }
 
     /** @inheritdoc */
     public function getModelName()
@@ -53,37 +44,8 @@ class GPT35Turbo extends AbstractChatModel
         return 1000;
     }
 
-
     /** @inheritdoc */
     public function getAnswer($messages)
-    {
-        return $this->getChatCompletion($messages);
-    }
-
-    /** @inheritdoc */
-    public function getRephrasedQuestion($messages)
-    {
-        return $this->getChatCompletion($messages);
-    }
-
-    /**
-     * @internal for checking available models
-     */
-    public function listUpstreamModels()
-    {
-        $url = 'https://api.openai.com/v1/models';
-        $result = $this->client->getHTTPClient()->http->get($url);
-        return $result;
-    }
-
-    /**
-     * Send data to the chat endpoint
-     *
-     * @param array $messages Messages in OpenAI format (with role and content)
-     * @return string The answer
-     * @throws \Exception
-     */
-    protected function getChatCompletion($messages)
     {
         $data = [
             'messages' => $messages,
@@ -95,26 +57,5 @@ class GPT35Turbo extends AbstractChatModel
         ];
         $response = $this->request('chat/completions', $data);
         return $response['choices'][0]['message']['content'];
-    }
-
-    /**
-     * Send a request to the OpenAI API and update usage statistics
-     *
-     * @param string $endpoint
-     * @param array $data Payload to send
-     * @return array API response
-     * @throws \Exception
-     */
-    protected function request($endpoint, $data)
-    {
-        $result = $this->client->request($endpoint, $data);
-        $stats = $this->client->getStats();
-
-        $this->tokensUsed += $stats['tokens'];
-        $this->costEstimate += $stats['tokens'] * $this->get1kTokenPrice() * (int)($this->get1kTokenPrice() * 10000);
-        $this->timeUsed += $stats['time'];
-        $this->requestsMade += $stats['requests'];
-
-        return $result;
     }
 }

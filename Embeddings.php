@@ -3,8 +3,8 @@
 namespace dokuwiki\plugin\aichat;
 
 use dokuwiki\Extension\PluginInterface;
-use dokuwiki\plugin\aichat\Model\AbstractChatModel;
-use dokuwiki\plugin\aichat\Model\AbstractEmbeddingModel;
+use dokuwiki\plugin\aichat\Model\ChatInterface;
+use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\CLI;
@@ -22,10 +22,10 @@ class Embeddings
     /** @var int maximum overlap between chunks in tokens */
     final public const MAX_OVERLAP_LEN = 200;
 
-    /** @var AbstractChatModel */
+    /** @var ChatInterface */
     protected $chatModel;
 
-    /** @var AbstractEmbeddingModel */
+    /** @var EmbeddingInterface */
     protected $embedModel;
 
     /** @var CLI|null */
@@ -40,8 +40,8 @@ class Embeddings
     private $sentenceQueue = [];
 
     public function __construct(
-        AbstractChatModel $chatModel,
-        AbstractEmbeddingModel $embedModel,
+        ChatInterface $chatModel,
+        EmbeddingInterface $embedModel,
         AbstractStorage $storage
     ) {
         $this->chatModel = $chatModel;

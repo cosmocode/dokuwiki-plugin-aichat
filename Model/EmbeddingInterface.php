@@ -2,7 +2,10 @@
 
 namespace dokuwiki\plugin\aichat\Model;
 
-abstract class AbstractEmbeddingModel extends AbstractModel
+/**
+ * Defines an embedding model
+ */
+interface EmbeddingInterface
 {
     /**
      * Maximum size of chunks this model could handle
@@ -12,14 +15,14 @@ abstract class AbstractEmbeddingModel extends AbstractModel
      *
      * @return int
      */
-    abstract public function getMaxEmbeddingTokenLength();
+    public function getMaxEmbeddingTokenLength();
 
     /**
      * Get the dimensions of the embedding vectors
      *
      * @return int
      */
-    abstract public function getDimensions();
+    public function getDimensions();
 
     /**
      * Get the embedding vectors for a given text
@@ -28,5 +31,5 @@ abstract class AbstractEmbeddingModel extends AbstractModel
      * @return float[]
      * @throws \Exception
      */
-    abstract public function getEmbedding($text);
+    public function getEmbedding($text);
 }
