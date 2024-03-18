@@ -41,21 +41,6 @@ abstract class AbstractModel
     }
 
     /**
-     * The name as used by the LLM provider
-     *
-     * @return string
-     */
-    abstract public function getModelName();
-
-    /**
-     * Get the price for 1000 tokens
-     *
-     * @return float
-     */
-    abstract public function get1kTokenPrice();
-
-
-    /**
      * This method should check the response for any errors. If the API singalled an error,
      * this method should throw an Exception with a meaningful error message.
      *
@@ -158,7 +143,7 @@ abstract class AbstractModel
     {
         return [
             'tokens' => $this->tokensUsed,
-            'cost' => round($this->tokensUsed * $this->get1kTokenPrice() / 1000, 4), // FIXME handle float precision
+            'cost' => round($this->tokensUsed * $this->get1kTokenPrice() / 1000, 4),
             'time' => round($this->timeUsed, 2),
             'requests' => $this->requestsMade,
         ];

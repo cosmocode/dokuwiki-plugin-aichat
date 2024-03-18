@@ -5,7 +5,7 @@ namespace dokuwiki\plugin\aichat\Model;
 /**
  * Defines an embedding model
  */
-interface EmbeddingInterface
+interface EmbeddingInterface extends ModelInterface
 {
     /**
      * Maximum size of chunks this model could handle

@@ -5,7 +5,7 @@ namespace dokuwiki\plugin\aichat\Model;
 /**
  * Defines a chat completion model
  */
-interface ChatInterface
+interface ChatInterface extends ModelInterface
 {
     /**
      * Maximum number of tokens to use when creating context info. Should be smaller than the absolute
