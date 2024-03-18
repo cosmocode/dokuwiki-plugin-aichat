@@ -16,9 +16,8 @@ abstract class AbstractOpenAIModel extends AbstractModel
     {
         parent::__construct($config);
 
-        $openAIKey = $config['key'] ?? '';
-        $openAIOrg = $config['org'] ?? '';
-
+        $openAIKey = $config['openaikey'] ?? '';
+        $openAIOrg = $config['openaiorg'] ?? '';
 
         $this->http->headers['Authorization'] = 'Bearer ' . $openAIKey;
         if ($openAIOrg) {

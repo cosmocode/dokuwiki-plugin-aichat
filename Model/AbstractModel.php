@@ -33,7 +33,7 @@ abstract class AbstractModel
      *
      * @param array $config The plugin configuration
      */
-    public function __construct()
+    public function __construct(array $config)
     {
         $this->http = new DokuHTTPClient();
         $this->http->timeout = 60;
@@ -143,7 +143,7 @@ abstract class AbstractModel
     {
         return [
             'tokens' => $this->tokensUsed,
-            'cost' => round($this->tokensUsed * $this->get1kTokenPrice() / 1000, 4),
+            'cost' => round($this->tokensUsed * $this->get1MillionTokenPrice() / 1_000_000, 4),
             'time' => round($this->timeUsed, 2),
             'requests' => $this->requestsMade,
         ];

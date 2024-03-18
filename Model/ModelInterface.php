@@ -17,11 +17,11 @@ interface ModelInterface
     public function getModelName();
 
     /**
-     * Get the price for 1000 tokens
+     * Get the price for 1,000,000 tokens
      *
      * @return float
      */
-    public function get1kTokenPrice();
+    public function get1MillionTokenPrice();
 
 
     /**

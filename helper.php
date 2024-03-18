@@ -44,6 +44,7 @@ class helper_plugin_aichat extends Plugin
         require_once __DIR__ . '/vendor/autoload.php'; // FIXME obsolete from Kaos onwards
         global $conf;
         $this->runDataFile = $conf['metadir'] . '/aichat__run.json';
+        $this->loadConfig();
     }
 
     /**
@@ -88,14 +89,14 @@ class helper_plugin_aichat extends Plugin
 
         $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
 
+        //$class = Claude3Haiku::class;
+
         if (!class_exists($class)) {
             throw new \RuntimeException('Configured model not found: ' . $class);
         }
+
         // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
-        $this->chatModel = new $class([
-            'key' => $this->getConf('openaikey'),
-            'org' => $this->getConf('openaiorg')
-        ]);
+        $this->chatModel = new $class($this->conf);
 
         return $this->chatModel;
     }
@@ -112,11 +113,7 @@ class helper_plugin_aichat extends Plugin
             return $this->embedModel;
         }
 
-
-        $this->embedModel = new EmbeddingAda02([
-            'key' => $this->getConf('openaikey'),
-            'org' => $this->getConf('openaiorg')
-        ]);
+        $this->embedModel = new EmbeddingAda02($this->conf);
 
         return $this->embedModel;
     }

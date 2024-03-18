@@ -12,13 +12,14 @@ class GPT35Turbo16K extends GPT35Turbo
     /** @inheritdoc */
     public function getModelName()
     {
-        return 'gpt-3.5-turbo-16k';
+        return 'gpt-3.5-turbo';
     }
 
     /** @inheritdoc */
-    public function get1kTokenPrice()
+    public function get1MillionTokenPrice()
     {
-        return 0.003;
+        // differs between input and output tokens, we use the more expensive one
+        return 1.50;
     }
 
     /** @inheritdoc */

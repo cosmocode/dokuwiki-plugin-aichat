@@ -5,14 +5,10 @@ namespace dokuwiki\plugin\aichat\Model\OpenAI;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 
 /**
- * Basic OpenAI Client using the standard GPT-3.5-turbo model
  *
- * Additional OpenAI models just overwrite the $setup array
  */
 class GPT35Turbo extends AbstractOpenAIModel implements ChatInterface
 {
-    /** @var AbstractOpenAIModel */
-    protected $client;
 
     /** @inheritdoc */
     public function getModelName()
@@ -21,9 +17,10 @@ class GPT35Turbo extends AbstractOpenAIModel implements ChatInterface
     }
 
     /** @inheritdoc */
-    public function get1kTokenPrice()
+    public function get1MillionTokenPrice()
     {
-        return 0.0015;
+        // differs between input and output tokens, we use the more expensive one
+        return 1.50;
     }
 
     /** @inheritdoc */

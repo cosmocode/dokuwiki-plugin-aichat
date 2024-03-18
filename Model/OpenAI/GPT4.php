@@ -16,9 +16,10 @@ class GPT4 extends GPT35Turbo
     }
 
     /** @inheritdoc */
-    public function get1kTokenPrice()
+    public function get1MillionTokenPrice()
     {
-        return 0.03;
+        // differs between input and output tokens, we use the more expensive one
+        return 60.00;
     }
 
     /** @inheritdoc */
