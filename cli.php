@@ -275,7 +275,7 @@ class cli_plugin_aichat extends CLIPlugin
                 [
                     $name,
                     sprintf(" In: %7d\nOut: %7d", $info['inputTokens'], $info['outputTokens']),
-                    sprintf(" In: %.2f\nOut: %.2f", $info['inputTokenPrice'], $info['inputTokenPrice']),
+                    sprintf(" In: %.2f\nOut: %.2f", $info['inputTokenPrice'], $info['outputTokenPrice']),
                     $info['description']."\n"
                 ],
                 [
