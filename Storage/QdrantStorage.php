@@ -20,15 +20,12 @@ class QdrantStorage extends AbstractStorage
     protected $collectionName = '';
 
 
-    /**
-     * QdrantStorage constructor.
-     */
-    public function __construct()
+    /** @inheritdoc */
+    public function __construct(array $config)
     {
-        $helper = plugin_load('helper', 'aichat');
 
-        $this->baseurl = $helper->getConf('qdrant_baseurl');
-        $this->collectionName = $helper->getConf('qdrant_collection');
+        $this->baseurl = $config['qdrant_baseurl'] ?? '';
+        $this->collectionName = $config['qdrant_collection'] ?? '';
 
         $this->http = new DokuHTTPClient();
         $this->http->headers['Content-Type'] = 'application/json';
@@ -36,8 +33,8 @@ class QdrantStorage extends AbstractStorage
         $this->http->keep_alive = false;
         $this->http->timeout = 30;
 
-        if ($helper->getConf('qdrant_apikey')) {
-            $this->http->headers['api-key'] = $helper->getConf('qdrant_apikey');
+        if (!empty($config['qdrant_apikey']) {
+            $this->http->headers['api-key'] = $config['qdrant_apikey'];
         }
     }
 

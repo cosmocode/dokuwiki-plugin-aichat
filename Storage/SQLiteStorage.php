@@ -30,12 +30,8 @@ class SQLiteStorage extends AbstractStorage
 
     protected $useLanguageClusters = false;
 
-    /**
-     * Initializes the database connection and registers our custom function
-     *
-     * @throws \Exception
-     */
-    public function __construct()
+    /** @inheritdoc */
+    public function __construct(array $config)
     {
         $this->db = new SQLiteDB('aichat', DOKU_PLUGIN . 'aichat/db/');
         $this->db->getPdo()->sqliteCreateFunction('COSIM', $this->sqliteCosineSimilarityCallback(...), 2);

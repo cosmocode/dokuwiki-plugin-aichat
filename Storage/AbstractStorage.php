@@ -18,6 +18,11 @@ abstract class AbstractStorage
     protected $logger;
 
     /**
+     * @param array $config The plugin's configuration
+     */
+    abstract public function __construct(array $config);
+
+    /**
      * @param CLIPlugin $logger
      * @return void
      */

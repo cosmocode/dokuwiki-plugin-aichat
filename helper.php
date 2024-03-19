@@ -9,10 +9,6 @@ use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 use dokuwiki\plugin\aichat\Model\OpenAI\Embedding3Small;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
-use dokuwiki\plugin\aichat\Storage\ChromaStorage;
-use dokuwiki\plugin\aichat\Storage\PineconeStorage;
-use dokuwiki\plugin\aichat\Storage\QdrantStorage;
-use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
 /**
  * DokuWiki Plugin aichat (Helper Component)
@@ -156,15 +152,8 @@ class helper_plugin_aichat extends Plugin
             return $this->storage;
         }
 
-        if ($this->getConf('pinecone_apikey')) {
-            $this->storage = new PineconeStorage();
-        } elseif ($this->getConf('chroma_baseurl')) {
-            $this->storage = new ChromaStorage();
-        } elseif ($this->getConf('qdrant_baseurl')) {
-            $this->storage = new QdrantStorage();
-        } else {
-            $this->storage = new SQLiteStorage();
-        }
+        $class = '\\dokuwiki\\plugin\\aichat\\Storage\\' . $this->getConf('storage') . 'Storage';
+        $this->storage = new $class($this->conf);
 
         if ($this->logger) {
             $this->storage->setLogger($this->logger);
