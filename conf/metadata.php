@@ -18,19 +18,9 @@ $meta['model'] = array('multichoice',
 );
 
 
-$meta['chatmodel'] = array('multichoice',
-    '_choices' => array(
-        'OpenAI gpt-3.5-turbo',
-        'OpenAI gpt-4',
-    )
-);
+$meta['chatmodel'] = array(\dokuwiki\plugin\aichat\ModelSetting::class, 'type' => 'chat');
 
-$meta['embedmodel'] = array('multichoice',
-    '_choices' => array(
-        'OpenAI text-embedding-3-small',
-        'OpenAI text-embedding-ada-002',
-    )
-);
+$meta['embedmodel'] = array(\dokuwiki\plugin\aichat\ModelSetting::class, 'type' => 'embedding');
 
 $meta['storage'] = array('multichoice',
     '_choices' => array(
