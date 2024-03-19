@@ -16,33 +16,28 @@ class GPT35Turbo extends AbstractOpenAIModel implements ChatInterface
         return 'gpt-3.5-turbo';
     }
 
-    /** @inheritdoc */
-    public function get1MillionTokenPrice()
+    public function getMaxInputTokenLength(): int
     {
-        // differs between input and output tokens, we use the more expensive one
+        return 16_385;
+    }
+
+    public function getInputTokenPrice(): float
+    {
+        return 0.50;
+    }
+
+    public function getMaxOutputTokenLength(): int
+    {
+        return 4_096;
+    }
+
+    public function getOutputTokenPrice(): float
+    {
         return 1.50;
     }
 
     /** @inheritdoc */
-    public function getMaxContextTokenLength()
-    {
-        return 3500;
-    }
-
-    /** @inheritdoc */
-    public function getMaxRephrasingTokenLength()
-    {
-        return 3500;
-    }
-
-    /** @inheritdoc */
-    public function getMaxEmbeddingTokenLength()
-    {
-        return 1000;
-    }
-
-    /** @inheritdoc */
-    public function getAnswer($messages)
+    public function getAnswer($messages): string
     {
         $data = [
             'messages' => $messages,
@@ -55,4 +50,6 @@ class GPT35Turbo extends AbstractOpenAIModel implements ChatInterface
         $response = $this->request('chat/completions', $data);
         return $response['choices'][0]['message']['content'];
     }
+
+
 }

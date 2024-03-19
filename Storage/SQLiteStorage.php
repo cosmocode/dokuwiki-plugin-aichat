@@ -18,7 +18,7 @@ use KMeans\Space;
 class SQLiteStorage extends AbstractStorage
 {
     /** @var float minimum similarity to consider a chunk a match */
-    final public const SIMILARITY_THRESHOLD = 0.75;
+    final public const SIMILARITY_THRESHOLD = 0;
 
     /** @var int Number of documents to randomly sample to create the clusters */
     final public const SAMPLE_SIZE = 2000;

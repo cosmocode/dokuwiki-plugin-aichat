@@ -212,6 +212,10 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function chat()
     {
+        if($this->loglevel['debug']['enabled']) {
+            $this->helper->getChatModel()->setDebug(true);
+        }
+
         $history = [];
         while ($q = $this->readLine('Your Question')) {
             $this->helper->getChatModel()->resetUsageStats();
@@ -231,6 +235,10 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function ask($query)
     {
+        if($this->loglevel['debug']['enabled']) {
+            $this->helper->getChatModel()->setDebug(true);
+        }
+
         $result = $this->helper->askQuestion($query);
         $this->printAnswer($result);
     }

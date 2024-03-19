@@ -12,26 +12,24 @@ class EmbeddingAda02 extends AbstractOpenAIModel implements EmbeddingInterface
         return 'text-embedding-ada-002';
     }
 
-    /** @inheritdoc */
-    public function get1MillionTokenPrice()
+    public function getMaxInputTokenLength(): int
+    {
+        return 8192;
+    }
+
+    public function getInputTokenPrice(): float
     {
         return 0.10;
     }
 
     /** @inheritdoc */
-    public function getMaxEmbeddingTokenLength()
-    {
-        return 8000; // really 8191
-    }
-
-    /** @inheritdoc */
-    public function getDimensions()
+    public function getDimensions(): int
     {
         return 1536;
     }
 
     /** @inheritdoc */
-    public function getEmbedding($text)
+    public function getEmbedding($text): array
     {
         $data = [
             'model' => $this->getModelName(),
@@ -41,4 +39,6 @@ class EmbeddingAda02 extends AbstractOpenAIModel implements EmbeddingInterface
 
         return $response['data'][0]['embedding'];
     }
+
+
 }

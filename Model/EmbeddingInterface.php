@@ -8,21 +8,9 @@ namespace dokuwiki\plugin\aichat\Model;
 interface EmbeddingInterface extends ModelInterface
 {
     /**
-     * Maximum size of chunks this model could handle
-     *
-     * Generally the maximum is defined by the same method in the ChatModel because chunks
-     * need to fit into the chat request.
-     *
-     * @return int
-     */
-    public function getMaxEmbeddingTokenLength();
-
-    /**
      * Get the dimensions of the embedding vectors
-     *
-     * @return int
      */
-    public function getDimensions();
+    public function getDimensions(): int;
 
     /**
      * Get the embedding vectors for a given text
@@ -31,5 +19,5 @@ interface EmbeddingInterface extends ModelInterface
      * @return float[]
      * @throws \Exception
      */
-    public function getEmbedding($text);
+    public function getEmbedding($text): array;
 }

@@ -39,14 +39,29 @@ class Embeddings
     /** @var array remember sentences when chunking */
     private $sentenceQueue = [];
 
+    protected $configChunkSize;
+    protected $configContextChunks;
+
+    /**
+     * Embeddings constructor.
+     *
+     * @param ChatInterface $chatModel
+     * @param EmbeddingInterface $embedModel
+     * @param AbstractStorage $storage
+     * @param array $config The plugin configuration
+     */
     public function __construct(
-        ChatInterface $chatModel,
+        ChatInterface      $chatModel,
         EmbeddingInterface $embedModel,
-        AbstractStorage $storage
-    ) {
+        AbstractStorage    $storage,
+                           $config
+    )
+    {
         $this->chatModel = $chatModel;
         $this->embedModel = $embedModel;
         $this->storage = $storage;
+        $this->configChunkSize = $config['chunkSize'];
+        $this->configContextChunks = $config['contextChunks'];
     }
 
     /**
@@ -90,8 +105,9 @@ class Embeddings
     public function getChunkSize()
     {
         return min(
-            $this->chatModel->getMaxEmbeddingTokenLength(),
-            $this->embedModel->getMaxEmbeddingTokenLength()
+            floor($this->chatModel->getMaxInputTokenLength() / 4), // be able to fit 4 chunks into the max input
+            floor($this->embedModel->getMaxInputTokenLength() * 0.9), // only use 90% of the embedding model to be safe
+            $this->configChunkSize, // this is usually the smallest
         );
     }
 
@@ -117,7 +133,7 @@ class Embeddings
                 !page_exists($page) ||
                 isHiddenPage($page) ||
                 filesize(wikiFN($page)) < 150 || // skip very small pages
-                ($skipRE && preg_match($skipRE, (string) $page)) ||
+                ($skipRE && preg_match($skipRE, (string)$page)) ||
                 ($matchRE && !preg_match($matchRE, ":$page"))
             ) {
                 // this page should not be in the index (anymore)
@@ -165,7 +181,7 @@ class Embeddings
 
         $parts = $this->splitIntoChunks($text);
         foreach ($parts as $part) {
-            if (trim((string) $part) == '') continue; // skip empty chunks
+            if (trim((string)$part) == '') continue; // skip empty chunks
 
             try {
                 $embedding = $this->embedModel->getEmbedding($part);
@@ -210,8 +226,11 @@ class Embeddings
         global $auth;
         $vector = $this->embedModel->getEmbedding($query);
 
-        $fetch = ceil(
-            ($this->getChunkSize() / $this->chatModel->getMaxEmbeddingTokenLength())
+        $fetch = (int) ceil(
+            min(
+                ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize() ),
+                $this->configContextChunks
+            )
             * 1.5 // fetch a few more than needed, since not all chunks are maximum length
         );
 
@@ -231,7 +250,7 @@ class Embeddings
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
 
             $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-            if ($size + $chunkSize > $this->chatModel->getMaxContextTokenLength()) break; // we have enough
+            if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
 
             $result[] = $chunk;
             $size += $chunkSize;

@@ -13,8 +13,14 @@ use dokuwiki\HTTP\DokuHTTPClient;
  */
 abstract class AbstractModel
 {
-    /** @var int total tokens used by this instance */
+    /** @var bool debug API communication */
+    protected $debug = false;
+
+
+    protected $inputTokensUsed = 0;
+    protected $outputTokensUsed = 0;
     protected $tokensUsed = 0;
+
     /** @var int total time spent in requests by this instance */
     protected $timeUsed = 0;
     /** @var int total number of requests made by this instance */
@@ -38,6 +44,16 @@ abstract class AbstractModel
         $this->http = new DokuHTTPClient();
         $this->http->timeout = 60;
         $this->http->headers['Content-Type'] = 'application/json';
+    }
+
+    /**
+     * When enabled, the input/output of the API will be printed to STDOUT
+     *
+     * @param bool $debug
+     */
+    public function setDebug($debug = true)
+    {
+        $this->debug = $debug;
     }
 
     /**
@@ -82,10 +98,15 @@ abstract class AbstractModel
 
         // encode payload data
         try {
-            $json = json_encode($data, JSON_THROW_ON_ERROR);
+            $json = json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
         } catch (\JsonException $e) {
             $this->timeUsed += $this->requestStart - microtime(true);
             throw new \Exception('Failed to encode JSON for API:' . $e->getMessage(), $e->getCode(), $e);
+        }
+
+        if ($this->debug) {
+            echo 'Sending ' . $method . ' request to ' . $url . ' with payload:' . "\n";
+            print_r($json);
         }
 
         // send request and handle retries
@@ -97,6 +118,11 @@ abstract class AbstractModel
             }
             $this->timeUsed += microtime(true) - $this->requestStart;
             throw new \Exception('API returned no response. ' . $this->http->error);
+        }
+
+        if ($this->debug) {
+            echo 'Received response:' . "\n";
+            print_r($response);
         }
 
         // decode the response
@@ -141,9 +167,16 @@ abstract class AbstractModel
      */
     public function getUsageStats()
     {
+
+        $cost = 0;
+        $cost += $this->inputTokensUsed * $this->getInputTokenPrice();
+        if ($this instanceof ChatInterface) {
+            $cost += $this->outputTokensUsed * $this->getOutputTokenPrice();
+        }
+
         return [
-            'tokens' => $this->tokensUsed,
-            'cost' => round($this->tokensUsed * $this->get1MillionTokenPrice() / 1_000_000, 4),
+            'tokens' => $this->tokensUsed + $this->inputTokensUsed + $this->outputTokensUsed,
+            'cost' => round($cost / 1_000_000, 4),
             'time' => round($this->timeUsed, 2),
             'requests' => $this->requestsMade,
         ];

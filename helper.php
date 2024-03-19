@@ -7,6 +7,7 @@ use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
+use dokuwiki\plugin\aichat\Model\OpenAI\Embedding3Small;
 use dokuwiki\plugin\aichat\Model\OpenAI\EmbeddingAda02;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\ChromaStorage;
@@ -113,6 +114,7 @@ class helper_plugin_aichat extends Plugin
             return $this->embedModel;
         }
 
+        //$this->embedModel = new Embedding3Small($this->conf);
         $this->embedModel = new EmbeddingAda02($this->conf);
 
         return $this->embedModel;
@@ -130,7 +132,12 @@ class helper_plugin_aichat extends Plugin
             return $this->embeddings;
         }
 
-        $this->embeddings = new Embeddings($this->getChatModel(), $this->getEmbedModel(), $this->getStorage());
+        $this->embeddings = new Embeddings(
+            $this->getChatModel(),
+            $this->getEmbedModel(),
+            $this->getStorage(),
+            $this->conf
+        );
         if ($this->logger) {
             $this->embeddings->setLogger($this->logger);
         }
@@ -178,23 +185,21 @@ class helper_plugin_aichat extends Plugin
     {
         if ($history) {
             $standaloneQuestion = $this->rephraseChatQuestion($question, $history);
-            $prev = end($history);
         } else {
             $standaloneQuestion = $question;
-            $prev = [];
         }
-        return $this->askQuestion($standaloneQuestion, $prev);
+        return $this->askQuestion($standaloneQuestion, $history);
     }
 
     /**
      * Ask a single standalone question
      *
      * @param string $question
-     * @param array $previous [user, ai] of the previous question
+     * @param array $history [user, ai] of the previous question
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askQuestion($question, $previous = [])
+    public function askQuestion($question, $history = [])
     {
         $similar = $this->getEmbeddings()->getSimilarChunks($question, $this->getLanguageLimit());
         if ($similar) {
@@ -204,34 +209,13 @@ class helper_plugin_aichat extends Plugin
             );
             $prompt = $this->getPrompt('question', [
                 'context' => $context,
-                'language' => $this->getLanguagePrompt()
             ]);
         } else {
-            $prompt = $this->getPrompt('noanswer') . ' ' . $this->getLanguagePrompt();
+            $prompt = $this->getPrompt('noanswer');
+            $history = [];
         }
 
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => $prompt
-            ],
-            [
-                'role' => 'user',
-                'content' => $question
-            ]
-        ];
-
-        if ($previous) {
-            array_unshift($messages, [
-                'role' => 'assistant',
-                'content' => $previous[1]
-            ]);
-            array_unshift($messages, [
-                'role' => 'user',
-                'content' => $previous[0]
-            ]);
-        }
-
+        $messages = $this->prepareMessages($prompt, $question, $history);
         $answer = $this->getChatModel()->getAnswer($messages);
 
         return [
@@ -251,27 +235,84 @@ class helper_plugin_aichat extends Plugin
      */
     public function rephraseChatQuestion($question, $history)
     {
-        // go back in history as far as possible without hitting the token limit
-        $chatHistory = '';
+        $prompt = $this->getPrompt('rephrase');
+        $messages = $this->prepareMessages($prompt, $question, $history);
+        return $this->getChatModel()->getAnswer($messages);
+    }
+
+    /**
+     * Prepare the messages for the AI
+     *
+     * @param string $prompt The fully prepared system prompt
+     * @param string $question The user question
+     * @param array[] $history The chat history [[user, ai], [user, ai], ...]
+     * @return array An OpenAI compatible array of messages
+     */
+    protected function prepareMessages($prompt, $question, $history)
+    {
+        // calculate the space for context
+        $remainingContext = $this->getChatModel()->getMaxInputTokenLength();
+        $remainingContext -= $this->countTokens($prompt);
+        $remainingContext -= $this->countTokens($question);
+        $safetyMargin = $remainingContext * 0.05; // 5% safety margin
+        $remainingContext -= $safetyMargin;
+        // FIXME we may want to also have an upper limit for the history and not always use the full context
+
+        $messages = $this->historyMessages($history, $remainingContext);
+        $messages[] = [
+            'role' => 'system',
+            'content' => $prompt
+        ];
+        $messages[] = [
+            'role' => 'user',
+            'content' => $question
+        ];
+        return $messages;
+    }
+
+    /**
+     * Create an array of OpenAI compatible messages from the given history
+     *
+     * Only as many messages are used as fit into the token limit
+     *
+     * @param array[] $history The chat history [[user, ai], [user, ai], ...]
+     * @param int $tokenLimit
+     * @return array
+     */
+    protected function historyMessages($history, $tokenLimit)
+    {
+        $remainingContext = $tokenLimit;
+
+        $messages = [];
         $history = array_reverse($history);
         foreach ($history as $row) {
-            if (
-                count($this->getEmbeddings()->getTokenEncoder()->encode($chatHistory)) >
-                $this->getChatModel()->getMaxRephrasingTokenLength()
-            ) {
+            $length = $this->countTokens($row[0] . $row[1]);
+            if ($length > $remainingContext) {
                 break;
             }
+            $remainingContext -= $length;
 
-            $chatHistory =
-                "Human: " . $row[0] . "\n" .
-                "Assistant: " . $row[1] . "\n" .
-                $chatHistory;
+            $messages[] = [
+                'role' => 'assistant',
+                'content' => $row[1]
+            ];
+            $messages[] = [
+                'role' => 'user',
+                'content' => $row[0]
+            ];
         }
+        return array_reverse($messages);
+    }
 
-        // ask openAI to rephrase the question
-        $prompt = $this->getPrompt('rephrase', ['history' => $chatHistory, 'question' => $question]);
-        $messages = [['role' => 'user', 'content' => $prompt]];
-        return $this->getChatModel()->getAnswer($messages);
+    /**
+     * Get an aproximation of the token count for the given text
+     *
+     * @param $text
+     * @return int
+     */
+    protected function countTokens($text)
+    {
+        return count($this->getEmbeddings()->getTokenEncoder()->encode($text));
     }
 
     /**
@@ -284,6 +325,7 @@ class helper_plugin_aichat extends Plugin
     protected function getPrompt($type, $vars = [])
     {
         $template = file_get_contents($this->localFN('prompt_' . $type));
+        $vars['language'] = $this->getLanguagePrompt();
 
         $replace = [];
         foreach ($vars as $key => $val) {
@@ -312,7 +354,7 @@ class helper_plugin_aichat extends Plugin
             }
         }
 
-        $languagePrompt = 'Always answer in the user\'s language.' .
+        $languagePrompt = 'Always answer in the user\'s language. ' .
             "If you are unsure about the language, speak $currentLang.";
         return $languagePrompt;
     }

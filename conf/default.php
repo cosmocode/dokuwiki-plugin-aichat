@@ -25,6 +25,9 @@ $conf['qdrant_baseurl'] = '';
 $conf['qdrant_apikey'] = '';
 $conf['qdrant_collection'] = 'aichat';
 
+$conf['chunkSize'] = 1500;
+$conf['contextChunks'] = 5;
+
 $conf['logging'] = 0;
 $conf['restrict'] = '';
 $conf['skipRegex'] = ':(playground|sandbox)(:|$)';

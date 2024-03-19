@@ -17,12 +17,16 @@ interface ModelInterface
     public function getModelName();
 
     /**
-     * Get the price for 1,000,000 tokens
+     * Maximum number of tokens the model can handle as input.
      *
-     * @return float
+     * This is the absolute limit, including any context, prompts, questions etc.
      */
-    public function get1MillionTokenPrice();
+    public function getMaxInputTokenLength(): int;
 
+    /**
+     * The price for 1,000,000 input tokens in USD
+     */
+    public function getInputTokenPrice(): float;
 
     /**
      * Reset the usage statistics

@@ -43,7 +43,8 @@ abstract class AbstractOpenAIModel extends AbstractModel
     protected function parseAPIResponse($response)
     {
         if (isset($response['usage'])) {
-            $this->tokensUsed += $response['usage']['total_tokens'];
+            $this->inputTokensUsed += $response['usage']['prompt_tokens'];
+            $this->outputTokensUsed += $response['usage']['completion_tokens'] ?? 0;
         }
 
         if (isset($response['error'])) {

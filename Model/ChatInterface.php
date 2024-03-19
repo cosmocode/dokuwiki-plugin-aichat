@@ -8,29 +8,14 @@ namespace dokuwiki\plugin\aichat\Model;
 interface ChatInterface extends ModelInterface
 {
     /**
-     * Maximum number of tokens to use when creating context info. Should be smaller than the absolute
-     * token limit of the model, so that prompts and questions can be added.
-     *
-     * @return int
+     * Maximum number of tokens the model can output as an answer
      */
-    public function getMaxContextTokenLength();
+    public function getMaxOutputTokenLength(): int;
 
     /**
-     * Maximum number of tokens to use as context when rephrasing a question. Should be smaller than the
-     * absolute token limit of the model, so that prompts and questions can be added.
-     *
-     * @return int
+     * The price for 1,000,000 output tokens in USD
      */
-    public function getMaxRephrasingTokenLength();
-
-    /**
-     * Maximum size of chunks to be created for this model
-     *
-     * Should be a size small enough to fit at least a few chunks into the context token limit.
-     *
-     * @return int
-     */
-    public function getMaxEmbeddingTokenLength();
+    public function getOutputTokenPrice(): float;
 
     /**
      * Answer a given question.
@@ -41,5 +26,5 @@ interface ChatInterface extends ModelInterface
      * @return string The answer
      * @throws \Exception
      */
-    public function getAnswer($messages);
+    public function getAnswer($messages): string;
 }
