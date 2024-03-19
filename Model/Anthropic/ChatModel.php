@@ -12,7 +12,11 @@ class ChatModel extends AbstractModel implements ChatInterface
     {
         parent::__construct($name, $config);
 
-        $this->http->headers['x-api-key'] = $config['anthropic_apikey'] ?? '';
+        if (empty($config['anthropic_apikey'])) {
+            throw new \Exception('Anthropic API key not configured');
+        }
+
+        $this->http->headers['x-api-key'] = $config['anthropic_apikey'];
         $this->http->headers['anthropic-version'] = '2023-06-01';
     }
 

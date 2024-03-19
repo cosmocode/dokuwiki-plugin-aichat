@@ -15,7 +15,10 @@ abstract class AbstractMistralModel extends AbstractModel
     public function __construct(string $name, array $config)
     {
         parent::__construct($name, $config);
-        $this->http->headers['Authorization'] = 'Bearer ' . $config['mistral_apikey'] ?? '';
+        if(empty($config['mistral_apikey'])) {
+            throw new \Exception('Mistral API key not configured');
+        }
+        $this->http->headers['Authorization'] = 'Bearer ' . $config['mistral_apikey'];
     }
 
     /**

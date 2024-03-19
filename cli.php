@@ -47,7 +47,7 @@ class cli_plugin_aichat extends CLIPlugin
             'embed'
         );
 
-        $options->registerCommand('maintenance', 'Run storage maintenance. Refert to the documentation for details.');
+        $options->registerCommand('maintenance', 'Run storage maintenance. Refer to the documentation for details.');
 
         $options->registerCommand('similar', 'Search for similar pages');
         $options->registerArgument('query', 'Look up chunks similar to this query', true, 'similar');
@@ -56,6 +56,8 @@ class cli_plugin_aichat extends CLIPlugin
         $options->registerArgument('question', 'The question to ask', true, 'ask');
 
         $options->registerCommand('chat', 'Start an interactive chat session');
+
+        $options->registerCommand('models', 'List available models');
 
         $options->registerCommand('info', 'Get Info about the vector storage and other stats');
 
@@ -75,6 +77,7 @@ class cli_plugin_aichat extends CLIPlugin
     /** @inheritDoc */
     protected function main(Options $options)
     {
+        $this->loadConfig();
         ini_set('memory_limit', -1);
         switch ($options->getCmd()) {
             case 'embed':
@@ -91,6 +94,9 @@ class cli_plugin_aichat extends CLIPlugin
                 break;
             case 'chat':
                 $this->chat();
+                break;
+            case 'models':
+                $this->models();
                 break;
             case 'split':
                 $this->split($options->getArgs()[0]);
@@ -212,7 +218,7 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function chat()
     {
-        if($this->loglevel['debug']['enabled']) {
+        if ($this->loglevel['debug']['enabled']) {
             $this->helper->getChatModel()->setDebug(true);
         }
 
@@ -226,6 +232,82 @@ class cli_plugin_aichat extends CLIPlugin
         }
     }
 
+    protected function models()
+    {
+        $result = [
+            'chat' => [],
+            'embedding' => [],
+        ];
+
+
+        $jsons = glob(__DIR__ . '/Model/*/models.json');
+        foreach ($jsons as $json) {
+            $models = json_decode(file_get_contents($json), true);
+            foreach ($models as $type => $model) {
+                $namespace = basename(dirname($json));
+                foreach ($model as $name => $info) {
+
+
+                    $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\' . ucfirst($type) . 'Model';
+                    try {
+                        new $class($name, $this->conf);
+                        $info['confok'] = true;
+                    } catch (Exception $e) {
+                        $info['confok'] = false;
+                    }
+
+                    $result[$type]["$namespace $name"] = $info;
+                }
+            }
+        }
+
+        $td = new TableFormatter($this->colors);
+        $cols = [30, 20, 20, '*'];
+        echo "==== Chat Models ====\n\n";
+        echo $td->format(
+            $cols,
+            ['Model', 'Token Limits', 'Price USD/M', 'Description'],
+            [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
+        );
+        foreach ($result['chat'] as $name => $info) {
+            echo $td->format(
+                $cols,
+                [
+                    $name,
+                    sprintf(" In: %7d\nOut: %7d", $info['inputTokens'], $info['outputTokens']),
+                    sprintf(" In: %.2f\nOut: %.2f", $info['inputTokenPrice'], $info['inputTokenPrice']),
+                    $info['description']."\n"
+                ],
+                [
+                    $info['confok'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
+                ]
+            );
+        }
+
+        echo "==== Embedding Models ====\n\n";
+        echo $td->format(
+            $cols,
+            ['Model', 'Token Limits', 'Price USD/M', 'Description'],
+            [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
+        );
+        foreach ($result['embedding'] as $name => $info) {
+            echo $td->format(
+                $cols,
+                [
+                    $name,
+                    sprintf("%7d", $info['inputTokens']),
+                    sprintf("%.2f", $info['inputTokenPrice']),
+                    $info['description']."\n"
+                ],
+                [
+                    $info['confok'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
+                ]
+            );
+        }
+
+        $this->colors->ptln('Current prices may differ', Colors::C_RED);
+    }
+
     /**
      * Handle a single, standalone question
      *
@@ -235,7 +317,7 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function ask($query)
     {
-        if($this->loglevel['debug']['enabled']) {
+        if ($this->loglevel['debug']['enabled']) {
             $this->helper->getChatModel()->setDebug(true);
         }
 
