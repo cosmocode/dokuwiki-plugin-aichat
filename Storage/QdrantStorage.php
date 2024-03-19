@@ -33,7 +33,7 @@ class QdrantStorage extends AbstractStorage
         $this->http->keep_alive = false;
         $this->http->timeout = 30;
 
-        if (!empty($config['qdrant_apikey']) {
+        if (!empty($config['qdrant_apikey'])) {
             $this->http->headers['api-key'] = $config['qdrant_apikey'];
         }
     }
