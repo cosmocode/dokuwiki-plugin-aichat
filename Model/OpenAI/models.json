@@ -34,6 +34,12 @@
             "inputTokens": 8192,
             "inputTokenPrice": 0.02,
             "dimensions": 1536
+        },
+        "text-embedding-3-large": {
+            "description": "Most capable embedding model for both english and non-english tasks",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.13,
+            "dimensions": 3072
         }
     }
 }

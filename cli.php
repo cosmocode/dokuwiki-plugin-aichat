@@ -284,11 +284,12 @@ class cli_plugin_aichat extends CLIPlugin
             );
         }
 
+        $cols = [30, 10, 10, 10, '*'];
         echo "==== Embedding Models ====\n\n";
         echo $td->format(
             $cols,
-            ['Model', 'Token Limits', 'Price USD/M', 'Description'],
-            [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
+            ['Model', 'Token Limits', 'Price USD/M', 'Dimensions', 'Description'],
+            [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
         );
         foreach ($result['embedding'] as $name => $info) {
             echo $td->format(
@@ -297,6 +298,7 @@ class cli_plugin_aichat extends CLIPlugin
                     $name,
                     sprintf("%7d", $info['inputTokens']),
                     sprintf("%.2f", $info['inputTokenPrice']),
+                    $info['dimensions'],
                     $info['description']."\n"
                 ],
                 [

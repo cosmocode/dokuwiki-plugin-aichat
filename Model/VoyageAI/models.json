@@ -1,0 +1,16 @@
+{
+    "embedding": {
+        "voyage-2": {
+            "description": "Base generalist embedding model optimized for both latency and quality, while still offering better retrieval performance than OpenAI V3 Large.",
+            "inputTokens": 4000,
+            "inputTokenPrice": 0.1,
+            "dimensions": 1024
+        },
+        "voyage-large-2": {
+            "description": "Our most powerful generalist embedding model (e.g., better than OpenAI V3 Large).",
+            "inputTokens": 16000,
+            "inputTokenPrice": 0.1,
+            "dimensions": 1536
+        }
+    }
+}

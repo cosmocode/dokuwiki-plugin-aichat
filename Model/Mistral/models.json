@@ -40,7 +40,8 @@
         "mistral-embed": {
             "description": "State-of-the-art semantic for extracting representation of text extracts. English only for now.",
             "inputTokenPrice": 0.10,
-            "inputTokens": 4096
+            "inputTokens": 4096,
+            "dimensions": 1024
         }
     }
 }
