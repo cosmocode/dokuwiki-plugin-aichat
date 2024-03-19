@@ -24,7 +24,7 @@ class QdrantStorage extends AbstractStorage
     public function __construct(array $config)
     {
 
-        $this->baseurl = $config['qdrant_baseurl'] ?? '';
+        $this->baseurl = trim($config['qdrant_baseurl'] ?? '', '/');
         $this->collectionName = $config['qdrant_collection'] ?? '';
 
         $this->http = new DokuHTTPClient();
@@ -86,10 +86,11 @@ class QdrantStorage extends AbstractStorage
      *
      * Initializes the collection if it doesn't exist yet
      *
+     * @param int $createWithDimensions if > 0, the collection will be created with this many dimensions
      * @return string
      * @throws \Exception
      */
-    public function getCollection()
+    public function getCollection($createWithDimensions = 0)
     {
         if ($this->collection) return $this->collection;
 
@@ -97,13 +98,14 @@ class QdrantStorage extends AbstractStorage
             $this->runQuery('/collections/' . $this->collectionName, '', 'GET');
             $this->collection = $this->collectionName;
             return $this->collection; // collection exists
-        } catch (\Exception) {
-            // collection seems not to exist
+        } catch (\Exception $e) {
+            if (!$createWithDimensions) throw $e;
         }
 
+        // still here? create the collection
         $data = [
             'vectors' => [
-                'size' => 1536, // FIXME should not be hardcoded
+                'size' => $createWithDimensions,
                 'distance' => 'Cosine',
             ]
         ];
@@ -121,10 +123,12 @@ class QdrantStorage extends AbstractStorage
         if (!$clear) return;
 
         // if a collection exists, delete it
-        $collection = $this->getCollection();
-        if ($collection) {
+        try {
+            $collection = $this->getCollection();
             $this->runQuery('/collections/' . $collection, '', 'DELETE');
             $this->collection = '';
+        } catch (\Exception) {
+            // no such collection
         }
     }
 
@@ -162,11 +166,18 @@ class QdrantStorage extends AbstractStorage
     /** @inheritdoc */
     public function deletePageChunks($page, $firstChunkID)
     {
+        try {
+            $collection = $this->getCollection();
+        } catch (\Exception) {
+            // no such collection
+            return;
+        }
+
         // delete all possible chunk IDs
         $ids = range($firstChunkID, $firstChunkID + 99, 1);
 
         $this->runQuery(
-            '/collections/' . $this->getCollection() . '/points/delete',
+            '/collections/' . $collection . '/points/delete',
             [
                 'points' => $ids
             ],
@@ -192,7 +203,7 @@ class QdrantStorage extends AbstractStorage
         }
 
         $this->runQuery(
-            '/collections/' . $this->getCollection() . '/points',
+            '/collections/' . $this->getCollection(count($chunk->getEmbedding())) . '/points',
             [
                 'points' => $points
             ],

@@ -149,7 +149,8 @@ class Embeddings
             } else {
                 // page is newer than the chunks we have, create new chunks
                 $this->storage->deletePageChunks($page, $chunkID);
-                $this->storage->addPageChunks($this->createPageChunks($page, $chunkID));
+                $chunks = $this->createPageChunks($page, $chunkID);
+                if ($chunks) $this->storage->addPageChunks($chunks);
             }
         }
         $this->storage->finalizeCreation();
