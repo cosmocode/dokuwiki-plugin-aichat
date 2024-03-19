@@ -12,9 +12,9 @@ use dokuwiki\plugin\aichat\Model\AbstractModel;
 abstract class AbstractOpenAIModel extends AbstractModel
 {
     /** @inheritdoc */
-    public function __construct($config)
+    public function __construct(string $name, array $config)
     {
-        parent::__construct($config);
+        parent::__construct($name, $config);
 
         $openAIKey = $config['openaikey'] ?? '';
         $openAIOrg = $config['openaiorg'] ?? '';

@@ -17,6 +17,33 @@ $meta['model'] = array('multichoice',
     )
 );
 
+
+$meta['chatmodel'] = array('multichoice',
+    '_choices' => array(
+        'OpenAI gpt-3.5-turbo',
+        'OpenAI gpt-4',
+    )
+);
+
+$meta['embedmodel'] = array('multichoice',
+    '_choices' => array(
+        'OpenAI text-embedding-3-small',
+        'OpenAI text-embedding-ada-002',
+    )
+);
+
+$meta['storage'] = array('multichoice',
+    '_choices' => array(
+        'Chroma',
+        'Pinecone',
+        'Qdrant',
+        'SQLite',
+    )
+);
+
+
+
+
 $meta['pinecone_apikey'] = array('string');
 $meta['pinecone_baseurl'] = array('string');
 

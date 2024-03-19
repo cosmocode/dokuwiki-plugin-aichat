@@ -26,5 +26,5 @@ interface ChatInterface extends ModelInterface
      * @return string The answer
      * @throws \Exception
      */
-    public function getAnswer($messages): string;
+    public function getAnswer(array $messages): string;
 }

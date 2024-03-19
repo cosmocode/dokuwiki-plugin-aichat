@@ -8,7 +8,7 @@ use dokuwiki\plugin\aichat\Model\ChatInterface;
 /**
  * The Claude 3 Haiku model
  */
-class Claude3Haiku extends AbstractAnthropicModel implements ChatInterface
+class Claude3Haiku extends ChatModel implements ChatInterface
 {
 
     /** @inheritdoc */
@@ -42,36 +42,4 @@ class Claude3Haiku extends AbstractAnthropicModel implements ChatInterface
         return 1000;
     }
 
-    /** @inheritdoc */
-    public function getAnswer($messages)
-    {
-        // convert OpenAI Style to Anthropic style
-        $system = '';
-        $chat = [];
-        foreach ($messages as $message) {
-            if ($message['role'] === 'system') {
-                $system .= $message['content']."\n";
-            } else {
-                $chat[] = $message;
-            }
-        }
-
-        $data = [
-            'messages' => $chat,
-            'model' => $this->getModelName(),
-            'max_tokens' => $this->getMaxEmbeddingTokenLength(),
-            'stream' => false,
-            'temperature' => 0.0,
-        ];
-
-        if($system) {
-            $data['system'] = $system;
-        }
-
-        $response = $this->request('messages', $data);
-
-        print_r($response);
-
-        return $response['content'][0]['text'];
-    }
 }

@@ -1,0 +1,34 @@
+{
+    "chat": {
+        "gpt-3.5-turbo": {
+            "inputTokens": 16385,
+            "inputTokenPrice": 0.50,
+            "outputTokens": 4096,
+            "outputTokenPrice": 1.50
+        },
+        "gpt-4": {
+            "inputTokens": 81924,
+            "inputTokenPrice": 30.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 60.00
+        },
+        "gpt-4-turbo-preview": {
+            "inputTokens": 128000,
+            "inputTokenPrice": 10.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 30.00
+        }
+    },
+    "embedding": {
+        "text-embedding-ada-002": {
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.10,
+            "dimensions": 1536
+        },
+        "text-embedding-3-small": {
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.02,
+            "dimensions": 1536
+        }
+    }
+}

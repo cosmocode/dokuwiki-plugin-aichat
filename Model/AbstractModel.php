@@ -10,41 +10,154 @@ use dokuwiki\HTTP\DokuHTTPClient;
  * Model classes also need to implement one of the following interfaces:
  * - ChatInterface
  * - EmbeddingInterface
+ *
+ * This class already implements most of the requirements for these interfaces.
+ *
+ * In addition to any missing interface methods, model implementations will need to
+ * extend the constructor to handle the plugin configuration and implement the
+ * parseAPIResponse() method to handle the specific API response.
  */
-abstract class AbstractModel
+abstract class AbstractModel implements ModelInterface
 {
-    /** @var bool debug API communication */
-    protected $debug = false;
+    /** @var string The model name */
+    protected $modelName;
+    /** @var array The model info from the model.json file */
+    protected $modelInfo;
 
-
+    /** @var int input tokens used since last reset */
     protected $inputTokensUsed = 0;
+    /** @var int output tokens used since last reset */
     protected $outputTokensUsed = 0;
-    protected $tokensUsed = 0;
-
-    /** @var int total time spent in requests by this instance */
+    /** @var int total time spent in requests since last reset */
     protected $timeUsed = 0;
-    /** @var int total number of requests made by this instance */
+    /** @var int total number of requests made since last reset */
     protected $requestsMade = 0;
-    /** @var int How often to retry a request if it fails */
-    public const MAX_RETRIES = 3;
-    /** @var DokuHTTPClient */
-    protected $http;
     /** @var int start time of the current request chain (may be multiple when retries needed) */
     protected $requestStart = 0;
 
-    /**
-     * This initializes a HTTP client
-     *
-     * Implementors should override this and authenticate the client.
-     *
-     * @param array $config The plugin configuration
-     */
-    public function __construct(array $config)
+    /** @var int How often to retry a request if it fails */
+    public const MAX_RETRIES = 3;
+
+    /** @var DokuHTTPClient */
+    protected $http;
+    /** @var bool debug API communication */
+    protected $debug = false;
+
+    // region ModelInterface
+
+    /** @inheritdoc */
+    public function __construct(string $name, array $config)
     {
+        $this->modelName = $name;
         $this->http = new DokuHTTPClient();
         $this->http->timeout = 60;
         $this->http->headers['Content-Type'] = 'application/json';
+
+        $reflect = new \ReflectionClass($this);
+        $json = dirname($reflect->getFileName()) . '/models.json';
+        if (!file_exists($json)) {
+            throw new \Exception('Model info file not found at ' . $json);
+        }
+        try {
+            $modelinfos = json_decode(file_get_contents($json), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \Exception('Failed to parse model info file: ' . $e->getMessage(), $e->getCode(), $e);
+        }
+
+        if ($this instanceof ChatInterface) {
+            if (!isset($modelinfos['chat'][$name])) {
+                throw new \Exception('Invalid chat model configured: ' . $name);
+            }
+            $this->modelInfo = $modelinfos['chat'][$name];
+        }
+
+        if ($this instanceof EmbeddingInterface) {
+            if (!isset($modelinfos['embedding'][$name])) {
+                throw new \Exception('Invalid embedding model configured: ' . $name);
+            }
+            $this->modelInfo = $modelinfos['embedding'][$name];
+        }
     }
+
+    /** @inheritdoc */
+    public function getModelName()
+    {
+        return $this->modelName;
+    }
+
+    /**
+     * Reset the usage statistics
+     *
+     * Usually not needed when only handling one operation per request, but useful in CLI
+     */
+    public function resetUsageStats()
+    {
+        $this->tokensUsed = 0;
+        $this->timeUsed = 0;
+        $this->requestsMade = 0;
+    }
+
+    /**
+     * Get the usage statistics for this instance
+     *
+     * @return string[]
+     */
+    public function getUsageStats()
+    {
+
+        $cost = 0;
+        $cost += $this->inputTokensUsed * $this->getInputTokenPrice();
+        if ($this instanceof ChatInterface) {
+            $cost += $this->outputTokensUsed * $this->getOutputTokenPrice();
+        }
+
+        return [
+            'tokens' => $this->inputTokensUsed + $this->outputTokensUsed,
+            'cost' => round($cost / 1_000_000, 4),
+            'time' => round($this->timeUsed, 2),
+            'requests' => $this->requestsMade,
+        ];
+    }
+
+    /** @inheritdoc */
+    public function getMaxInputTokenLength(): int
+    {
+        return $this->modelInfo['inputTokens'];
+    }
+
+    /** @inheritdoc */
+    public function getInputTokenPrice(): float
+    {
+        return $this->modelInfo['inputTokenPrice'];
+    }
+
+    // endregion
+
+    // region EmbeddingInterface
+
+    /** @inheritdoc */
+    public function getDimensions(): int
+    {
+        return $this->modelInfo['dimensions'];
+    }
+
+    // endregion
+
+    // region ChatInterface
+
+    public function getMaxOutputTokenLength(): int
+    {
+        return $this->modelInfo['outputTokens'];
+    }
+
+    public function getOutputTokenPrice(): float
+    {
+        return $this->modelInfo['outputTokenPrice'];
+    }
+
+    // endregion
+
+    // region API communication
 
     /**
      * When enabled, the input/output of the API will be printed to STDOUT
@@ -148,37 +261,5 @@ abstract class AbstractModel
         return $result;
     }
 
-    /**
-     * Reset the usage statistics
-     *
-     * Usually not needed when only handling one operation per request, but useful in CLI
-     */
-    public function resetUsageStats()
-    {
-        $this->tokensUsed = 0;
-        $this->timeUsed = 0;
-        $this->requestsMade = 0;
-    }
-
-    /**
-     * Get the usage statistics for this instance
-     *
-     * @return string[]
-     */
-    public function getUsageStats()
-    {
-
-        $cost = 0;
-        $cost += $this->inputTokensUsed * $this->getInputTokenPrice();
-        if ($this instanceof ChatInterface) {
-            $cost += $this->outputTokensUsed * $this->getOutputTokenPrice();
-        }
-
-        return [
-            'tokens' => $this->tokensUsed + $this->inputTokensUsed + $this->outputTokensUsed,
-            'cost' => round($cost / 1_000_000, 4),
-            'time' => round($this->timeUsed, 2),
-            'requests' => $this->requestsMade,
-        ];
-    }
+    // endregion
 }

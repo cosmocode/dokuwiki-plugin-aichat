@@ -8,7 +8,6 @@ use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 use dokuwiki\plugin\aichat\Model\OpenAI\Embedding3Small;
-use dokuwiki\plugin\aichat\Model\OpenAI\EmbeddingAda02;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\plugin\aichat\Storage\ChromaStorage;
 use dokuwiki\plugin\aichat\Storage\PineconeStorage;
@@ -88,17 +87,14 @@ class helper_plugin_aichat extends Plugin
             return $this->chatModel;
         }
 
-        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
-
-        //$class = Claude3Haiku::class;
+        [$namespace, $name] = sexplode(' ', $this->getConf('chatmodel'), 2);
+        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\ChatModel';
 
         if (!class_exists($class)) {
-            throw new \RuntimeException('Configured model not found: ' . $class);
+            throw new \RuntimeException('No ChatModel found for ' . $namespace);
         }
 
-        // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
-        $this->chatModel = new $class($this->conf);
-
+        $this->chatModel = new $class($name, $this->conf);
         return $this->chatModel;
     }
 
@@ -109,14 +105,18 @@ class helper_plugin_aichat extends Plugin
      */
     public function getEmbedModel()
     {
-        // FIXME this is hardcoded to OpenAI for now
         if ($this->embedModel instanceof EmbeddingInterface) {
             return $this->embedModel;
         }
 
-        //$this->embedModel = new Embedding3Small($this->conf);
-        $this->embedModel = new EmbeddingAda02($this->conf);
+        [$namespace, $name] = sexplode(' ', $this->getConf('embedmodel'), 2);
+        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\EmbeddingModel';
 
+        if (!class_exists($class)) {
+            throw new \RuntimeException('No EmbeddingModel found for ' . $namespace);
+        }
+
+        $this->embedModel = new $class($name, $this->conf);
         return $this->embedModel;
     }
 
