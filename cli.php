@@ -124,7 +124,8 @@ class cli_plugin_aichat extends CLIPlugin
     protected function showinfo()
     {
         $stats = [
-            'model' => $this->getConf('model'),
+            'chat model' => $this->getConf('chatmodel'),
+            'embed model' => $this->getConf('embedmodel'),
         ];
         $stats = array_merge(
             $stats,
