@@ -6,15 +6,16 @@
  * @author Andreas Gohr <gohr@cosmocode.de>
  */
 
-$conf['openaikey']    = '';
-$conf['openaiorg']    = '';
-$conf['model'] = 'OpenAI\\GPT35Turbo';
 
 $conf['chatmodel'] = 'OpenAI gpt-3.5-turbo';
 $conf['embedmodel'] = 'OpenAI text-embedding-ada-002';
 $conf['storage'] = 'SQLite';
 
-$conf['anthropic_key'] = '';
+$conf['openai_apikey']    = '';
+$conf['openai_org']    = '';
+
+$conf['anthropic_apikey'] = '';
+
 $conf['mistral_apikey'] = '';
 
 $conf['pinecone_apikey'] = '';

@@ -226,12 +226,9 @@ class Embeddings
         global $auth;
         $vector = $this->embedModel->getEmbedding($query);
 
-        $fetch = (int) ceil(
-            min(
-                ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize() ),
-                $this->configContextChunks
-            )
-            * 1.5 // fetch a few more than needed, since not all chunks are maximum length
+        $fetch = min(
+            ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize()),
+            $this->configContextChunks
         );
 
         $time = microtime(true);
