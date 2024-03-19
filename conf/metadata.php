@@ -31,7 +31,8 @@ $meta['storage'] = array('multichoice',
     )
 );
 
-
+$meta['anthropic_key'] = array('string');
+$meta['mistral_apikey'] = array('string');
 
 
 $meta['pinecone_apikey'] = array('string');

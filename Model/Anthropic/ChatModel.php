@@ -33,7 +33,7 @@ class ChatModel extends AbstractModel implements ChatInterface
         $data = [
             'messages' => $chat,
             'model' => $this->getModelName(),
-            'max_tokens' => $this->getMaxEmbeddingTokenLength(),
+            'max_tokens' => $this->getMaxOutputTokenLength(),
             'stream' => false,
             'temperature' => 0.0,
         ];

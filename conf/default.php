@@ -15,6 +15,7 @@ $conf['embedmodel'] = 'OpenAI text-embedding-ada-002';
 $conf['storage'] = 'SQLite';
 
 $conf['anthropic_key'] = '';
+$conf['mistral_apikey'] = '';
 
 $conf['pinecone_apikey'] = '';
 $conf['pinecone_baseurl'] = '';

@@ -52,6 +52,7 @@ abstract class AbstractModel implements ModelInterface
         $this->http = new DokuHTTPClient();
         $this->http->timeout = 60;
         $this->http->headers['Content-Type'] = 'application/json';
+        $this->http->headers['Accept'] = 'application/json';
 
         $reflect = new \ReflectionClass($this);
         $json = dirname($reflect->getFileName()) . '/models.json';
