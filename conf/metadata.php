@@ -7,6 +7,7 @@
  */
 
 $meta['chatmodel'] = array(\dokuwiki\plugin\aichat\ModelSetting::class, 'type' => 'chat');
+$meta['rephrasemodel'] = array(\dokuwiki\plugin\aichat\ModelSetting::class, 'type' => 'chat');
 $meta['embedmodel'] = array(\dokuwiki\plugin\aichat\ModelSetting::class, 'type' => 'embedding');
 $meta['storage'] = array('multichoice',
     '_choices' => array(

@@ -7,7 +7,6 @@ use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
-use dokuwiki\plugin\aichat\Model\OpenAI\Embedding3Small;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 
 /**
@@ -22,6 +21,8 @@ class helper_plugin_aichat extends Plugin
     protected $logger;
     /** @var ChatInterface */
     protected $chatModel;
+    /** @var ChatInterface */
+    protected $rephraseModel;
     /** @var EmbeddingInterface */
     protected $embedModel;
     /** @var Embeddings */
@@ -31,6 +32,7 @@ class helper_plugin_aichat extends Plugin
 
     /** @var array where to store meta data on the last run */
     protected $runDataFile;
+
 
     /**
      * Constructor. Initializes vendor autoloader
@@ -92,6 +94,26 @@ class helper_plugin_aichat extends Plugin
 
         $this->chatModel = new $class($name, $this->conf);
         return $this->chatModel;
+    }
+
+    /**
+     * @return ChatInterface
+     */
+    public function getRephraseModel()
+    {
+        if ($this->rephraseModel instanceof ChatInterface) {
+            return $this->rephraseModel;
+        }
+
+        [$namespace, $name] = sexplode(' ', $this->getConf('rephrasemodel'), 2);
+        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\ChatModel';
+
+        if (!class_exists($class)) {
+            throw new \RuntimeException('No ChatModel found for ' . $namespace);
+        }
+
+        $this->rephraseModel = new $class($name, $this->conf);
+        return $this->rephraseModel;
     }
 
     /**
@@ -172,7 +194,7 @@ class helper_plugin_aichat extends Plugin
      */
     public function askChatQuestion($question, $history = [])
     {
-        if ($history) {
+        if ($history && $this->getConf('rephraseHistory') > 0) {
             $standaloneQuestion = $this->rephraseChatQuestion($question, $history);
         } else {
             $standaloneQuestion = $question;
@@ -204,7 +226,9 @@ class helper_plugin_aichat extends Plugin
             $history = [];
         }
 
-        $messages = $this->prepareMessages($prompt, $question, $history);
+        $messages = $this->prepareMessages(
+            $this->getChatModel(), $prompt, $question, $history, $this->getConf('chatHistory')
+        );
         $answer = $this->getChatModel()->getAnswer($messages);
 
         return [
@@ -225,29 +249,35 @@ class helper_plugin_aichat extends Plugin
     public function rephraseChatQuestion($question, $history)
     {
         $prompt = $this->getPrompt('rephrase');
-        $messages = $this->prepareMessages($prompt, $question, $history);
-        return $this->getChatModel()->getAnswer($messages);
+        $messages = $this->prepareMessages(
+            $this->getRephraseModel(), $prompt, $question, $history, $this->getConf('rephraseHistory')
+        );
+        return $this->getRephraseModel()->getAnswer($messages);
     }
 
     /**
      * Prepare the messages for the AI
      *
+     * @param ChatInterface $model The used model
      * @param string $prompt The fully prepared system prompt
      * @param string $question The user question
      * @param array[] $history The chat history [[user, ai], [user, ai], ...]
+     * @param int $historySize The maximum number of messages to use from the history
      * @return array An OpenAI compatible array of messages
      */
-    protected function prepareMessages($prompt, $question, $history)
+    protected function prepareMessages(
+        ChatInterface $model, string $prompt, string $question, array $history, int $historySize
+    ): array
     {
         // calculate the space for context
-        $remainingContext = $this->getChatModel()->getMaxInputTokenLength();
+        $remainingContext = $model->getMaxInputTokenLength();
         $remainingContext -= $this->countTokens($prompt);
         $remainingContext -= $this->countTokens($question);
         $safetyMargin = $remainingContext * 0.05; // 5% safety margin
         $remainingContext -= $safetyMargin;
         // FIXME we may want to also have an upper limit for the history and not always use the full context
 
-        $messages = $this->historyMessages($history, $remainingContext);
+        $messages = $this->historyMessages($history, $remainingContext, $historySize);
         $messages[] = [
             'role' => 'system',
             'content' => $prompt
@@ -265,15 +295,17 @@ class helper_plugin_aichat extends Plugin
      * Only as many messages are used as fit into the token limit
      *
      * @param array[] $history The chat history [[user, ai], [user, ai], ...]
-     * @param int $tokenLimit
+     * @param int $tokenLimit The maximum number of tokens to use
+     * @param int $sizeLimit The maximum number of messages to use
      * @return array
      */
-    protected function historyMessages($history, $tokenLimit)
+    protected function historyMessages(array $history, int $tokenLimit, int $sizeLimit): array
     {
         $remainingContext = $tokenLimit;
 
         $messages = [];
         $history = array_reverse($history);
+        $history = array_slice($history, 0, $sizeLimit);
         foreach ($history as $row) {
             $length = $this->countTokens($row[0] . $row[1]);
             if ($length > $remainingContext) {

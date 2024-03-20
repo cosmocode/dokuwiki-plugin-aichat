@@ -7,6 +7,7 @@
 
 
 $lang['chatmodel'] = 'The 🧠 model to use for chat completion. Configure required credentials below.';
+$lang['rephrasemodel'] = 'The 🧠 model to use for rephrasing questions. Configure required credentials below.';
 $lang['embedmodel'] = 'The 🧠 model to use for text embedding. Configure required credentials below.<br>🔄 You need to rebuild the vector storage when changing this setting.';
 $lang['storage'] = 'Which 📥 vector storage to use. Configure required credentials below.<br>🔄 You need to rebuild the vector storage when changing this setting.';
 
@@ -32,6 +33,8 @@ $lang['qdrant_collection'] = '📥 <b>Qdrant</b> collection. Will be created.';
 
 $lang['chunkSize'] = 'Maximum number of tokens per chunk.<br>🔄 You need to rebuild the vector storage when changing this setting.';
 $lang['contextChunks'] = 'Number of chunks to send to the AI model for context.';
+$lang['chatHistory'] = 'Number of previous chat messages to consider for context in the conversation.';
+$lang['rephraseHistory'] = 'Number of previous chat messages to consider for context when rephrasing a question. Set to 0 to disable rephrasing.';
 
 $lang['logging'] = 'Log all questions and answers. Use the <a href="?do=admin&page=logviewer&facility=aichat">Log Viewer</a> to access.';
 $lang['restrict'] = 'Restrict access to these users and groups (comma separated). Leave empty to allow all users.';

@@ -8,6 +8,7 @@
 
 
 $conf['chatmodel'] = 'OpenAI gpt-3.5-turbo';
+$conf['rephrasemodel'] = 'OpenAI gpt-3.5-turbo';
 $conf['embedmodel'] = 'OpenAI text-embedding-ada-002';
 $conf['storage'] = 'SQLite';
 
@@ -35,6 +36,8 @@ $conf['qdrant_collection'] = 'aichat';
 
 $conf['chunkSize'] = 1500;
 $conf['contextChunks'] = 5;
+$conf['chatHistory'] = 1;
+$conf['rephraseHistory'] = 1;
 
 $conf['logging'] = 0;
 $conf['restrict'] = '';

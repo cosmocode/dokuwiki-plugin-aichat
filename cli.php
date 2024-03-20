@@ -221,11 +221,15 @@ class cli_plugin_aichat extends CLIPlugin
     {
         if ($this->loglevel['debug']['enabled']) {
             $this->helper->getChatModel()->setDebug(true);
+            $this->helper->getRephraseModel()->setDebug(true);
+            $this->helper->getEmbedModel()->setDebug(true);
         }
 
         $history = [];
         while ($q = $this->readLine('Your Question')) {
             $this->helper->getChatModel()->resetUsageStats();
+            $this->helper->getRephraseModel()->resetUsageStats();
+            $this->helper->getEmbedModel()->resetUsageStats();
             $result = $this->helper->askChatQuestion($q, $history);
             $this->colors->ptln("Interpretation: {$result['question']}", Colors::C_LIGHTPURPLE);
             $history[] = [$result['question'], $result['answer']];
@@ -277,7 +281,7 @@ class cli_plugin_aichat extends CLIPlugin
                     $name,
                     sprintf(" In: %7d\nOut: %7d", $info['inputTokens'], $info['outputTokens']),
                     sprintf(" In: %.2f\nOut: %.2f", $info['inputTokenPrice'], $info['outputTokenPrice']),
-                    $info['description']."\n"
+                    $info['description'] . "\n"
                 ],
                 [
                     $info['confok'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
@@ -300,7 +304,7 @@ class cli_plugin_aichat extends CLIPlugin
                     sprintf("%7d", $info['inputTokens']),
                     sprintf("%.2f", $info['inputTokenPrice']),
                     $info['dimensions'],
-                    $info['description']."\n"
+                    $info['description'] . "\n"
                 ],
                 [
                     $info['confok'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
@@ -322,6 +326,8 @@ class cli_plugin_aichat extends CLIPlugin
     {
         if ($this->loglevel['debug']['enabled']) {
             $this->helper->getChatModel()->setDebug(true);
+            $this->helper->getRephraseModel()->setDebug(true);
+            $this->helper->getEmbedModel()->setDebug(true);
         }
 
         $result = $this->helper->askQuestion($query);
@@ -433,9 +439,18 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function printUsage()
     {
+        $chat = $this->helper->getChatModel()->getUsageStats();
+        $rephrase = $this->helper->getRephraseModel()->getUsageStats();
+        $embed = $this->helper->getEmbedModel()->getUsageStats();
+
         $this->info(
-            'Made {requests} requests in {time}s to Model. Used {tokens} tokens for about ${cost}.',
-            $this->helper->getChatModel()->getUsageStats()
+            'Made {requests} requests in {time}s to models. Used {tokens} tokens for about ${cost}.',
+            [
+                'requests' => $chat['requests'] + $rephrase['requests'] + $embed['requests'],
+                'time' => $chat['time'] + $rephrase['time'] + $embed['time'],
+                'tokens' => $chat['tokens'] + $chat['tokens'] + $embed['tokens'],
+                'cost' => $chat['cost'] + $chat['cost'] + $embed['cost'],
+            ]
         );
     }
 

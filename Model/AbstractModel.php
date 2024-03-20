@@ -221,6 +221,7 @@ abstract class AbstractModel implements ModelInterface
         if ($this->debug) {
             echo 'Sending ' . $method . ' request to ' . $url . ' with payload:' . "\n";
             print_r($json);
+            echo "\n";
         }
 
         // send request and handle retries
@@ -237,6 +238,7 @@ abstract class AbstractModel implements ModelInterface
         if ($this->debug) {
             echo 'Received response:' . "\n";
             print_r($response);
+            echo "\n";
         }
 
         // decode the response
