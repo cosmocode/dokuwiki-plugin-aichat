@@ -183,14 +183,17 @@ class helper_plugin_aichat extends Plugin
             );
             $prompt = $this->getPrompt('question', [
                 'context' => $context,
+                'question' => $question,
             ]);
         } else {
-            $prompt = $this->getPrompt('noanswer');
+            $prompt = $this->getPrompt('noanswer', [
+                'question' => $question,
+            ]);
             $history = [];
         }
 
         $messages = $this->prepareMessages(
-            $this->getChatModel(), $prompt, $question, $history, $this->getConf('chatHistory')
+            $this->getChatModel(), $prompt, $history, $this->getConf('chatHistory')
         );
         $answer = $this->getChatModel()->getAnswer($messages);
 
@@ -211,9 +214,11 @@ class helper_plugin_aichat extends Plugin
      */
     public function rephraseChatQuestion($question, $history)
     {
-        $prompt = $this->getPrompt('rephrase');
+        $prompt = $this->getPrompt('rephrase', [
+            'question' => $question,
+        ]);
         $messages = $this->prepareMessages(
-            $this->getRephraseModel(), $prompt, $question, $history, $this->getConf('rephraseHistory')
+            $this->getRephraseModel(), $prompt, $history, $this->getConf('rephraseHistory')
         );
         return $this->getRephraseModel()->getAnswer($messages);
     }
@@ -222,32 +227,26 @@ class helper_plugin_aichat extends Plugin
      * Prepare the messages for the AI
      *
      * @param ChatInterface $model The used model
-     * @param string $prompt The fully prepared system prompt
-     * @param string $question The user question
+     * @param string $promptedQuestion The user question embedded in a prompt
      * @param array[] $history The chat history [[user, ai], [user, ai], ...]
      * @param int $historySize The maximum number of messages to use from the history
      * @return array An OpenAI compatible array of messages
      */
     protected function prepareMessages(
-        ChatInterface $model, string $prompt, string $question, array $history, int $historySize
+        ChatInterface $model, string $promptedQuestion, array $history, int $historySize
     ): array
     {
         // calculate the space for context
         $remainingContext = $model->getMaxInputTokenLength();
-        $remainingContext -= $this->countTokens($prompt);
-        $remainingContext -= $this->countTokens($question);
+        $remainingContext -= $this->countTokens($promptedQuestion);
         $safetyMargin = $remainingContext * 0.05; // 5% safety margin
         $remainingContext -= $safetyMargin;
         // FIXME we may want to also have an upper limit for the history and not always use the full context
 
         $messages = $this->historyMessages($history, $remainingContext, $historySize);
         $messages[] = [
-            'role' => 'system',
-            'content' => $prompt
-        ];
-        $messages[] = [
             'role' => 'user',
-            'content' => $question
+            'content' => $promptedQuestion
         ];
         return $messages;
     }
@@ -308,7 +307,7 @@ class helper_plugin_aichat extends Plugin
      */
     protected function getPrompt($type, $vars = [])
     {
-        $template = file_get_contents($this->localFN('prompt_' . $type));
+        $template = file_get_contents($this->localFN($type, 'prompt'));
         $vars['language'] = $this->getLanguagePrompt();
 
         $replace = [];

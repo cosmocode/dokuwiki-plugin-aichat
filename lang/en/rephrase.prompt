@@ -1,0 +1,6 @@
+Given the previous conversation and the users follow-up question, rephrase the user's follow-up question to be a standalone question that is understandable without the previous context.
+{{LANGUAGE}}
+Only reply with the rephrased question, do not answer it.
+
+Follow-up question: {{QUESTION}}
+Standalone question:

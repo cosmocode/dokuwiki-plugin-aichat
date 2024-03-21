@@ -1,3 +1,0 @@
-Given the previous conversation, rephrase the user's follow-up question to be a standalone question. {{LANGUAGE}}
-
-Only reply with the rephrased question, do not answer it.
