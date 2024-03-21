@@ -29,7 +29,7 @@ class ModelFactory
      *
      * @param bool $debug
      */
-    public function setDebug(bool $debug=true)
+    public function setDebug(bool $debug = true)
     {
         $this->debug = $debug;
         $this->getChatModel()->setDebug($debug);
@@ -155,5 +155,4 @@ class ModelFactory
 
         return $instance;
     }
-
 }

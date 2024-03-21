@@ -50,5 +50,4 @@ interface ModelInterface
      * The price for 1,000,000 input tokens in USD
      */
     public function getInputTokenPrice(): float;
-
 }

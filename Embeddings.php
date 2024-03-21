@@ -54,12 +54,11 @@ class Embeddings
      * @param array $config The plugin configuration
      */
     public function __construct(
-        ChatInterface      $chatModel,
+        ChatInterface $chatModel,
         EmbeddingInterface $embedModel,
-        AbstractStorage    $storage,
-                           $config
-    )
-    {
+        AbstractStorage $storage,
+        $config
+    ) {
         $this->chatModel = $chatModel;
         $this->embedModel = $embedModel;
         $this->storage = $storage;

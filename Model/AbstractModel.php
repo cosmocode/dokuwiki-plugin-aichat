@@ -93,7 +93,8 @@ abstract class AbstractModel implements ModelInterface
      */
     public function resetUsageStats()
     {
-        $this->tokensUsed = 0;
+        $this->inputTokensUsed = 0;
+        $this->outputTokensUsed = 0;
         $this->timeUsed = 0;
         $this->requestsMade = 0;
     }

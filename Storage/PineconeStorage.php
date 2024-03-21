@@ -54,7 +54,7 @@ class PineconeStorage extends AbstractStorage
         }
 
         try {
-        $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
+            $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
             throw new \Exception('Pinecone API returned invalid JSON. ' . $response, 0, $e);
         }

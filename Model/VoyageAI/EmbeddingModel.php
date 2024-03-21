@@ -58,5 +58,4 @@ class EmbeddingModel extends AbstractModel implements EmbeddingInterface
 
         return $response;
     }
-
 }

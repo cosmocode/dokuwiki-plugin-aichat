@@ -193,7 +193,10 @@ class helper_plugin_aichat extends Plugin
         }
 
         $messages = $this->prepareMessages(
-            $this->getChatModel(), $prompt, $history, $this->getConf('chatHistory')
+            $this->getChatModel(),
+            $prompt,
+            $history,
+            $this->getConf('chatHistory')
         );
         $answer = $this->getChatModel()->getAnswer($messages);
 
@@ -218,7 +221,10 @@ class helper_plugin_aichat extends Plugin
             'question' => $question,
         ]);
         $messages = $this->prepareMessages(
-            $this->getRephraseModel(), $prompt, $history, $this->getConf('rephraseHistory')
+            $this->getRephraseModel(),
+            $prompt,
+            $history,
+            $this->getConf('rephraseHistory')
         );
         return $this->getRephraseModel()->getAnswer($messages);
     }
@@ -233,9 +239,11 @@ class helper_plugin_aichat extends Plugin
      * @return array An OpenAI compatible array of messages
      */
     protected function prepareMessages(
-        ChatInterface $model, string $promptedQuestion, array $history, int $historySize
-    ): array
-    {
+        ChatInterface $model,
+        string $promptedQuestion,
+        array $history,
+        int $historySize
+    ): array {
         // calculate the space for context
         $remainingContext = $model->getMaxInputTokenLength();
         $remainingContext -= $this->countTokens($promptedQuestion);

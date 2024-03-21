@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\Extension\CLIPlugin;
 use dokuwiki\plugin\aichat\ModelFactory;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
@@ -10,7 +11,7 @@ use splitbrain\phpcli\Options;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class cli_plugin_aichat_simulate extends \dokuwiki\Extension\CLIPlugin
+class cli_plugin_aichat_simulate extends CLIPlugin
 {
     /** @var helper_plugin_aichat */
     protected $helper;
@@ -50,7 +51,7 @@ class cli_plugin_aichat_simulate extends \dokuwiki\Extension\CLIPlugin
         [$input, $output] = $options->getArgs();
         $questions = $this->readInputFile($input);
         $outfh = @fopen($output, 'w');
-        if(!$outfh) throw new \Exception("Could not open $output for writing");
+        if (!$outfh) throw new \Exception("Could not open $output for writing");
 
         $models = $this->helper->factory->getModels(true, 'chat');
 
@@ -92,7 +93,7 @@ class cli_plugin_aichat_simulate extends \dokuwiki\Extension\CLIPlugin
                 'question' => $q,
                 'rephrased' => $result['question'],
                 'answer' => $result['answer'],
-                'source.list' => join("\n", $result['sources']),
+                'source.list' => implode("\n", $result['sources']),
                 'source.time' => $this->helper->getEmbeddings()->timeSpent,
                 ...$this->flattenStats('stats.embedding', $this->helper->getEmbeddingModel()->getUsageStats()),
                 ...$this->flattenStats('stats.rephrase', $this->helper->getRephraseModel()->getUsageStats()),
@@ -132,13 +133,13 @@ class cli_plugin_aichat_simulate extends \dokuwiki\Extension\CLIPlugin
         $rows[] = $row;
 
         // write rows
-        for($i=0; $i<$numberOfRecords; $i++) {
-            foreach($rowkeys as $type => $keys) {
+        for ($i = 0; $i < $numberOfRecords; $i++) {
+            foreach ($rowkeys as $type => $keys) {
                 $row = [];
                 $row[] = $type;
-                foreach($models as $model) {
+                foreach ($models as $model) {
                     foreach ($keys as $key) {
-                        if($key) {
+                        if ($key) {
                             $row[] = $result[$model][$i][$key];
                         } else {
                             $row[] = '';
@@ -161,9 +162,10 @@ class cli_plugin_aichat_simulate extends \dokuwiki\Extension\CLIPlugin
      * @param array $stats
      * @return array
      */
-    protected function flattenStats(string $prefix, array $stats) {
+    protected function flattenStats(string $prefix, array $stats)
+    {
         $result = [];
-        foreach($stats as $key => $value) {
+        foreach ($stats as $key => $value) {
             $result["$prefix.$key"] = $value;
         }
         return $result;
@@ -183,4 +185,3 @@ class cli_plugin_aichat_simulate extends \dokuwiki\Extension\CLIPlugin
         return $questions;
     }
 }
-

@@ -6,7 +6,6 @@
  * @author Andreas Gohr <gohr@cosmocode.de>
  */
 
-
 $conf['chatmodel'] = 'OpenAI gpt-3.5-turbo';
 $conf['rephrasemodel'] = 'OpenAI gpt-3.5-turbo';
 $conf['embedmodel'] = 'OpenAI text-embedding-ada-002';
