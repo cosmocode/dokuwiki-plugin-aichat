@@ -68,8 +68,8 @@ class ChromaStorage extends AbstractStorage
 
         try {
             $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\Exception) {
-            throw new \Exception('Chroma API returned invalid JSON. ' . $response);
+        } catch (\Exception $e) {
+            throw new \Exception('Chroma API returned invalid JSON. ' . $response, 0, $e);
         }
 
         if ((int)$this->http->status !== 200) {
