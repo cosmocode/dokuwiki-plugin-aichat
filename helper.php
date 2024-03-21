@@ -7,6 +7,7 @@ use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
+use dokuwiki\plugin\aichat\ModelFactory;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 
 /**
@@ -17,14 +18,12 @@ use dokuwiki\plugin\aichat\Storage\AbstractStorage;
  */
 class helper_plugin_aichat extends Plugin
 {
+    /** @var ModelFactory */
+    public $factory;
+
     /** @var CLIPlugin $logger */
     protected $logger;
-    /** @var ChatInterface */
-    protected $chatModel;
-    /** @var ChatInterface */
-    protected $rephraseModel;
-    /** @var EmbeddingInterface */
-    protected $embedModel;
+
     /** @var Embeddings */
     protected $embeddings;
     /** @var AbstractStorage */
@@ -43,6 +42,7 @@ class helper_plugin_aichat extends Plugin
         global $conf;
         $this->runDataFile = $conf['metadir'] . '/aichat__run.json';
         $this->loadConfig();
+        $this->factory = new ModelFactory($this->conf);
     }
 
     /**
@@ -81,19 +81,7 @@ class helper_plugin_aichat extends Plugin
      */
     public function getChatModel()
     {
-        if ($this->chatModel instanceof ChatInterface) {
-            return $this->chatModel;
-        }
-
-        [$namespace, $name] = sexplode(' ', $this->getConf('chatmodel'), 2);
-        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\ChatModel';
-
-        if (!class_exists($class)) {
-            throw new \RuntimeException('No ChatModel found for ' . $namespace);
-        }
-
-        $this->chatModel = new $class($name, $this->conf);
-        return $this->chatModel;
+        return $this->factory->getChatModel();
     }
 
     /**
@@ -101,19 +89,7 @@ class helper_plugin_aichat extends Plugin
      */
     public function getRephraseModel()
     {
-        if ($this->rephraseModel instanceof ChatInterface) {
-            return $this->rephraseModel;
-        }
-
-        [$namespace, $name] = sexplode(' ', $this->getConf('rephrasemodel'), 2);
-        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\ChatModel';
-
-        if (!class_exists($class)) {
-            throw new \RuntimeException('No ChatModel found for ' . $namespace);
-        }
-
-        $this->rephraseModel = new $class($name, $this->conf);
-        return $this->rephraseModel;
+        return $this->factory->getRephraseModel();
     }
 
     /**
@@ -121,23 +97,10 @@ class helper_plugin_aichat extends Plugin
      *
      * @return EmbeddingInterface
      */
-    public function getEmbedModel()
+    public function getEmbeddingModel()
     {
-        if ($this->embedModel instanceof EmbeddingInterface) {
-            return $this->embedModel;
-        }
-
-        [$namespace, $name] = sexplode(' ', $this->getConf('embedmodel'), 2);
-        $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\EmbeddingModel';
-
-        if (!class_exists($class)) {
-            throw new \RuntimeException('No EmbeddingModel found for ' . $namespace);
-        }
-
-        $this->embedModel = new $class($name, $this->conf);
-        return $this->embedModel;
+        return $this->factory->getEmbeddingModel();
     }
-
 
     /**
      * Access the Embeddings interface
@@ -152,7 +115,7 @@ class helper_plugin_aichat extends Plugin
 
         $this->embeddings = new Embeddings(
             $this->getChatModel(),
-            $this->getEmbedModel(),
+            $this->getEmbeddingModel(),
             $this->getStorage(),
             $this->conf
         );

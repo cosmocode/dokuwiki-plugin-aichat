@@ -39,6 +39,9 @@ class Embeddings
     /** @var array remember sentences when chunking */
     private $sentenceQueue = [];
 
+    /** @var int the time spent for the last similar chunk retrieval */
+    public $timeSpent = 0;
+
     protected $configChunkSize;
     protected $configContextChunks;
 
@@ -234,10 +237,11 @@ class Embeddings
 
         $time = microtime(true);
         $chunks = $this->storage->getSimilarChunks($vector, $lang, $fetch);
+        $this->timeSpent = microtime(true) - $time;
         if ($this->logger instanceof CLI) {
             $this->logger->info(
                 'Fetched {count} similar chunks from store in {time} seconds',
-                ['count' => count($chunks), 'time' => round(microtime(true) - $time, 2)]
+                ['count' => count($chunks), 'time' => round($this->timeSpent, 2)]
             );
         }
 

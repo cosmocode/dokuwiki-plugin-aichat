@@ -49,8 +49,7 @@ class EmbeddingModel extends AbstractModel implements EmbeddingInterface
     protected function parseAPIResponse($response)
     {
         if (isset($response['usage'])) {
-            $this->inputTokensUsed += $response['usage']['prompt_tokens'];
-            $this->outputTokensUsed += $response['usage']['completion_tokens'] ?? 0;
+            $this->inputTokensUsed += $response['usage']['total_tokens'];
         }
 
         if (isset($response['error'])) {

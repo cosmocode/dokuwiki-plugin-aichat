@@ -114,7 +114,7 @@ abstract class AbstractModel implements ModelInterface
 
         return [
             'tokens' => $this->inputTokensUsed + $this->outputTokensUsed,
-            'cost' => round($cost / 1_000_000, 4),
+            'cost' => sprintf("%.6f", $cost / 1_000_000),
             'time' => round($this->timeUsed, 2),
             'requests' => $this->requestsMade,
         ];

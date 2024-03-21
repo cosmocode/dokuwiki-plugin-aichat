@@ -32,7 +32,11 @@ class Chunk implements \JsonSerializable, \Stringable
 
     public function __toString(): string
     {
-        return $this->page . '#' . $this->id;
+        $string = $this->page . '#' . $this->id;
+        if ($this->score) {
+            $string .= ' (' . $this->score . ')';
+        }
+        return $string;
     }
 
     /**

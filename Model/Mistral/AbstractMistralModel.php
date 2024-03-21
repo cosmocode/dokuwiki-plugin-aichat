@@ -43,8 +43,8 @@ abstract class AbstractMistralModel extends AbstractModel
             $this->outputTokensUsed += $response['usage']['completion_tokens'] ?? 0;
         }
 
-        if (isset($response['error'])) {
-            throw new \Exception('Mistral API error: ' . $response['error']['message']);
+        if (isset($response['object']) && $response['object'] === 'error') {
+            throw new \Exception('Mistral API error: ' . $response['message']);
         }
 
         return $response;

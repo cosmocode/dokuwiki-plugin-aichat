@@ -2,6 +2,7 @@
 
 use dokuwiki\Extension\CLIPlugin;
 use dokuwiki\plugin\aichat\Chunk;
+use dokuwiki\plugin\aichat\ModelFactory;
 use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
@@ -18,11 +19,13 @@ class cli_plugin_aichat extends CLIPlugin
     /** @var helper_plugin_aichat */
     protected $helper;
 
+    /** @inheritdoc */
     public function __construct($autocatch = true)
     {
         parent::__construct($autocatch);
         $this->helper = plugin_load('helper', 'aichat');
         $this->helper->setLogger($this);
+        $this->loadConfig();
     }
 
     /** @inheritDoc */
@@ -77,7 +80,10 @@ class cli_plugin_aichat extends CLIPlugin
     /** @inheritDoc */
     protected function main(Options $options)
     {
-        $this->loadConfig();
+        if ($this->loglevel['debug']['enabled']) {
+            $this->helper->factory->setDebug(true);
+        }
+
         ini_set('memory_limit', -1);
         switch ($options->getCmd()) {
             case 'embed':
@@ -219,17 +225,11 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function chat()
     {
-        if ($this->loglevel['debug']['enabled']) {
-            $this->helper->getChatModel()->setDebug(true);
-            $this->helper->getRephraseModel()->setDebug(true);
-            $this->helper->getEmbedModel()->setDebug(true);
-        }
-
         $history = [];
         while ($q = $this->readLine('Your Question')) {
             $this->helper->getChatModel()->resetUsageStats();
             $this->helper->getRephraseModel()->resetUsageStats();
-            $this->helper->getEmbedModel()->resetUsageStats();
+            $this->helper->getEmbeddingModel()->resetUsageStats();
             $result = $this->helper->askChatQuestion($q, $history);
             $this->colors->ptln("Interpretation: {$result['question']}", Colors::C_LIGHTPURPLE);
             $history[] = [$result['question'], $result['answer']];
@@ -237,34 +237,14 @@ class cli_plugin_aichat extends CLIPlugin
         }
     }
 
+    /**
+     * Print information about the available models
+     *
+     * @return void
+     */
     protected function models()
     {
-        $result = [
-            'chat' => [],
-            'embedding' => [],
-        ];
-
-
-        $jsons = glob(__DIR__ . '/Model/*/models.json');
-        foreach ($jsons as $json) {
-            $models = json_decode(file_get_contents($json), true);
-            foreach ($models as $type => $model) {
-                $namespace = basename(dirname($json));
-                foreach ($model as $name => $info) {
-
-
-                    $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $namespace . '\\' . ucfirst($type) . 'Model';
-                    try {
-                        new $class($name, $this->conf);
-                        $info['confok'] = true;
-                    } catch (Exception $e) {
-                        $info['confok'] = false;
-                    }
-
-                    $result[$type]["$namespace $name"] = $info;
-                }
-            }
-        }
+        $result = (new ModelFactory($this->conf))->getModels();
 
         $td = new TableFormatter($this->colors);
         $cols = [30, 20, 20, '*'];
@@ -284,7 +264,7 @@ class cli_plugin_aichat extends CLIPlugin
                     $info['description'] . "\n"
                 ],
                 [
-                    $info['confok'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
+                    $info['instance'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
                 ]
             );
         }
@@ -307,7 +287,7 @@ class cli_plugin_aichat extends CLIPlugin
                     $info['description'] . "\n"
                 ],
                 [
-                    $info['confok'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
+                    $info['instance'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
                 ]
             );
         }
@@ -324,12 +304,6 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function ask($query)
     {
-        if ($this->loglevel['debug']['enabled']) {
-            $this->helper->getChatModel()->setDebug(true);
-            $this->helper->getRephraseModel()->setDebug(true);
-            $this->helper->getEmbedModel()->setDebug(true);
-        }
-
         $result = $this->helper->askQuestion($query);
         $this->printAnswer($result);
     }
@@ -441,7 +415,7 @@ class cli_plugin_aichat extends CLIPlugin
     {
         $chat = $this->helper->getChatModel()->getUsageStats();
         $rephrase = $this->helper->getRephraseModel()->getUsageStats();
-        $embed = $this->helper->getEmbedModel()->getUsageStats();
+        $embed = $this->helper->getEmbeddingModel()->getUsageStats();
 
         $this->info(
             'Made {requests} requests in {time}s to models. Used {tokens} tokens for about ${cost}.',
