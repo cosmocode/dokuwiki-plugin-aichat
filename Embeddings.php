@@ -237,11 +237,11 @@ class Embeddings
 
         $time = microtime(true);
         $chunks = $this->storage->getSimilarChunks($vector, $lang, $fetch);
-        $this->timeSpent = microtime(true) - $time;
+        $this->timeSpent = round(microtime(true) - $time, 2);
         if ($this->logger instanceof CLI) {
             $this->logger->info(
                 'Fetched {count} similar chunks from store in {time} seconds',
-                ['count' => count($chunks), 'time' => round($this->timeSpent, 2)]
+                ['count' => count($chunks), 'time' => $this->timeSpent]
             );
         }
 

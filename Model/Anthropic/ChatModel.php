@@ -23,7 +23,7 @@ class ChatModel extends AbstractModel implements ChatInterface
     /** @inheritdoc */
     public function getAnswer(array $messages): string
     {
-        // convert OpenAI Style to Anthropic style
+        // system message is separate from the messages array
         $system = '';
         $chat = [];
         foreach ($messages as $message) {
@@ -47,9 +47,6 @@ class ChatModel extends AbstractModel implements ChatInterface
         }
 
         $response = $this->request('messages', $data);
-
-        print_r($response);
-
         return $response['content'][0]['text'];
     }
 
@@ -71,7 +68,8 @@ class ChatModel extends AbstractModel implements ChatInterface
     protected function parseAPIResponse($response)
     {
         if (isset($response['usage'])) {
-            $this->tokensUsed += $response['usage']['input_tokens'] + $response['usage']['output_tokens'];
+            $this->inputTokensUsed += $response['usage']['input_tokens'];
+            $this->outputTokensUsed += $response['usage']['output_tokens'];
         }
 
         if (isset($response['error'])) {
