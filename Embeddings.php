@@ -44,6 +44,7 @@ class Embeddings
 
     protected $configChunkSize;
     protected $configContextChunks;
+    protected $similarityThreshold;
 
     /**
      * Embeddings constructor.
@@ -64,6 +65,7 @@ class Embeddings
         $this->storage = $storage;
         $this->configChunkSize = $config['chunkSize'];
         $this->configContextChunks = $config['contextChunks'];
+        $this->similarityThreshold = $config['similarityThreshold']/100;
     }
 
     /**
@@ -249,6 +251,7 @@ class Embeddings
         foreach ($chunks as $chunk) {
             // filter out chunks the user is not allowed to read
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
+            if($chunk->getScore() < $this->similarityThreshold) continue;
 
             $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
             if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough

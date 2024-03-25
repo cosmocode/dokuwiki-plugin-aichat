@@ -40,8 +40,11 @@ $meta['qdrant_baseurl'] = array('string');
 $meta['qdrant_apikey'] = array('password');
 $meta['qdrant_collection'] = array('string');
 
-$meta['chunkSize'] = array('numeric', '_min' => 100);
-$meta['contextChunks'] = array('numeric', '_min' => 1);
+$meta['chunkSize'] = array('numeric', '_min' => 100, '_regexp' => '/^\d+$/');
+$meta['similarityThreshold'] = array('numeric', '_min' => 0, '_max' => 100, '_regexp' => '/^\d+$/');
+$meta['contextChunks'] = array('numeric', '_min' => 1, '_regexp' => '/^\d+$/');
+$meta['chatHistory'] = array('numeric', '_min' => 0, '_regexp' => '/^\d+$/');
+$meta['rephraseHistory'] = array('numeric', '_min' => 0, '_regexp' => '/^\d+$/');
 
 $meta['logging'] = array('onoff');
 $meta['restrict'] = array('string');
