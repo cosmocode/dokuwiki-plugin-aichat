@@ -1,6 +1,7 @@
 <?php
 
 use dokuwiki\Extension\CLIPlugin;
+use dokuwiki\plugin\aichat\AbstractCLI;
 use dokuwiki\plugin\aichat\ModelFactory;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
@@ -11,25 +12,16 @@ use splitbrain\phpcli\Options;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class cli_plugin_aichat_simulate extends CLIPlugin
+class cli_plugin_aichat_simulate extends AbstractCLI
 {
-    /** @var helper_plugin_aichat */
-    protected $helper;
-
-    /** @inheritdoc */
-    public function __construct($autocatch = true)
-    {
-        parent::__construct($autocatch);
-        $this->helper = plugin_load('helper', 'aichat');
-        $this->helper->setLogger($this);
-        $this->loadConfig();
-    }
 
 
     /** @inheritDoc */
     protected function setup(Options $options)
     {
-        $options->setHelp('Run a prpared chat session against multiple models');
+        parent::setup($options);
+
+        $options->setHelp('Run a prepared chat session against multiple models');
         $options->registerArgument('input', 'A file with the chat questions. Each question separated by two newlines');
         $options->registerArgument('output', 'Where to write the result CSV to');
 
@@ -44,14 +36,12 @@ class cli_plugin_aichat_simulate extends CLIPlugin
     /** @inheritDoc */
     protected function main(Options $options)
     {
-        if ($this->loglevel['debug']['enabled']) {
-            $this->helper->factory->setDebug(true);
-        }
+        parent::main($options);
 
         [$input, $output] = $options->getArgs();
         $questions = $this->readInputFile($input);
-        $outfh = @fopen($output, 'w');
-        if (!$outfh) throw new \Exception("Could not open $output for writing");
+        $outFH = @fopen($output, 'w');
+        if (!$outFH) throw new \Exception("Could not open $output for writing");
 
         $models = $this->helper->factory->getModels(true, 'chat');
 
@@ -65,9 +55,9 @@ class cli_plugin_aichat_simulate extends CLIPlugin
         }
 
         foreach ($this->records2rows($results) as $row) {
-            fputcsv($outfh, $row);
+            fputcsv($outFH, $row);
         }
-        fclose($outfh);
+        fclose($outFH);
         $this->success("Results written to $output");
     }
 
@@ -88,6 +78,7 @@ class cli_plugin_aichat_simulate extends CLIPlugin
             $this->colors->ptln($q, Colors::C_LIGHTPURPLE);
             $result = $this->helper->askChatQuestion($q, $history);
             $history[] = [$result['question'], $result['answer']];
+            $this->colors->ptln($result['question'], Colors::C_LIGHTBLUE);
 
             $record = [
                 'question' => $q,

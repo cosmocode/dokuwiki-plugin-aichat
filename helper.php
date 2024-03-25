@@ -57,6 +57,18 @@ class helper_plugin_aichat extends Plugin
     }
 
     /**
+     * Update the configuration
+     *
+     * @param array $config
+     * @return void
+     */
+    public function updateConfig(array $config)
+    {
+        $this->conf = array_merge($this->conf, $config);
+        $this->factory->updateConfig($config);
+    }
+
+    /**
      * Check if the current user is allowed to use the plugin (if it has been restricted)
      *
      * @return bool
@@ -240,10 +252,11 @@ class helper_plugin_aichat extends Plugin
      */
     protected function prepareMessages(
         ChatInterface $model,
-        string $promptedQuestion,
-        array $history,
-        int $historySize
-    ): array {
+        string        $promptedQuestion,
+        array         $history,
+        int           $historySize
+    ): array
+    {
         // calculate the space for context
         $remainingContext = $model->getMaxInputTokenLength();
         $remainingContext -= $this->countTokens($promptedQuestion);

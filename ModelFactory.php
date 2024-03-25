@@ -25,6 +25,19 @@ class ModelFactory
     }
 
     /**
+     * Update the configuration and reset the cached models
+     *
+     * @param array $config The new (partial) configuration
+     */
+    public function updateConfig(array $config)
+    {
+        $this->config = array_merge($this->config, $config);
+        $this->chatModel = null;
+        $this->rephraseModel = null;
+        $this->embeddingModel = null;
+    }
+
+    /**
      * Set the debug flag for all models
      *
      * @param bool $debug
@@ -49,6 +62,7 @@ class ModelFactory
             return $this->chatModel;
         }
         $this->chatModel = $this->loadModel('chat', $this->config['chatmodel']);
+        $this->chatModel->setDebug($this->debug);
         return $this->chatModel;
     }
 
@@ -64,6 +78,7 @@ class ModelFactory
             return $this->rephraseModel;
         }
         $this->rephraseModel = $this->loadModel('chat', $this->config['chatmodel']);
+        $this->rephraseModel->setDebug($this->debug);
         return $this->rephraseModel;
     }
 
@@ -78,6 +93,7 @@ class ModelFactory
             return $this->embeddingModel;
         }
         $this->embeddingModel = $this->loadModel('embedding', $this->config['embedmodel']);
+        $this->embeddingModel->setDebug($this->debug);
         return $this->embeddingModel;
     }
 

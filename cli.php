@@ -1,6 +1,7 @@
 <?php
 
 use dokuwiki\Extension\CLIPlugin;
+use dokuwiki\plugin\aichat\AbstractCLI;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\ModelFactory;
 use dokuwiki\Search\Indexer;
@@ -14,28 +15,26 @@ use splitbrain\phpcli\TableFormatter;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class cli_plugin_aichat extends CLIPlugin
+class cli_plugin_aichat extends AbstractCLI
 {
     /** @var helper_plugin_aichat */
     protected $helper;
 
-    /** @inheritdoc */
-    public function __construct($autocatch = true)
-    {
-        parent::__construct($autocatch);
-        $this->helper = plugin_load('helper', 'aichat');
-        $this->helper->setLogger($this);
-        $this->loadConfig();
-    }
-
     /** @inheritDoc */
     protected function setup(Options $options)
     {
-        $options->useCompactHelp();
+        parent::setup($options);
 
         $options->setHelp(
             'Manage and query the AI chatbot data. Please note that calls to your LLM provider will be made. ' .
             'This may incur costs.'
+        );
+
+        $options->registerOption(
+            'model',
+            'Overrides the chat and rephrasing model settings and uses this model instead',
+            '',
+            'model'
         );
 
         $options->registerCommand(
@@ -80,11 +79,15 @@ class cli_plugin_aichat extends CLIPlugin
     /** @inheritDoc */
     protected function main(Options $options)
     {
-        if ($this->loglevel['debug']['enabled']) {
-            $this->helper->factory->setDebug(true);
+        parent::main($options);
+
+        $model = $options->getOpt('model');
+        if($model) {
+            $this->helper->updateConfig(
+                ['chatmodel' => $model, 'rephasemodel' => $model]
+            );
         }
 
-        ini_set('memory_limit', -1);
         switch ($options->getCmd()) {
             case 'embed':
                 $this->createEmbeddings($options->getOpt('clear'));
