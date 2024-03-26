@@ -1,10 +1,10 @@
 <?php
 
-use dokuwiki\Extension\ActionPlugin;
-use dokuwiki\Extension\EventHandler;
-use dokuwiki\Extension\Event;
-use dokuwiki\Logger;
 use dokuwiki\ErrorHandler;
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\Event;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Logger;
 use dokuwiki\plugin\aichat\Chunk;
 
 /**
@@ -41,7 +41,7 @@ class action_plugin_aichat extends ActionPlugin
         $helper = plugin_load('helper', 'aichat');
 
         $question = $INPUT->post->str('question');
-        $history = json_decode((string) $INPUT->post->str('history'), null, 512, JSON_THROW_ON_ERROR);
+        $history = json_decode((string)$INPUT->post->str('history'), null, 512, JSON_THROW_ON_ERROR);
         header('Content-Type: application/json');
 
         if (!$helper->userMayAccess()) {
@@ -58,7 +58,13 @@ class action_plugin_aichat extends ActionPlugin
             $sources = [];
             foreach ($result['sources'] as $source) {
                 /** @var Chunk $source */
-                $sources[wl($source->getPage())] = p_get_first_heading($source->getPage()) ?: $source->getPage();
+                if(isset($sources[$source->getPage()])) continue; // only show the first occurrence per page
+                $sources[$source->getPage()] = [
+                    'page' => $source->getPage(),
+                    'url' => wl($source->getPage()),
+                    'title' => p_get_first_heading($source->getPage()) ?: $source->getPage(),
+                    'score' => sprintf("%.2f%%", $source->getScore()*100),
+                ];
             }
             $parseDown = new Parsedown();
             $parseDown->setSafeMode(true);
@@ -66,7 +72,7 @@ class action_plugin_aichat extends ActionPlugin
             echo json_encode([
                 'question' => $result['question'],
                 'answer' => $parseDown->text($result['answer']),
-                'sources' => $sources,
+                'sources' => array_values($sources),
             ], JSON_THROW_ON_ERROR);
 
             if ($this->getConf('logging')) {

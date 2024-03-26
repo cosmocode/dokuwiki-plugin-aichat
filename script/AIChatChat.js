@@ -288,13 +288,14 @@ class AIChatChat extends HTMLElement {
             div.textContent = message;
         }
 
-        if (sources !== null && Object.keys(sources).length > 0) {
+        if (sources !== null && sources.length > 0) {
             const ul = document.createElement('ul');
-            Object.entries(sources).forEach(([url, title]) => {
+            sources.forEach((source) => {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
-                a.href = url;
-                a.textContent = title;
+                a.href = source.url;
+                a.textContent = source.title;
+                a.title = `${source.page} (${source.score})`;
                 li.appendChild(a);
                 ul.appendChild(li);
             });
