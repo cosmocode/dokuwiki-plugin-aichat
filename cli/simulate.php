@@ -1,8 +1,6 @@
 <?php
 
-use dokuwiki\Extension\CLIPlugin;
 use dokuwiki\plugin\aichat\AbstractCLI;
-use dokuwiki\plugin\aichat\ModelFactory;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 
@@ -76,9 +74,15 @@ class cli_plugin_aichat_simulate extends AbstractCLI
             $this->helper->getEmbeddingModel()->resetUsageStats();
 
             $this->colors->ptln($q, Colors::C_LIGHTPURPLE);
-            $result = $this->helper->askChatQuestion($q, $history);
-            $history[] = [$result['question'], $result['answer']];
-            $this->colors->ptln($result['question'], Colors::C_LIGHTBLUE);
+            try {
+                $result = $this->helper->askChatQuestion($q, $history);
+                $history[] = [$result['question'], $result['answer']];
+                $this->colors->ptln($result['question'], Colors::C_LIGHTBLUE);
+            } catch (Exception $e) {
+                $this->error($e->getMessage());
+                $this->debug($e->getTraceAsString());
+                $result = ['question' => $q, 'answer' => "ERROR\n" . $e->getMessage(), 'sources' => []];
+            }
 
             $record = [
                 'question' => $q,

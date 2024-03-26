@@ -210,10 +210,9 @@ class cli_plugin_aichat extends AbstractCLI
      */
     protected function split($page)
     {
-        $text = rawWiki($page);
-        $chunks = $this->helper->getEmbeddings()->splitIntoChunks($text);
+        $chunks = $this->helper->getEmbeddings()->createPageChunks($page, 0);
         foreach ($chunks as $chunk) {
-            echo $chunk;
+            echo $chunk->getText();
             echo "\n";
             $this->colors->ptln('--------------------------------', Colors::C_LIGHTPURPLE);
         }

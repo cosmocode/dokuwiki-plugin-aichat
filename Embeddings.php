@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\aichat;
 
+use dokuwiki\Extension\Event;
 use dokuwiki\Extension\PluginInterface;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
@@ -55,17 +56,18 @@ class Embeddings
      * @param array $config The plugin configuration
      */
     public function __construct(
-        ChatInterface $chatModel,
+        ChatInterface      $chatModel,
         EmbeddingInterface $embedModel,
-        AbstractStorage $storage,
-        $config
-    ) {
+        AbstractStorage    $storage,
+                           $config
+    )
+    {
         $this->chatModel = $chatModel;
         $this->embedModel = $embedModel;
         $this->storage = $storage;
         $this->configChunkSize = $config['chunkSize'];
         $this->configContextChunks = $config['contextChunks'];
-        $this->similarityThreshold = $config['similarityThreshold']/100;
+        $this->similarityThreshold = $config['similarityThreshold'] / 100;
     }
 
     /**
@@ -169,9 +171,10 @@ class Embeddings
      * @param string $page Name of the page to split
      * @param int $firstChunkID The ID of the first chunk of this page
      * @return Chunk[] A list of chunks created for this page
+     * @emits INDEXER_PAGE_ADD support plugins that add additional data to the page
      * @throws \Exception
      */
-    protected function createPageChunks($page, $firstChunkID)
+    public function createPageChunks($page, $firstChunkID)
     {
         $chunkList = [];
 
@@ -182,6 +185,19 @@ class Embeddings
             $text = p_cached_output(wikiFN($page), 'text', $page);
         } else {
             $text = rawWiki($page);
+        }
+
+        // allow plugins to modify the text before splitting
+        $eventData = [
+            'page' => $page,
+            'body' => '',
+            'metadata' => ['title' => $page, 'relation_references' => []],
+        ];
+        $event = new Event('INDEXER_PAGE_ADD', $eventData);
+        if ($event->advise_before()) {
+            $text = $eventData['body'] . ' ' . $text;
+        } else {
+            $text = $eventData['body'];
         }
 
         $parts = $this->splitIntoChunks($text);
@@ -251,7 +267,7 @@ class Embeddings
         foreach ($chunks as $chunk) {
             // filter out chunks the user is not allowed to read
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
-            if($chunk->getScore() < $this->similarityThreshold) continue;
+            if ($chunk->getScore() < $this->similarityThreshold) continue;
 
             $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
             if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
@@ -269,7 +285,7 @@ class Embeddings
      * @throws \Exception
      * @todo support splitting too long sentences
      */
-    public function splitIntoChunks($text)
+    protected function splitIntoChunks($text)
     {
         $sentenceSplitter = new Sentence();
         $tiktok = $this->getTokenEncoder();
@@ -297,7 +313,8 @@ class Embeddings
                 $this->rememberSentence($sentence);
             } else {
                 // add current chunk to result
-                $chunks[] = $chunk;
+                $chunk = trim($chunk);
+                if ($chunk !== '') $chunks[] = $chunk;
 
                 // start new chunk with remembered sentences
                 $chunk = implode(' ', $this->sentenceQueue);

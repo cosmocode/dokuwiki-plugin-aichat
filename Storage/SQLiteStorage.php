@@ -65,6 +65,8 @@ class SQLiteStorage extends AbstractStorage
         if ($clear) {
             /** @noinspection SqlWithoutWhere */
             $this->db->exec('DELETE FROM embeddings');
+            /** @noinspection SqlWithoutWhere */
+            $this->db->exec('DELETE FROM clusters');
         }
     }
 
