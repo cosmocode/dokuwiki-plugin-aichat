@@ -259,11 +259,10 @@ class helper_plugin_aichat extends Plugin
      */
     protected function prepareMessages(
         ChatInterface $model,
-        string        $promptedQuestion,
-        array         $history,
-        int           $historySize
-    ): array
-    {
+        string $promptedQuestion,
+        array $history,
+        int $historySize
+    ): array {
         // calculate the space for context
         $remainingContext = $model->getMaxInputTokenLength();
         $remainingContext -= $this->countTokens($promptedQuestion);

@@ -58,12 +58,12 @@ class action_plugin_aichat extends ActionPlugin
             $sources = [];
             foreach ($result['sources'] as $source) {
                 /** @var Chunk $source */
-                if(isset($sources[$source->getPage()])) continue; // only show the first occurrence per page
+                if (isset($sources[$source->getPage()])) continue; // only show the first occurrence per page
                 $sources[$source->getPage()] = [
                     'page' => $source->getPage(),
                     'url' => wl($source->getPage()),
                     'title' => p_get_first_heading($source->getPage()) ?: $source->getPage(),
-                    'score' => sprintf("%.2f%%", $source->getScore()*100),
+                    'score' => sprintf("%.2f%%", $source->getScore() * 100),
                 ];
             }
             $parseDown = new Parsedown();

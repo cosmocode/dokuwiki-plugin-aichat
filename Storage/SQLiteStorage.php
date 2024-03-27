@@ -17,7 +17,6 @@ use KMeans\Space;
  */
 class SQLiteStorage extends AbstractStorage
 {
-
     /** @var int Number of documents to randomly sample to create the clusters */
     final public const SAMPLE_SIZE = 2000;
     /** @var int The average size of each cluster */
@@ -40,7 +39,7 @@ class SQLiteStorage extends AbstractStorage
         $helper = plugin_load('helper', 'aichat');
         $this->useLanguageClusters = $helper->getConf('preferUIlanguage') >= AIChat::LANG_UI_LIMITED;
 
-        $this->similarityThreshold = $config['similarityThreshold']/100;
+        $this->similarityThreshold = $config['similarityThreshold'] / 100;
     }
 
     /** @inheritdoc */

@@ -82,7 +82,7 @@ class cli_plugin_aichat extends AbstractCLI
         parent::main($options);
 
         $model = $options->getOpt('model');
-        if($model) {
+        if ($model) {
             $this->helper->updateConfig(
                 ['chatmodel' => $model, 'rephasemodel' => $model]
             );

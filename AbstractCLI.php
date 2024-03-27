@@ -2,9 +2,10 @@
 
 namespace dokuwiki\plugin\aichat;
 
+use dokuwiki\Extension\CLIPlugin;
 use splitbrain\phpcli\Options;
 
-abstract class AbstractCLI extends \dokuwiki\Extension\CLIPlugin
+abstract class AbstractCLI extends CLIPlugin
 {
     /** @var \helper_plugin_aichat */
     protected $helper;
@@ -44,11 +45,10 @@ abstract class AbstractCLI extends \dokuwiki\Extension\CLIPlugin
         $lc = $options->getOpt('lang');
         if ($lc === 'auto') {
             $this->helper->updateConfig(['preferUIlanguage' => 0]);
-        } else if ($lc) {
+        } elseif ($lc) {
             $this->helper->updateConfig(['preferUIlanguage' => 1]);
             global $conf;
             $conf['lang'] = $lc;
         }
-
     }
 }
