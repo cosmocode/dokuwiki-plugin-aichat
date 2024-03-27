@@ -170,24 +170,30 @@ class helper_plugin_aichat extends Plugin
     public function askChatQuestion($question, $history = [])
     {
         if ($history && $this->getConf('rephraseHistory') > 0) {
-            $standaloneQuestion = $this->rephraseChatQuestion($question, $history);
+            $contextQuestion = $this->rephraseChatQuestion($question, $history);
+
+            // Only use the rephrased question if it has more history than the chat history provides
+            if ($this->getConf('rephraseHistory') > $this->getConf('chatHistory')) {
+                $question = $contextQuestion;
+            }
         } else {
-            $standaloneQuestion = $question;
+            $contextQuestion = $question;
         }
-        return $this->askQuestion($standaloneQuestion, $history);
+        return $this->askQuestion($question, $history, $contextQuestion);
     }
 
     /**
      * Ask a single standalone question
      *
-     * @param string $question
+     * @param string $question The question to ask
      * @param array $history [user, ai] of the previous question
+     * @param string $contextQuestion The question to use for context search
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askQuestion($question, $history = [])
+    public function askQuestion($question, $history = [], $contextQuestion = '')
     {
-        $similar = $this->getEmbeddings()->getSimilarChunks($question, $this->getLanguageLimit());
+        $similar = $this->getEmbeddings()->getSimilarChunks($contextQuestion ?: $question, $this->getLanguageLimit());
         if ($similar) {
             $context = implode(
                 "\n",
@@ -214,6 +220,7 @@ class helper_plugin_aichat extends Plugin
 
         return [
             'question' => $question,
+            'contextQuestion' => $contextQuestion,
             'answer' => $answer,
             'sources' => $similar,
         ];

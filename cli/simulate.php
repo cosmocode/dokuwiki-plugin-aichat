@@ -92,7 +92,7 @@ class cli_plugin_aichat_simulate extends AbstractCLI
 
             $record = [
                 'question' => $q,
-                'rephrased' => $result['question'],
+                'rephrased' => $result['contextQuestion'],
                 'answer' => $result['answer'],
                 'source.list' => implode("\n", $result['sources']),
                 'source.time' => $this->helper->getEmbeddings()->timeSpent,
