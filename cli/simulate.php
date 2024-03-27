@@ -12,7 +12,13 @@ use splitbrain\phpcli\Options;
  */
 class cli_plugin_aichat_simulate extends AbstractCLI
 {
-
+    /** @inheritDoc */
+    public function getInfo()
+    {
+        $info = parent::getInfo();
+        $info['desc'] = 'Run a prepared chat session against multiple LLM models';
+        return $info;
+    }
 
     /** @inheritDoc */
     protected function setup(Options $options)
