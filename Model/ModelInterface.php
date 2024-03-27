@@ -19,6 +19,11 @@ interface ModelInterface
     public function __construct(string $name, array $config);
 
     /**
+     * Get the full model name as used in the configuration
+     */
+    public function __toString(): string;
+
+    /**
      * The name as used by the LLM provider
      *
      * @return string

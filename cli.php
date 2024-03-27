@@ -133,8 +133,9 @@ class cli_plugin_aichat extends AbstractCLI
     protected function showinfo()
     {
         $stats = [
-            'chat model' => $this->getConf('chatmodel'),
-            'embed model' => $this->getConf('embedmodel'),
+            'embed model' => (string) $this->helper->getEmbeddingModel(),
+            'rephrase model' => (string) $this->helper->getRephraseModel(),
+            'chat model' => (string) $this->helper->getChatModel(),
         ];
         $stats = array_merge(
             $stats,

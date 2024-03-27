@@ -21,6 +21,8 @@ abstract class AbstractModel implements ModelInterface
 {
     /** @var string The model name */
     protected $modelName;
+    /** @var string The full model name */
+    protected $modelFullName;
     /** @var array The model info from the model.json file */
     protected $modelInfo;
 
@@ -65,6 +67,8 @@ abstract class AbstractModel implements ModelInterface
             throw new \Exception('Failed to parse model info file: ' . $e->getMessage(), $e->getCode(), $e);
         }
 
+        $this->modelFullName = basename(dirname($reflect->getFileName()) . ' ' . $name);
+
         if ($this instanceof ChatInterface) {
             if (!isset($modelinfos['chat'][$name])) {
                 throw new \Exception('Invalid chat model configured: ' . $name);
@@ -79,6 +83,13 @@ abstract class AbstractModel implements ModelInterface
             $this->modelInfo = $modelinfos['embedding'][$name];
         }
     }
+
+    /** @inheritdoc */
+    public function __toString(): string
+    {
+        return $this->modelFullName;
+    }
+
 
     /** @inheritdoc */
     public function getModelName()
