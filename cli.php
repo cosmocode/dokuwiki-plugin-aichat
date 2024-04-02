@@ -139,7 +139,7 @@ class cli_plugin_aichat extends AbstractCLI
         ];
         $stats = array_merge(
             $stats,
-            array_map('dformat', $this->helper->getRunData()),
+            $this->helper->getRunData(),
             $this->helper->getStorage()->statistics()
         );
         $this->printTable($stats);
@@ -341,7 +341,7 @@ class cli_plugin_aichat extends AbstractCLI
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
 
         $data = $this->helper->getRunData();
-        $data['maintenance ran at'] = time();
+        $data['maintenance ran at'] = dformat();
         $this->helper->setRunData($data);
     }
 
@@ -354,13 +354,25 @@ class cli_plugin_aichat extends AbstractCLI
     {
         [$skipRE, $matchRE] = $this->getRegexps();
 
+        $data = $this->helper->getRunData();
+        $lastEmbedModel = $data['embed used'] ?? '';
+
+        if(
+            !$clear && $lastEmbedModel &&
+            $lastEmbedModel != (string) $this->helper->getEmbeddingModel()
+        ){
+            $this->warning('Embedding model has changed since last run. Forcing an index rebuild');
+            $clear = true;
+        }
+
         $start = time();
         $this->helper->getEmbeddings()->createNewIndex($skipRE, $matchRE, $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
 
-        $data = $this->helper->getRunData();
-        $data['embed ran at'] = time();
+
+        $data['embed ran at'] = dformat();
+        $data['embed used'] = (string) $this->helper->getEmbeddingModel();
         $this->helper->setRunData($data);
     }
 
