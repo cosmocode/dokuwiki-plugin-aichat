@@ -17,9 +17,6 @@ use KMeans\Space;
  */
 class SQLiteStorage extends AbstractStorage
 {
-    /** @var float minimum similarity to consider a chunk a match */
-    final public const SIMILARITY_THRESHOLD = 0.75;
-
     /** @var int Number of documents to randomly sample to create the clusters */
     final public const SAMPLE_SIZE = 2000;
     /** @var int The average size of each cluster */
@@ -30,18 +27,19 @@ class SQLiteStorage extends AbstractStorage
 
     protected $useLanguageClusters = false;
 
-    /**
-     * Initializes the database connection and registers our custom function
-     *
-     * @throws \Exception
-     */
-    public function __construct()
+    /** @var float minimum similarity to consider a chunk a match */
+    protected $similarityThreshold = 0;
+
+    /** @inheritdoc */
+    public function __construct(array $config)
     {
         $this->db = new SQLiteDB('aichat', DOKU_PLUGIN . 'aichat/db/');
         $this->db->getPdo()->sqliteCreateFunction('COSIM', $this->sqliteCosineSimilarityCallback(...), 2);
 
         $helper = plugin_load('helper', 'aichat');
         $this->useLanguageClusters = $helper->getConf('preferUIlanguage') >= AIChat::LANG_UI_LIMITED;
+
+        $this->similarityThreshold = $config['similarityThreshold'] / 100;
     }
 
     /** @inheritdoc */
@@ -66,6 +64,8 @@ class SQLiteStorage extends AbstractStorage
         if ($clear) {
             /** @noinspection SqlWithoutWhere */
             $this->db->exec('DELETE FROM embeddings');
+            /** @noinspection SqlWithoutWhere */
+            $this->db->exec('DELETE FROM clusters');
         }
     }
 
@@ -152,7 +152,7 @@ class SQLiteStorage extends AbstractStorage
                 AND similarity > CAST(? AS FLOAT)
            ORDER BY similarity DESC
               LIMIT ?',
-            [json_encode($vector, JSON_THROW_ON_ERROR), $cluster, self::SIMILARITY_THRESHOLD, $limit]
+            [json_encode($vector, JSON_THROW_ON_ERROR), $cluster, $this->similarityThreshold, $limit]
         );
         $chunks = [];
         foreach ($result as $record) {

@@ -1,0 +1,45 @@
+{
+    "chat": {
+        "gpt-3.5-turbo": {
+            "description": "GPT-3.5 Turbo is a variant of GPT-3.5 that is optimized for speed and can generate responses in a fraction of the time.",
+            "inputTokens": 16385,
+            "inputTokenPrice": 0.50,
+            "outputTokens": 4096,
+            "outputTokenPrice": 1.50
+        },
+        "gpt-4": {
+            "description": "GPT-4 is the latest version of OpenAI's Generative Pre-trained Transformer (GPT) language model. It is capable of generating human-like text and can be used for a wide range of natural language processing tasks.",
+            "inputTokens": 81924,
+            "inputTokenPrice": 30.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 60.00
+        },
+        "gpt-4-turbo-preview": {
+            "description": "GPT-4 Turbo Preview is a variant of GPT-4 that is optimized for speed and can generate responses in a fraction of the time.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 10.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 30.00
+        }
+    },
+    "embedding": {
+        "text-embedding-ada-002": {
+            "description": "Most capable 2nd generation embedding model",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.10,
+            "dimensions": 1536
+        },
+        "text-embedding-3-small": {
+            "description": "Increased performance over 2nd generation ada embedding model",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.02,
+            "dimensions": 1536
+        },
+        "text-embedding-3-large": {
+            "description": "Most capable embedding model for both english and non-english tasks",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.13,
+            "dimensions": 3072
+        }
+    }
+}

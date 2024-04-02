@@ -2,8 +2,10 @@
 
 namespace dokuwiki\plugin\aichat;
 
+use dokuwiki\Extension\Event;
 use dokuwiki\Extension\PluginInterface;
-use dokuwiki\plugin\aichat\Model\AbstractModel;
+use dokuwiki\plugin\aichat\Model\ChatInterface;
+use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
 use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\CLI;
@@ -21,8 +23,12 @@ class Embeddings
     /** @var int maximum overlap between chunks in tokens */
     final public const MAX_OVERLAP_LEN = 200;
 
-    /** @var AbstractModel */
-    protected $model;
+    /** @var ChatInterface */
+    protected $chatModel;
+
+    /** @var EmbeddingInterface */
+    protected $embedModel;
+
     /** @var CLI|null */
     protected $logger;
     /** @var Encoder */
@@ -34,10 +40,33 @@ class Embeddings
     /** @var array remember sentences when chunking */
     private $sentenceQueue = [];
 
-    public function __construct(AbstractModel $model, AbstractStorage $storage)
-    {
-        $this->model = $model;
+    /** @var int the time spent for the last similar chunk retrieval */
+    public $timeSpent = 0;
+
+    protected $configChunkSize;
+    protected $configContextChunks;
+    protected $similarityThreshold;
+
+    /**
+     * Embeddings constructor.
+     *
+     * @param ChatInterface $chatModel
+     * @param EmbeddingInterface $embedModel
+     * @param AbstractStorage $storage
+     * @param array $config The plugin configuration
+     */
+    public function __construct(
+        ChatInterface $chatModel,
+        EmbeddingInterface $embedModel,
+        AbstractStorage $storage,
+        $config
+    ) {
+        $this->chatModel = $chatModel;
+        $this->embedModel = $embedModel;
         $this->storage = $storage;
+        $this->configChunkSize = $config['chunkSize'];
+        $this->configContextChunks = $config['contextChunks'];
+        $this->similarityThreshold = $config['similarityThreshold'] / 100;
     }
 
     /**
@@ -74,6 +103,20 @@ class Embeddings
     }
 
     /**
+     * Return the chunk size to use
+     *
+     * @return int
+     */
+    public function getChunkSize()
+    {
+        return min(
+            floor($this->chatModel->getMaxInputTokenLength() / 4), // be able to fit 4 chunks into the max input
+            floor($this->embedModel->getMaxInputTokenLength() * 0.9), // only use 90% of the embedding model to be safe
+            $this->configChunkSize, // this is usually the smallest
+        );
+    }
+
+    /**
      * Update the embeddings storage
      *
      * @param string $skipRE Regular expression to filter out pages (full RE with delimiters)
@@ -95,7 +138,7 @@ class Embeddings
                 !page_exists($page) ||
                 isHiddenPage($page) ||
                 filesize(wikiFN($page)) < 150 || // skip very small pages
-                ($skipRE && preg_match($skipRE, (string) $page)) ||
+                ($skipRE && preg_match($skipRE, (string)$page)) ||
                 ($matchRE && !preg_match($matchRE, ":$page"))
             ) {
                 // this page should not be in the index (anymore)
@@ -111,7 +154,8 @@ class Embeddings
             } else {
                 // page is newer than the chunks we have, create new chunks
                 $this->storage->deletePageChunks($page, $chunkID);
-                $this->storage->addPageChunks($this->createPageChunks($page, $chunkID));
+                $chunks = $this->createPageChunks($page, $chunkID);
+                if ($chunks) $this->storage->addPageChunks($chunks);
             }
         }
         $this->storage->finalizeCreation();
@@ -126,9 +170,10 @@ class Embeddings
      * @param string $page Name of the page to split
      * @param int $firstChunkID The ID of the first chunk of this page
      * @return Chunk[] A list of chunks created for this page
+     * @emits INDEXER_PAGE_ADD support plugins that add additional data to the page
      * @throws \Exception
      */
-    protected function createPageChunks($page, $firstChunkID)
+    public function createPageChunks($page, $firstChunkID)
     {
         $chunkList = [];
 
@@ -141,12 +186,25 @@ class Embeddings
             $text = rawWiki($page);
         }
 
+        // allow plugins to modify the text before splitting
+        $eventData = [
+            'page' => $page,
+            'body' => '',
+            'metadata' => ['title' => $page, 'relation_references' => []],
+        ];
+        $event = new Event('INDEXER_PAGE_ADD', $eventData);
+        if ($event->advise_before()) {
+            $text = $eventData['body'] . ' ' . $text;
+        } else {
+            $text = $eventData['body'];
+        }
+
         $parts = $this->splitIntoChunks($text);
         foreach ($parts as $part) {
-            if (trim((string) $part) == '') continue; // skip empty chunks
+            if (trim((string)$part) == '') continue; // skip empty chunks
 
             try {
-                $embedding = $this->model->getEmbedding($part);
+                $embedding = $this->embedModel->getEmbedding($part);
             } catch (\Exception $e) {
                 if ($this->logger instanceof CLI) {
                     $this->logger->error(
@@ -186,19 +244,20 @@ class Embeddings
     public function getSimilarChunks($query, $lang = '')
     {
         global $auth;
-        $vector = $this->model->getEmbedding($query);
+        $vector = $this->embedModel->getEmbedding($query);
 
-        $fetch = ceil(
-            ($this->model->getMaxContextTokenLength() / $this->model->getMaxEmbeddingTokenLength())
-            * 1.5 // fetch a few more than needed, since not all chunks are maximum length
+        $fetch = min(
+            ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize()),
+            $this->configContextChunks
         );
 
         $time = microtime(true);
         $chunks = $this->storage->getSimilarChunks($vector, $lang, $fetch);
+        $this->timeSpent = round(microtime(true) - $time, 2);
         if ($this->logger instanceof CLI) {
             $this->logger->info(
                 'Fetched {count} similar chunks from store in {time} seconds',
-                ['count' => count($chunks), 'time' => round(microtime(true) - $time, 2)]
+                ['count' => count($chunks), 'time' => $this->timeSpent]
             );
         }
 
@@ -207,9 +266,10 @@ class Embeddings
         foreach ($chunks as $chunk) {
             // filter out chunks the user is not allowed to read
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
+            if ($chunk->getScore() < $this->similarityThreshold) continue;
 
             $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-            if ($size + $chunkSize > $this->model->getMaxContextTokenLength()) break; // we have enough
+            if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
 
             $result[] = $chunk;
             $size += $chunkSize;
@@ -224,7 +284,7 @@ class Embeddings
      * @throws \Exception
      * @todo support splitting too long sentences
      */
-    public function splitIntoChunks($text)
+    protected function splitIntoChunks($text)
     {
         $sentenceSplitter = new Sentence();
         $tiktok = $this->getTokenEncoder();
@@ -236,7 +296,7 @@ class Embeddings
         $chunk = '';
         while ($sentence = array_shift($sentences)) {
             $slen = count($tiktok->encode($sentence));
-            if ($slen > $this->model->getMaxEmbeddingTokenLength()) {
+            if ($slen > $this->getChunkSize()) {
                 // sentence is too long, we need to split it further
                 if ($this->logger instanceof CLI) $this->logger->warning(
                     'Sentence too long, splitting not implemented yet'
@@ -244,7 +304,7 @@ class Embeddings
                 continue;
             }
 
-            if ($chunklen + $slen < $this->model->getMaxEmbeddingTokenLength()) {
+            if ($chunklen + $slen < $this->getChunkSize()) {
                 // add to current chunk
                 $chunk .= $sentence;
                 $chunklen += $slen;
@@ -252,7 +312,8 @@ class Embeddings
                 $this->rememberSentence($sentence);
             } else {
                 // add current chunk to result
-                $chunks[] = $chunk;
+                $chunk = trim($chunk);
+                if ($chunk !== '') $chunks[] = $chunk;
 
                 // start new chunk with remembered sentences
                 $chunk = implode(' ', $this->sentenceQueue);

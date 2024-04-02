@@ -5,22 +5,37 @@
  * @author Andreas Gohr <gohr@cosmocode.de>
  */
 
-$lang['openaikey'] = 'Your OpenAI API key';
-$lang['openaiorg'] = 'Your OpenAI organization ID (if any)';
-$lang['model'] = 'Which model to use. When changing models, be sure to run <code>php bin/plugin.php aichat embed -c</code> to rebuild the vector storage.';
 
-$lang['pinecone_apikey'] = 'Your Pinecone API key if you want to use Pinecone as a storage backend.';
-$lang['pinecone_baseurl'] = 'Your Pinecone base URL if you want to use Pinecone as a storage backend.';
+$lang['chatmodel'] = 'The 🧠 model to use for chat completion. Configure required credentials below.';
+$lang['rephrasemodel'] = 'The 🧠 model to use for rephrasing questions. Configure required credentials below.';
+$lang['embedmodel'] = 'The 🧠 model to use for text embedding. Configure required credentials below.<br>🔄 You need to rebuild the vector storage when changing this setting.';
+$lang['storage'] = 'Which 📥 vector storage to use. Configure required credentials below.<br>🔄 You need to rebuild the vector storage when changing this setting.';
 
-$lang['chroma_baseurl'] = 'Your Chroma base URL if you want to use Chroma as a storage backend.';
-$lang['chroma_apikey'] = 'Your Chroma API key. Empty if no authentication is required.';
-$lang['chroma_tenant'] = 'Your Chroma tenant name.';
-$lang['chroma_database'] = 'Your Chroma database name.';
-$lang['chroma_collection'] = 'The collection to use. Will be created.';
 
-$lang['qdrant_baseurl'] = 'Your Qdrant base URL if you want to use Qdrant as a storage backend.';
-$lang['qdrant_apikey'] = 'Your Qdrant API key. Empty if no authentication is required.';
-$lang['qdrant_collection'] = 'The collection to use. Will be created.';
+$lang['openai_apikey'] = '🧠 <b>OpenAI</b> API key';
+$lang['openai_org'] = '🧠 <b>OpenAI</b> Organization ID (if any)';
+$lang['anthropic_apikey'] = '🧠 <b>Anthropic</b> API key';
+$lang['mistral_apikey'] = '🧠 <b>Mistral</b> API key';
+$lang['voyageai_apikey'] = '🧠 <b>Voyage AI</b> API key';
+
+$lang['pinecone_apikey'] = '📥 <b>Pinecone</b> API key';
+$lang['pinecone_baseurl'] = '📥 <b>Pinecone</b> base URL';
+
+$lang['chroma_baseurl'] = '📥 <b>Chroma</b> base URL';
+$lang['chroma_apikey'] = '📥 <b>Chroma</b> API key. Empty if no authentication is required';
+$lang['chroma_tenant'] = '📥 <b>Chroma</b> tenant name';
+$lang['chroma_database'] = '📥 <b>Chroma</b> database name';
+$lang['chroma_collection'] = '📥 <b>Chroma</b> collection. Will be created.';
+
+$lang['qdrant_baseurl'] = '📥 <b>Qdrant</b> base URL';
+$lang['qdrant_apikey'] = '📥 <b>Qdrant</b> API key. Empty if no authentication is required';
+$lang['qdrant_collection'] = '📥 <b>Qdrant</b> collection. Will be created.';
+
+$lang['chunkSize'] = 'Maximum number of tokens per chunk.<br>🔄 You need to rebuild the vector storage when changing this setting.';
+$lang['similarityThreshold'] = 'Minimum similarity threshold when selecting sources for a question. 0-100.';
+$lang['contextChunks'] = 'Maximum number of chunks to send to the AI model for context.';
+$lang['chatHistory'] = 'Number of previous chat messages to consider for context in the conversation.';
+$lang['rephraseHistory'] = 'Number of previous chat messages to consider for context when rephrasing a question. Set to 0 to disable rephrasing.';
 
 $lang['logging'] = 'Log all questions and answers. Use the <a href="?do=admin&page=logviewer&facility=aichat">Log Viewer</a> to access.';
 $lang['restrict'] = 'Restrict access to these users and groups (comma separated). Leave empty to allow all users.';

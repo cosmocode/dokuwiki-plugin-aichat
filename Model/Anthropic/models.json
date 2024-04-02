@@ -1,0 +1,25 @@
+{
+    "chat": {
+        "claude-3-opus-20240229": {
+            "description": "Most powerful model for highly complex tasks. Top-level performance, intelligence, fluency, and understanding.",
+            "inputTokens": 150000,
+            "inputTokenPrice": 15.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 75.00
+        },
+        "claude-3-sonnet-20240229": {
+            "description": "Ideal balance of intelligence and speed for enterprise workloads. Maximum utility at a lower price, dependable, balanced for scaled deployments.",
+            "inputTokens": 150000,
+            "inputTokenPrice": 3.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 15.00
+        },
+        "claude-3-haiku-20240307": {
+            "description": "Fastest and most compact model for near-instant responsiveness. Quick and accurate targeted performance.",
+            "inputTokens": 150000,
+            "inputTokenPrice": 0.25,
+            "outputTokens": 4096,
+            "outputTokenPrice": 1.25
+        }
+    }
+}

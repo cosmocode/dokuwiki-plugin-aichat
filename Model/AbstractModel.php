@@ -2,83 +2,99 @@
 
 namespace dokuwiki\plugin\aichat\Model;
 
-abstract class AbstractModel
+use dokuwiki\HTTP\DokuHTTPClient;
+
+/**
+ * Base class for all models
+ *
+ * Model classes also need to implement one of the following interfaces:
+ * - ChatInterface
+ * - EmbeddingInterface
+ *
+ * This class already implements most of the requirements for these interfaces.
+ *
+ * In addition to any missing interface methods, model implementations will need to
+ * extend the constructor to handle the plugin configuration and implement the
+ * parseAPIResponse() method to handle the specific API response.
+ */
+abstract class AbstractModel implements ModelInterface
 {
-    /** @var int total tokens used by this instance */
-    protected $tokensUsed = 0;
-    /** @var int total cost used by this instance (multiplied by 1000*10000) */
-    protected $costEstimate = 0;
-    /** @var int total time spent in requests by this instance */
+    /** @var string The model name */
+    protected $modelName;
+    /** @var string The full model name */
+    protected $modelFullName;
+    /** @var array The model info from the model.json file */
+    protected $modelInfo;
+
+    /** @var int input tokens used since last reset */
+    protected $inputTokensUsed = 0;
+    /** @var int output tokens used since last reset */
+    protected $outputTokensUsed = 0;
+    /** @var int total time spent in requests since last reset */
     protected $timeUsed = 0;
-    /** @var int total number of requests made by this instance */
+    /** @var int total number of requests made since last reset */
     protected $requestsMade = 0;
+    /** @var int start time of the current request chain (may be multiple when retries needed) */
+    protected $requestStart = 0;
 
+    /** @var int How often to retry a request if it fails */
+    public const MAX_RETRIES = 3;
 
-    /**
-     * @param array $authConfig Any configuration this Model/Service may need to authenticate
-     * @throws \Exception
-     */
-    abstract public function __construct($authConfig);
+    /** @var DokuHTTPClient */
+    protected $http;
+    /** @var bool debug API communication */
+    protected $debug = false;
 
-    /**
-     * Maximum size of chunks this model can handle
-     *
-     * @return int
-     */
-    abstract public function getMaxEmbeddingTokenLength();
+    // region ModelInterface
 
-    /**
-     * Maximum number of tokens to use when creating context info. Should be smaller than the absolute
-     * token limit of the model, so that prompts and questions can be added.
-     *
-     * @return int
-     */
-    abstract public function getMaxContextTokenLength();
-
-    /**
-     * Maximum number of tokens to use as context when rephrasing a question. Should be smaller than the
-     * absolute token limit of the model, so that prompts and questions can be added.
-     *
-     * @return int
-     */
-    public function getMaxRephrasingTokenLength()
+    /** @inheritdoc */
+    public function __construct(string $name, array $config)
     {
-        return $this->getMaxContextTokenLength();
+        $this->modelName = $name;
+        $this->http = new DokuHTTPClient();
+        $this->http->timeout = 60;
+        $this->http->headers['Content-Type'] = 'application/json';
+        $this->http->headers['Accept'] = 'application/json';
+
+        $reflect = new \ReflectionClass($this);
+        $json = dirname($reflect->getFileName()) . '/models.json';
+        if (!file_exists($json)) {
+            throw new \Exception('Model info file not found at ' . $json);
+        }
+        try {
+            $modelinfos = json_decode(file_get_contents($json), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \Exception('Failed to parse model info file: ' . $e->getMessage(), $e->getCode(), $e);
+        }
+
+        $this->modelFullName = basename(dirname($reflect->getFileName()) . ' ' . $name);
+
+        if ($this instanceof ChatInterface) {
+            if (!isset($modelinfos['chat'][$name])) {
+                throw new \Exception('Invalid chat model configured: ' . $name);
+            }
+            $this->modelInfo = $modelinfos['chat'][$name];
+        }
+
+        if ($this instanceof EmbeddingInterface) {
+            if (!isset($modelinfos['embedding'][$name])) {
+                throw new \Exception('Invalid embedding model configured: ' . $name);
+            }
+            $this->modelInfo = $modelinfos['embedding'][$name];
+        }
     }
 
-    /**
-     * Get the embedding vectors for a given text
-     *
-     * @param string $text
-     * @return float[]
-     * @throws \Exception
-     */
-    abstract public function getEmbedding($text);
-
-    /**
-     * Answer a given question.
-     *
-     * Any prompt, chat history, context etc. will already be included in the $messages array.
-     *
-     * @param array $messages Messages in OpenAI format (with role and content)
-     * @return string The answer
-     * @throws \Exception
-     */
-    abstract public function getAnswer($messages);
-
-    /**
-     * This is called to let the LLM rephrase a question using given context
-     *
-     * Any prompt, chat history, context etc. will already be included in the $messages array.
-     * This calls getAnswer() by default, but you may want to use a different model instead.
-     *
-     * @param array $messages Messages in OpenAI format (with role and content)
-     * @return string The new question
-     * @throws \Exception
-     */
-    public function getRephrasedQuestion($messages)
+    /** @inheritdoc */
+    public function __toString(): string
     {
-        return $this->getAnswer($messages);
+        return $this->modelFullName;
+    }
+
+
+    /** @inheritdoc */
+    public function getModelName()
+    {
+        return $this->modelName;
     }
 
     /**
@@ -88,8 +104,8 @@ abstract class AbstractModel
      */
     public function resetUsageStats()
     {
-        $this->tokensUsed = 0;
-        $this->costEstimate = 0;
+        $this->inputTokensUsed = 0;
+        $this->outputTokensUsed = 0;
         $this->timeUsed = 0;
         $this->requestsMade = 0;
     }
@@ -101,11 +117,164 @@ abstract class AbstractModel
      */
     public function getUsageStats()
     {
+
+        $cost = 0;
+        $cost += $this->inputTokensUsed * $this->getInputTokenPrice();
+        if ($this instanceof ChatInterface) {
+            $cost += $this->outputTokensUsed * $this->getOutputTokenPrice();
+        }
+
         return [
-            'tokens' => $this->tokensUsed,
-            'cost' => round($this->costEstimate / 1000 / 10000, 4),
+            'tokens' => $this->inputTokensUsed + $this->outputTokensUsed,
+            'cost' => sprintf("%.6f", $cost / 1_000_000),
             'time' => round($this->timeUsed, 2),
             'requests' => $this->requestsMade,
         ];
     }
+
+    /** @inheritdoc */
+    public function getMaxInputTokenLength(): int
+    {
+        return $this->modelInfo['inputTokens'];
+    }
+
+    /** @inheritdoc */
+    public function getInputTokenPrice(): float
+    {
+        return $this->modelInfo['inputTokenPrice'];
+    }
+
+    // endregion
+
+    // region EmbeddingInterface
+
+    /** @inheritdoc */
+    public function getDimensions(): int
+    {
+        return $this->modelInfo['dimensions'];
+    }
+
+    // endregion
+
+    // region ChatInterface
+
+    public function getMaxOutputTokenLength(): int
+    {
+        return $this->modelInfo['outputTokens'];
+    }
+
+    public function getOutputTokenPrice(): float
+    {
+        return $this->modelInfo['outputTokenPrice'];
+    }
+
+    // endregion
+
+    // region API communication
+
+    /**
+     * When enabled, the input/output of the API will be printed to STDOUT
+     *
+     * @param bool $debug
+     */
+    public function setDebug($debug = true)
+    {
+        $this->debug = $debug;
+    }
+
+    /**
+     * This method should check the response for any errors. If the API singalled an error,
+     * this method should throw an Exception with a meaningful error message.
+     *
+     * If the response returned any info on used tokens, they should be added to $this->tokensUsed
+     *
+     * The method should return the parsed response, which will be passed to the calling method.
+     *
+     * @param mixed $response the parsed JSON response from the API
+     * @return mixed
+     * @throws \Exception when the response indicates an error
+     */
+    abstract protected function parseAPIResponse($response);
+
+    /**
+     * Send a request to the API
+     *
+     * Model classes should use this method to send requests to the API.
+     *
+     * This method will take care of retrying and logging basic statistics.
+     *
+     * It is assumed that all APIs speak JSON.
+     *
+     * @param string $method The HTTP method to use (GET, POST, PUT, DELETE, etc.)
+     * @param string $url The full URL to send the request to
+     * @param array $data Payload to send, will be encoded to JSON
+     * @param int $retry How often this request has been retried, do not set externally
+     * @return array API response as returned by parseAPIResponse
+     * @throws \Exception when anything goes wrong
+     */
+    protected function sendAPIRequest($method, $url, $data, $retry = 0)
+    {
+        // init statistics
+        if ($retry === 0) {
+            $this->requestStart = microtime(true);
+        } else {
+            sleep($retry); // wait a bit between retries
+        }
+        $this->requestsMade++;
+
+        // encode payload data
+        try {
+            $json = json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+        } catch (\JsonException $e) {
+            $this->timeUsed += $this->requestStart - microtime(true);
+            throw new \Exception('Failed to encode JSON for API:' . $e->getMessage(), $e->getCode(), $e);
+        }
+
+        if ($this->debug) {
+            echo 'Sending ' . $method . ' request to ' . $url . ' with payload:' . "\n";
+            print_r($json);
+            echo "\n";
+        }
+
+        // send request and handle retries
+        $this->http->sendRequest($url, $json, $method);
+        $response = $this->http->resp_body;
+        if ($response === false || $this->http->error) {
+            if ($retry < self::MAX_RETRIES) {
+                return $this->sendAPIRequest($method, $url, $data, $retry + 1);
+            }
+            $this->timeUsed += microtime(true) - $this->requestStart;
+            throw new \Exception('API returned no response. ' . $this->http->error);
+        }
+
+        if ($this->debug) {
+            echo 'Received response:' . "\n";
+            print_r($response);
+            echo "\n";
+        }
+
+        // decode the response
+        try {
+            $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            $this->timeUsed += microtime(true) - $this->requestStart;
+            throw new \Exception('API returned invalid JSON: ' . $response, 0, $e);
+        }
+
+        // parse the response, retry on error
+        try {
+            $result = $this->parseAPIResponse($result);
+        } catch (\Exception $e) {
+            if ($retry < self::MAX_RETRIES) {
+                return $this->sendAPIRequest($method, $url, $data, $retry + 1);
+            }
+            $this->timeUsed += microtime(true) - $this->requestStart;
+            throw $e;
+        }
+
+        $this->timeUsed += microtime(true) - $this->requestStart;
+        return $result;
+    }
+
+    // endregion
 }

@@ -54,6 +54,12 @@ class AIChatButton extends HTMLElement {
         for (const elem of this.#root.querySelectorAll('[title]')) {
             elem.title = this.getAttribute('title-'+elem.title) || elem.title;
         }
+
+        this.#root.querySelector('button.start').animate({
+            opacity: [0, 0.5, 1],
+            transform: ['scale(0.5)', 'scale(1.1)', 'scale(1)'],
+            easing: ["ease-in", "ease-out"],
+        }, 1000);
     }
 
     /**
@@ -76,6 +82,7 @@ class AIChatButton extends HTMLElement {
             }
             :host > button svg {
                 fill: var(--color-chat-icon);
+                filter: drop-shadow(0.2em 0.2em 0.2em rgb(0 0 0 / 0.4));
             }
             svg {
                 width: 2em;
@@ -99,7 +106,7 @@ class AIChatButton extends HTMLElement {
 
                 padding: 0.5em;
 
-                box-shadow: 0 4px 5px rgb(0 0 0 / 30%);
+                box-shadow: 0 0.2em 0.2em rgb(0 0 0 / 0.4);
                 border-radius: 8px;
                 border: 1px solid #fff;
             }

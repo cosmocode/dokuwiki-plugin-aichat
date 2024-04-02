@@ -5,13 +5,10 @@ use dokuwiki\Extension\Plugin;
 use dokuwiki\plugin\aichat\AIChat;
 use dokuwiki\plugin\aichat\Chunk;
 use dokuwiki\plugin\aichat\Embeddings;
-use dokuwiki\plugin\aichat\Model\AbstractModel;
-use dokuwiki\plugin\aichat\Model\OpenAI\GPT35Turbo;
+use dokuwiki\plugin\aichat\Model\ChatInterface;
+use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
+use dokuwiki\plugin\aichat\ModelFactory;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
-use dokuwiki\plugin\aichat\Storage\ChromaStorage;
-use dokuwiki\plugin\aichat\Storage\PineconeStorage;
-use dokuwiki\plugin\aichat\Storage\QdrantStorage;
-use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
 
 /**
  * DokuWiki Plugin aichat (Helper Component)
@@ -21,10 +18,12 @@ use dokuwiki\plugin\aichat\Storage\SQLiteStorage;
  */
 class helper_plugin_aichat extends Plugin
 {
+    /** @var ModelFactory */
+    public $factory;
+
     /** @var CLIPlugin $logger */
     protected $logger;
-    /** @var AbstractModel */
-    protected $model;
+
     /** @var Embeddings */
     protected $embeddings;
     /** @var AbstractStorage */
@@ -32,6 +31,7 @@ class helper_plugin_aichat extends Plugin
 
     /** @var array where to store meta data on the last run */
     protected $runDataFile;
+
 
     /**
      * Constructor. Initializes vendor autoloader
@@ -41,6 +41,8 @@ class helper_plugin_aichat extends Plugin
         require_once __DIR__ . '/vendor/autoload.php'; // FIXME obsolete from Kaos onwards
         global $conf;
         $this->runDataFile = $conf['metadir'] . '/aichat__run.json';
+        $this->loadConfig();
+        $this->factory = new ModelFactory($this->conf);
     }
 
     /**
@@ -52,6 +54,18 @@ class helper_plugin_aichat extends Plugin
     public function setLogger($logger)
     {
         $this->logger = $logger;
+    }
+
+    /**
+     * Update the configuration
+     *
+     * @param array $config
+     * @return void
+     */
+    public function updateConfig(array $config)
+    {
+        $this->conf = array_merge($this->conf, $config);
+        $this->factory->updateConfig($config);
     }
 
     /**
@@ -73,26 +87,31 @@ class helper_plugin_aichat extends Plugin
     }
 
     /**
-     * Access the OpenAI client
+     * Access the Chat Model
      *
-     * @return GPT35Turbo
+     * @return ChatInterface
      */
-    public function getModel()
+    public function getChatModel()
     {
-        if (!$this->model instanceof AbstractModel) {
-            $class = '\\dokuwiki\\plugin\\aichat\\Model\\' . $this->getConf('model');
+        return $this->factory->getChatModel();
+    }
 
-            if (!class_exists($class)) {
-                throw new \RuntimeException('Configured model not found: ' . $class);
-            }
-            // FIXME for now we only have OpenAI models, so we can hardcode the auth setup
-            $this->model = new $class([
-                'key' => $this->getConf('openaikey'),
-                'org' => $this->getConf('openaiorg')
-            ]);
-        }
+    /**
+     * @return ChatInterface
+     */
+    public function getRephraseModel()
+    {
+        return $this->factory->getRephraseModel();
+    }
 
-        return $this->model;
+    /**
+     * Access the Embedding Model
+     *
+     * @return EmbeddingInterface
+     */
+    public function getEmbeddingModel()
+    {
+        return $this->factory->getEmbeddingModel();
     }
 
     /**
@@ -102,11 +121,18 @@ class helper_plugin_aichat extends Plugin
      */
     public function getEmbeddings()
     {
-        if (!$this->embeddings instanceof Embeddings) {
-            $this->embeddings = new Embeddings($this->getModel(), $this->getStorage());
-            if ($this->logger) {
-                $this->embeddings->setLogger($this->logger);
-            }
+        if ($this->embeddings instanceof Embeddings) {
+            return $this->embeddings;
+        }
+
+        $this->embeddings = new Embeddings(
+            $this->getChatModel(),
+            $this->getEmbeddingModel(),
+            $this->getStorage(),
+            $this->conf
+        );
+        if ($this->logger) {
+            $this->embeddings->setLogger($this->logger);
         }
 
         return $this->embeddings;
@@ -119,20 +145,15 @@ class helper_plugin_aichat extends Plugin
      */
     public function getStorage()
     {
-        if (!$this->storage instanceof AbstractStorage) {
-            if ($this->getConf('pinecone_apikey')) {
-                $this->storage = new PineconeStorage();
-            } elseif ($this->getConf('chroma_baseurl')) {
-                $this->storage = new ChromaStorage();
-            } elseif ($this->getConf('qdrant_baseurl')) {
-                $this->storage = new QdrantStorage();
-            } else {
-                $this->storage = new SQLiteStorage();
-            }
+        if ($this->storage instanceof AbstractStorage) {
+            return $this->storage;
+        }
 
-            if ($this->logger) {
-                $this->storage->setLogger($this->logger);
-            }
+        $class = '\\dokuwiki\\plugin\\aichat\\Storage\\' . $this->getConf('storage') . 'Storage';
+        $this->storage = new $class($this->conf);
+
+        if ($this->logger) {
+            $this->storage->setLogger($this->logger);
         }
 
         return $this->storage;
@@ -148,27 +169,31 @@ class helper_plugin_aichat extends Plugin
      */
     public function askChatQuestion($question, $history = [])
     {
-        if ($history) {
-            $standaloneQuestion = $this->rephraseChatQuestion($question, $history);
-            $prev = end($history);
+        if ($history && $this->getConf('rephraseHistory') > 0) {
+            $contextQuestion = $this->rephraseChatQuestion($question, $history);
+
+            // Only use the rephrased question if it has more history than the chat history provides
+            if ($this->getConf('rephraseHistory') > $this->getConf('chatHistory')) {
+                $question = $contextQuestion;
+            }
         } else {
-            $standaloneQuestion = $question;
-            $prev = [];
+            $contextQuestion = $question;
         }
-        return $this->askQuestion($standaloneQuestion, $prev);
+        return $this->askQuestion($question, $history, $contextQuestion);
     }
 
     /**
      * Ask a single standalone question
      *
-     * @param string $question
-     * @param array $previous [user, ai] of the previous question
+     * @param string $question The question to ask
+     * @param array $history [user, ai] of the previous question
+     * @param string $contextQuestion The question to use for context search
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askQuestion($question, $previous = [])
+    public function askQuestion($question, $history = [], $contextQuestion = '')
     {
-        $similar = $this->getEmbeddings()->getSimilarChunks($question, $this->getLanguageLimit());
+        $similar = $this->getEmbeddings()->getSimilarChunks($contextQuestion ?: $question, $this->getLanguageLimit());
         if ($similar) {
             $context = implode(
                 "\n",
@@ -176,38 +201,26 @@ class helper_plugin_aichat extends Plugin
             );
             $prompt = $this->getPrompt('question', [
                 'context' => $context,
-                'language' => $this->getLanguagePrompt()
+                'question' => $question,
             ]);
         } else {
-            $prompt = $this->getPrompt('noanswer') . ' ' . $this->getLanguagePrompt();
+            $prompt = $this->getPrompt('noanswer', [
+                'question' => $question,
+            ]);
+            $history = [];
         }
 
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => $prompt
-            ],
-            [
-                'role' => 'user',
-                'content' => $question
-            ]
-        ];
-
-        if ($previous) {
-            array_unshift($messages, [
-                'role' => 'assistant',
-                'content' => $previous[1]
-            ]);
-            array_unshift($messages, [
-                'role' => 'user',
-                'content' => $previous[0]
-            ]);
-        }
-
-        $answer = $this->getModel()->getAnswer($messages);
+        $messages = $this->prepareMessages(
+            $this->getChatModel(),
+            $prompt,
+            $history,
+            $this->getConf('chatHistory')
+        );
+        $answer = $this->getChatModel()->getAnswer($messages);
 
         return [
             'question' => $question,
+            'contextQuestion' => $contextQuestion,
             'answer' => $answer,
             'sources' => $similar,
         ];
@@ -223,27 +236,93 @@ class helper_plugin_aichat extends Plugin
      */
     public function rephraseChatQuestion($question, $history)
     {
-        // go back in history as far as possible without hitting the token limit
-        $chatHistory = '';
+        $prompt = $this->getPrompt('rephrase', [
+            'question' => $question,
+        ]);
+        $messages = $this->prepareMessages(
+            $this->getRephraseModel(),
+            $prompt,
+            $history,
+            $this->getConf('rephraseHistory')
+        );
+        return $this->getRephraseModel()->getAnswer($messages);
+    }
+
+    /**
+     * Prepare the messages for the AI
+     *
+     * @param ChatInterface $model The used model
+     * @param string $promptedQuestion The user question embedded in a prompt
+     * @param array[] $history The chat history [[user, ai], [user, ai], ...]
+     * @param int $historySize The maximum number of messages to use from the history
+     * @return array An OpenAI compatible array of messages
+     */
+    protected function prepareMessages(
+        ChatInterface $model,
+        string $promptedQuestion,
+        array $history,
+        int $historySize
+    ): array {
+        // calculate the space for context
+        $remainingContext = $model->getMaxInputTokenLength();
+        $remainingContext -= $this->countTokens($promptedQuestion);
+        $safetyMargin = $remainingContext * 0.05; // 5% safety margin
+        $remainingContext -= $safetyMargin;
+        // FIXME we may want to also have an upper limit for the history and not always use the full context
+
+        $messages = $this->historyMessages($history, $remainingContext, $historySize);
+        $messages[] = [
+            'role' => 'user',
+            'content' => $promptedQuestion
+        ];
+        return $messages;
+    }
+
+    /**
+     * Create an array of OpenAI compatible messages from the given history
+     *
+     * Only as many messages are used as fit into the token limit
+     *
+     * @param array[] $history The chat history [[user, ai], [user, ai], ...]
+     * @param int $tokenLimit The maximum number of tokens to use
+     * @param int $sizeLimit The maximum number of messages to use
+     * @return array
+     */
+    protected function historyMessages(array $history, int $tokenLimit, int $sizeLimit): array
+    {
+        $remainingContext = $tokenLimit;
+
+        $messages = [];
         $history = array_reverse($history);
+        $history = array_slice($history, 0, $sizeLimit);
         foreach ($history as $row) {
-            if (
-                count($this->getEmbeddings()->getTokenEncoder()->encode($chatHistory)) >
-                $this->getModel()->getMaxRephrasingTokenLength()
-            ) {
+            $length = $this->countTokens($row[0] . $row[1]);
+            if ($length > $remainingContext) {
                 break;
             }
+            $remainingContext -= $length;
 
-            $chatHistory =
-                "Human: " . $row[0] . "\n" .
-                "Assistant: " . $row[1] . "\n" .
-                $chatHistory;
+            $messages[] = [
+                'role' => 'assistant',
+                'content' => $row[1]
+            ];
+            $messages[] = [
+                'role' => 'user',
+                'content' => $row[0]
+            ];
         }
+        return array_reverse($messages);
+    }
 
-        // ask openAI to rephrase the question
-        $prompt = $this->getPrompt('rephrase', ['history' => $chatHistory, 'question' => $question]);
-        $messages = [['role' => 'user', 'content' => $prompt]];
-        return $this->getModel()->getRephrasedQuestion($messages);
+    /**
+     * Get an aproximation of the token count for the given text
+     *
+     * @param $text
+     * @return int
+     */
+    protected function countTokens($text)
+    {
+        return count($this->getEmbeddings()->getTokenEncoder()->encode($text));
     }
 
     /**
@@ -255,7 +334,8 @@ class helper_plugin_aichat extends Plugin
      */
     protected function getPrompt($type, $vars = [])
     {
-        $template = file_get_contents($this->localFN('prompt_' . $type));
+        $template = file_get_contents($this->localFN($type, 'prompt'));
+        $vars['language'] = $this->getLanguagePrompt();
 
         $replace = [];
         foreach ($vars as $key => $val) {
@@ -284,7 +364,7 @@ class helper_plugin_aichat extends Plugin
             }
         }
 
-        $languagePrompt = 'Always answer in the user\'s language.' .
+        $languagePrompt = 'Always answer in the user\'s language. ' .
             "If you are unsure about the language, speak $currentLang.";
         return $languagePrompt;
     }

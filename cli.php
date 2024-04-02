@@ -1,7 +1,9 @@
 <?php
 
 use dokuwiki\Extension\CLIPlugin;
+use dokuwiki\plugin\aichat\AbstractCLI;
 use dokuwiki\plugin\aichat\Chunk;
+use dokuwiki\plugin\aichat\ModelFactory;
 use dokuwiki\Search\Indexer;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
@@ -13,26 +15,26 @@ use splitbrain\phpcli\TableFormatter;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class cli_plugin_aichat extends CLIPlugin
+class cli_plugin_aichat extends AbstractCLI
 {
     /** @var helper_plugin_aichat */
     protected $helper;
 
-    public function __construct($autocatch = true)
-    {
-        parent::__construct($autocatch);
-        $this->helper = plugin_load('helper', 'aichat');
-        $this->helper->setLogger($this);
-    }
-
     /** @inheritDoc */
     protected function setup(Options $options)
     {
-        $options->useCompactHelp();
+        parent::setup($options);
 
         $options->setHelp(
             'Manage and query the AI chatbot data. Please note that calls to your LLM provider will be made. ' .
             'This may incur costs.'
+        );
+
+        $options->registerOption(
+            'model',
+            'Overrides the chat and rephrasing model settings and uses this model instead',
+            '',
+            'model'
         );
 
         $options->registerCommand(
@@ -47,7 +49,7 @@ class cli_plugin_aichat extends CLIPlugin
             'embed'
         );
 
-        $options->registerCommand('maintenance', 'Run storage maintenance. Refert to the documentation for details.');
+        $options->registerCommand('maintenance', 'Run storage maintenance. Refer to the documentation for details.');
 
         $options->registerCommand('similar', 'Search for similar pages');
         $options->registerArgument('query', 'Look up chunks similar to this query', true, 'similar');
@@ -56,6 +58,8 @@ class cli_plugin_aichat extends CLIPlugin
         $options->registerArgument('question', 'The question to ask', true, 'ask');
 
         $options->registerCommand('chat', 'Start an interactive chat session');
+
+        $options->registerCommand('models', 'List available models');
 
         $options->registerCommand('info', 'Get Info about the vector storage and other stats');
 
@@ -75,7 +79,15 @@ class cli_plugin_aichat extends CLIPlugin
     /** @inheritDoc */
     protected function main(Options $options)
     {
-        ini_set('memory_limit', -1);
+        parent::main($options);
+
+        $model = $options->getOpt('model');
+        if ($model) {
+            $this->helper->updateConfig(
+                ['chatmodel' => $model, 'rephasemodel' => $model]
+            );
+        }
+
         switch ($options->getCmd()) {
             case 'embed':
                 $this->createEmbeddings($options->getOpt('clear'));
@@ -91,6 +103,9 @@ class cli_plugin_aichat extends CLIPlugin
                 break;
             case 'chat':
                 $this->chat();
+                break;
+            case 'models':
+                $this->models();
                 break;
             case 'split':
                 $this->split($options->getArgs()[0]);
@@ -118,11 +133,13 @@ class cli_plugin_aichat extends CLIPlugin
     protected function showinfo()
     {
         $stats = [
-            'model' => $this->getConf('model'),
+            'embed model' => (string) $this->helper->getEmbeddingModel(),
+            'rephrase model' => (string) $this->helper->getRephraseModel(),
+            'chat model' => (string) $this->helper->getChatModel(),
         ];
         $stats = array_merge(
             $stats,
-            array_map('dformat', $this->helper->getRunData()),
+            $this->helper->getRunData(),
             $this->helper->getStorage()->statistics()
         );
         $this->printTable($stats);
@@ -194,10 +211,9 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function split($page)
     {
-        $text = rawWiki($page);
-        $chunks = $this->helper->getEmbeddings()->splitIntoChunks($text);
+        $chunks = $this->helper->getEmbeddings()->createPageChunks($page, 0);
         foreach ($chunks as $chunk) {
-            echo $chunk;
+            echo $chunk->getText();
             echo "\n";
             $this->colors->ptln('--------------------------------', Colors::C_LIGHTPURPLE);
         }
@@ -214,12 +230,72 @@ class cli_plugin_aichat extends CLIPlugin
     {
         $history = [];
         while ($q = $this->readLine('Your Question')) {
-            $this->helper->getModel()->resetUsageStats();
+            $this->helper->getChatModel()->resetUsageStats();
+            $this->helper->getRephraseModel()->resetUsageStats();
+            $this->helper->getEmbeddingModel()->resetUsageStats();
             $result = $this->helper->askChatQuestion($q, $history);
             $this->colors->ptln("Interpretation: {$result['question']}", Colors::C_LIGHTPURPLE);
             $history[] = [$result['question'], $result['answer']];
             $this->printAnswer($result);
         }
+    }
+
+    /**
+     * Print information about the available models
+     *
+     * @return void
+     */
+    protected function models()
+    {
+        $result = (new ModelFactory($this->conf))->getModels();
+
+        $td = new TableFormatter($this->colors);
+        $cols = [30, 20, 20, '*'];
+        echo "==== Chat Models ====\n\n";
+        echo $td->format(
+            $cols,
+            ['Model', 'Token Limits', 'Price USD/M', 'Description'],
+            [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
+        );
+        foreach ($result['chat'] as $name => $info) {
+            echo $td->format(
+                $cols,
+                [
+                    $name,
+                    sprintf(" In: %7d\nOut: %7d", $info['inputTokens'], $info['outputTokens']),
+                    sprintf(" In: %.2f\nOut: %.2f", $info['inputTokenPrice'], $info['outputTokenPrice']),
+                    $info['description'] . "\n"
+                ],
+                [
+                    $info['instance'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
+                ]
+            );
+        }
+
+        $cols = [30, 10, 10, 10, '*'];
+        echo "==== Embedding Models ====\n\n";
+        echo $td->format(
+            $cols,
+            ['Model', 'Token Limits', 'Price USD/M', 'Dimensions', 'Description'],
+            [Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE, Colors::C_LIGHTBLUE]
+        );
+        foreach ($result['embedding'] as $name => $info) {
+            echo $td->format(
+                $cols,
+                [
+                    $name,
+                    sprintf("%7d", $info['inputTokens']),
+                    sprintf("%.2f", $info['inputTokenPrice']),
+                    $info['dimensions'],
+                    $info['description'] . "\n"
+                ],
+                [
+                    $info['instance'] ? Colors::C_LIGHTGREEN : Colors::C_LIGHTRED,
+                ]
+            );
+        }
+
+        $this->colors->ptln('Current prices may differ', Colors::C_RED);
     }
 
     /**
@@ -265,7 +341,7 @@ class cli_plugin_aichat extends CLIPlugin
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
 
         $data = $this->helper->getRunData();
-        $data['maintenance ran at'] = time();
+        $data['maintenance ran at'] = dformat();
         $this->helper->setRunData($data);
     }
 
@@ -278,13 +354,25 @@ class cli_plugin_aichat extends CLIPlugin
     {
         [$skipRE, $matchRE] = $this->getRegexps();
 
+        $data = $this->helper->getRunData();
+        $lastEmbedModel = $data['embed used'] ?? '';
+
+        if(
+            !$clear && $lastEmbedModel &&
+            $lastEmbedModel != (string) $this->helper->getEmbeddingModel()
+        ){
+            $this->warning('Embedding model has changed since last run. Forcing an index rebuild');
+            $clear = true;
+        }
+
         $start = time();
         $this->helper->getEmbeddings()->createNewIndex($skipRE, $matchRE, $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
 
-        $data = $this->helper->getRunData();
-        $data['embed ran at'] = time();
+
+        $data['embed ran at'] = dformat();
+        $data['embed used'] = (string) $this->helper->getEmbeddingModel();
         $this->helper->setRunData($data);
     }
 
@@ -340,9 +428,18 @@ class cli_plugin_aichat extends CLIPlugin
      */
     protected function printUsage()
     {
+        $chat = $this->helper->getChatModel()->getUsageStats();
+        $rephrase = $this->helper->getRephraseModel()->getUsageStats();
+        $embed = $this->helper->getEmbeddingModel()->getUsageStats();
+
         $this->info(
-            'Made {requests} requests in {time}s to Model. Used {tokens} tokens for about ${cost}.',
-            $this->helper->getModel()->getUsageStats()
+            'Made {requests} requests in {time}s to models. Used {tokens} tokens for about ${cost}.',
+            [
+                'requests' => $chat['requests'] + $rephrase['requests'] + $embed['requests'],
+                'time' => $chat['time'] + $rephrase['time'] + $embed['time'],
+                'tokens' => $chat['tokens'] + $chat['tokens'] + $embed['tokens'],
+                'cost' => $chat['cost'] + $chat['cost'] + $embed['cost'],
+            ]
         );
     }
 

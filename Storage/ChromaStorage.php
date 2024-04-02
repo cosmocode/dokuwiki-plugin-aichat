@@ -21,17 +21,13 @@ class ChromaStorage extends AbstractStorage
     protected $collection = '';
     protected $collectionID = '';
 
-    /**
-     * ChromaStorage constructor.
-     */
-    public function __construct()
+    /** @inheritdoc */
+    public function __construct(array $config)
     {
-        $helper = plugin_load('helper', 'aichat');
-
-        $this->baseurl = $helper->getConf('chroma_baseurl');
-        $this->tenant = $helper->getConf('chroma_tenant');
-        $this->database = $helper->getConf('chroma_database');
-        $this->collection = $helper->getConf('chroma_collection');
+        $this->baseurl = $config['chroma_baseurl'] ?? '';
+        $this->tenant = $config['chroma_tenant'] ?? '';
+        $this->database = $config['chroma_database'] ?? '';
+        $this->collection = $config['chroma_collection'] ?? '';
 
         $this->http = new DokuHTTPClient();
         $this->http->headers['Content-Type'] = 'application/json';
@@ -39,8 +35,8 @@ class ChromaStorage extends AbstractStorage
         $this->http->keep_alive = false;
         $this->http->timeout = 30;
 
-        if ($helper->getConf('chroma_apikey')) {
-            $this->http->headers['Authorization'] = 'Bearer ' . $helper->getConf('chroma_apikey');
+        if (!empty($config['chroma_apikey'])) {
+            $this->http->headers['Authorization'] = 'Bearer ' . $config['chroma_apikey'];
         }
     }
 
@@ -71,9 +67,9 @@ class ChromaStorage extends AbstractStorage
         }
 
         try {
-            $result = json_decode((string) $response, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\Exception) {
-            throw new \Exception('Chroma API returned invalid JSON. ' . $response);
+            $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Exception $e) {
+            throw new \Exception('Chroma API returned invalid JSON. ' . $response, 0, $e);
         }
 
         if ((int)$this->http->status !== 200) {

@@ -17,17 +17,13 @@ class PineconeStorage extends AbstractStorage
     /** @var bool set to true when no chunks should be reused */
     protected $overwrite = false;
 
-    /**
-     * PineconeStorage constructor.
-     */
-    public function __construct()
+    /** @inheritdoc */
+    public function __construct(array $config)
     {
-        $helper = plugin_load('helper', 'aichat');
-
-        $this->baseurl = $helper->getConf('pinecone_baseurl');
+        $this->baseurl = $config['pinecone_baseurl'] ?? '';
 
         $this->http = new DokuHTTPClient();
-        $this->http->headers['Api-Key'] = $helper->getConf('pinecone_apikey');
+        $this->http->headers['Api-Key'] = $config['pinecone_apikey'];
         $this->http->headers['Content-Type'] = 'application/json';
         $this->http->headers['Accept'] = 'application/json';
     }
