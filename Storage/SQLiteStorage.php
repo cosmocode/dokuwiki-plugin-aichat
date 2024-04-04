@@ -35,7 +35,7 @@ class SQLiteStorage extends AbstractStorage
     {
         $this->db = new SQLiteDB('aichat', DOKU_PLUGIN . 'aichat/db/');
         $this->db->getPdo()->sqliteCreateFunction('COSIM', $this->sqliteCosineSimilarityCallback(...), 2);
-        $this->db->getPdo()->sqliteCreateFunction('BITSIM', $this->bitwiseSimilarityCallback(...), 2);
+        $this->db->getPdo()->sqliteCreateFunction('BITSIM', [self::class, 'hammingDistanceSimilarityCallback'], 2);
 
         $helper = plugin_load('helper', 'aichat');
         $this->useLanguageClusters = $helper->getConf('preferUIlanguage') >= AIChat::LANG_UI_LIMITED;
@@ -241,12 +241,14 @@ class SQLiteStorage extends AbstractStorage
      * @param string $embedding The embedding vector as binary string
      * @return int
      */
-    public function bitwiseSimilarityCallback($query, $embedding)
+    static public function hammingDistanceSimilarityCallback($query, $embedding)
     {
-        $diff = $embedding & $query;
+        $diff = $embedding ^ $query;
         $all = unpack('C*', $diff);
         $highBytes = array_reduce($all, static fn($carry, $item) => $carry + self::popcount($item), 0);
-        return $highBytes / (count($all) * 8);
+
+        $total = (count($all) * 8);
+        return ($total - $highBytes) / $total;
     }
 
     /**

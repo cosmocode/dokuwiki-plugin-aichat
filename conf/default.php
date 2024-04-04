@@ -20,6 +20,8 @@ $conf['mistral_apikey'] = '';
 
 $conf['voyageai_apikey'] = '';
 
+$conf['ollama_baseurl'] = 'http://localhost:11434/api/';
+
 $conf['pinecone_apikey'] = '';
 $conf['pinecone_baseurl'] = '';
 
