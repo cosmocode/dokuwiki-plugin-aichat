@@ -35,6 +35,7 @@ class SQLiteStorage extends AbstractStorage
     {
         $this->db = new SQLiteDB('aichat', DOKU_PLUGIN . 'aichat/db/');
         $this->db->getPdo()->sqliteCreateFunction('COSIM', $this->sqliteCosineSimilarityCallback(...), 2);
+        $this->db->getPdo()->sqliteCreateFunction('BITSIM', $this->bitwiseSimilarityCallback(...), 2);
 
         $helper = plugin_load('helper', 'aichat');
         $this->useLanguageClusters = $helper->getConf('preferUIlanguage') >= AIChat::LANG_UI_LIMITED;
@@ -52,7 +53,7 @@ class SQLiteStorage extends AbstractStorage
             $record['page'],
             $record['id'],
             $record['chunk'],
-            json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR),
+            json_decode((string)$record['embedding'], true, 512, JSON_THROW_ON_ERROR),
             $record['lang'],
             $record['created']
         );
@@ -90,6 +91,7 @@ class SQLiteStorage extends AbstractStorage
                 'id' => $chunk->getId(),
                 'chunk' => $chunk->getText(),
                 'embedding' => json_encode($chunk->getEmbedding(), JSON_THROW_ON_ERROR),
+                'binary' => $this->vector2binary($chunk->getEmbedding()),
                 'created' => $chunk->getCreated(),
                 'lang' => $chunk->getLanguage(),
             ]);
@@ -127,7 +129,7 @@ class SQLiteStorage extends AbstractStorage
                 $record['page'],
                 $record['id'],
                 $record['chunk'],
-                json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR),
+                json_decode((string)$record['embedding'], true, 512, JSON_THROW_ON_ERROR),
                 $record['lang'],
                 $record['created']
             );
@@ -138,29 +140,56 @@ class SQLiteStorage extends AbstractStorage
     /** @inheritdoc */
     public function getSimilarChunks($vector, $lang = '', $limit = 4)
     {
+        $binary = $this->vector2binary($vector);
+
         $cluster = $this->getCluster($vector, $lang);
         if ($this->logger) $this->logger->info(
             'Using cluster {cluster} for similarity search',
             ['cluster' => $cluster]
         );
 
-        $result = $this->db->queryAll(
-            'SELECT *, COSIM(?, embedding) AS similarity
+        if( false ) {
+            $result = $this->db->queryAll(
+                'SELECT *, COSIM(?, embedding) AS similarity
                FROM embeddings
               WHERE cluster = ?
                 AND GETACCESSLEVEL(page) > 0
-                AND similarity > CAST(? AS FLOAT)
+                --AND similarity > CAST(? AS FLOAT)
            ORDER BY similarity DESC
               LIMIT ?',
-            [json_encode($vector, JSON_THROW_ON_ERROR), $cluster, $this->similarityThreshold, $limit]
-        );
+                [
+                    json_encode($vector, JSON_THROW_ON_ERROR),
+                    $cluster,
+                    //$this->similarityThreshold,
+                    $limit
+                ]
+            );
+        } else {
+            $result = $this->db->queryAll(
+                'SELECT *, BITSIM(?, binary)  AS similarity
+               FROM embeddings
+              WHERE cluster = ?
+                AND GETACCESSLEVEL(page) > 0
+                --AND similarity > CAST(? AS FLOAT)
+           ORDER BY similarity DESC
+              LIMIT ?',
+                [
+                    $binary,
+                    $cluster,
+                    //$this->similarityThreshold,
+                    $limit
+                ]
+            );
+        }
+
+
         $chunks = [];
         foreach ($result as $record) {
             $chunks[] = new Chunk(
                 $record['page'],
                 $record['id'],
                 $record['chunk'],
-                json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR),
+                json_decode((string)$record['embedding'], true, 512, JSON_THROW_ON_ERROR),
                 $record['lang'],
                 $record['created'],
                 $record['similarity']
@@ -203,6 +232,40 @@ class SQLiteStorage extends AbstractStorage
             json_decode($query, true, 512, JSON_THROW_ON_ERROR),
             json_decode($embedding, true, 512, JSON_THROW_ON_ERROR)
         );
+    }
+
+    /**
+     * Method registered as SQLite callback to calculate the bitwise similarity
+     *
+     * @param string $query The query vector as binary string
+     * @param string $embedding The embedding vector as binary string
+     * @return int
+     */
+    public function bitwiseSimilarityCallback($query, $embedding)
+    {
+        $diff = $embedding & $query;
+        $all = unpack('C*', $diff);
+        $highBytes = array_reduce($all, static fn($carry, $item) => $carry + self::popcount($item), 0);
+        return $highBytes / (count($all) * 8);
+    }
+
+    /**
+     * Count the number of bits set to 1 in a number
+     *
+     * @param int $x
+     * @return int
+     */
+    static public function popcount($x)
+    {
+        if (function_exists('gmp_popcount')) {
+            return gmp_popcount($x);
+        }
+        $con = 0;
+        while ($x) {
+            $x &= $x - 1;
+            ++$con;
+        }
+        return $con;
     }
 
     /**
@@ -268,7 +331,7 @@ class SQLiteStorage extends AbstractStorage
             $query = "SELECT id, embedding FROM embeddings $where ORDER BY RANDOM() LIMIT ?";
             $result = $this->db->queryAll($query, [self::SAMPLE_SIZE]);
             if (!$result) return; // no data to cluster
-            $dimensions = count(json_decode((string) $result[0]['embedding'], true, 512, JSON_THROW_ON_ERROR));
+            $dimensions = count(json_decode((string)$result[0]['embedding'], true, 512, JSON_THROW_ON_ERROR));
 
             // how many clusters?
             if (count($result) < self::CLUSTER_SIZE * 3) {
@@ -285,7 +348,7 @@ class SQLiteStorage extends AbstractStorage
             // cluster them using kmeans
             $space = new Space($dimensions);
             foreach ($result as $record) {
-                $space->addPoint(json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR));
+                $space->addPoint(json_decode((string)$record['embedding'], true, 512, JSON_THROW_ON_ERROR));
             }
             $clusters = $space->solve($clustercount, function ($space, $clusters) {
                 static $iterations = 0;
@@ -326,7 +389,7 @@ class SQLiteStorage extends AbstractStorage
         $handle = $this->db->query($query);
 
         while ($record = $handle->fetch(\PDO::FETCH_ASSOC)) {
-            $vector = json_decode((string) $record['embedding'], true, 512, JSON_THROW_ON_ERROR);
+            $vector = json_decode((string)$record['embedding'], true, 512, JSON_THROW_ON_ERROR);
             $cluster = $this->getCluster($vector, $this->useLanguageClusters ? $record['lang'] : '');
             $query = 'UPDATE embeddings SET cluster = ? WHERE id = ?';
             $this->db->exec($query, [$cluster, $record['id']]);
@@ -389,7 +452,7 @@ class SQLiteStorage extends AbstractStorage
         file_put_contents($metafile, $header . "\n", FILE_APPEND);
 
         while ($row = $handle->fetch(\PDO::FETCH_ASSOC)) {
-            $vector = json_decode((string) $row['embedding'], true, 512, JSON_THROW_ON_ERROR);
+            $vector = json_decode((string)$row['embedding'], true, 512, JSON_THROW_ON_ERROR);
             $vector = implode("\t", $vector);
 
             $meta = implode("\t", [$row['id'], $row['page'], $row['created']]);
@@ -397,5 +460,35 @@ class SQLiteStorage extends AbstractStorage
             file_put_contents($vectorfile, $vector . "\n", FILE_APPEND);
             file_put_contents($metafile, $meta . "\n", FILE_APPEND);
         }
+    }
+
+    /**
+     * Convert the given vectors to a binary string
+     *
+     * Vectors larger than zero are represented as 1, otherwise as 0
+     *
+     * @link https://blog.pgvecto.rs/my-binary-vector-search-is-better-than-your-fp32-vectors
+     * @link https://www.reddit.com/r/PHP/comments/3y3dcr/comment/cyacis5/
+     * @param float[] $vectors
+     * @return string A binary string
+     */
+    public function vector2binary($vectors)
+    {
+        $binary = '';
+
+        $dimensions = ceil(count($vectors) / 8) * 8; // round up to the next multiple of 8
+
+        for ($i = 0; $i < $dimensions; $i = $i + 8) {
+            $byte = ((($vectors[$i] ?? 0) > 0 ? 1 : 0) * 128) +
+                ((($vectors[$i + 1] ?? 0) > 0 ? 1 : 0) * 64) +
+                ((($vectors[$i + 2] ?? 0) > 0 ? 1 : 0) * 32) +
+                ((($vectors[$i + 3] ?? 0) > 0 ? 1 : 0) * 16) +
+                ((($vectors[$i + 4] ?? 0) > 0 ? 1 : 0) * 8) +
+                ((($vectors[$i + 5] ?? 0) > 0 ? 1 : 0) * 4) +
+                ((($vectors[$i + 6] ?? 0) > 0 ? 1 : 0) * 2) +
+                ((($vectors[$i + 7] ?? 0) > 0 ? 1 : 0) * 1);
+            $binary .= chr($byte);
+        }
+        return $binary;
     }
 }
