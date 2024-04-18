@@ -27,6 +27,8 @@ $meta['mistral_apikey'] = array('password');
 
 $meta['voyageai_apikey'] = array('password');
 
+$meta['reka_apikey'] = array('password');
+
 $meta['pinecone_apikey'] = array('password');
 $meta['pinecone_baseurl'] = array('string');
 

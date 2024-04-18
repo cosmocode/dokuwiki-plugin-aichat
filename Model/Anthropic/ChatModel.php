@@ -51,7 +51,7 @@ class ChatModel extends AbstractModel implements ChatInterface
     }
 
     /**
-     * Send a request to the OpenAI API
+     * Send a request to the API
      *
      * @param string $endpoint
      * @param array $data Payload to send

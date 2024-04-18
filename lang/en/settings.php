@@ -17,6 +17,7 @@ $lang['openai_org'] = '🧠 <b>OpenAI</b> Organization ID (if any)';
 $lang['anthropic_apikey'] = '🧠 <b>Anthropic</b> API key';
 $lang['mistral_apikey'] = '🧠 <b>Mistral</b> API key';
 $lang['voyageai_apikey'] = '🧠 <b>Voyage AI</b> API key';
+$lang['reka_apikey'] = '🧠 <b>Reka</b> API key';
 
 $lang['pinecone_apikey'] = '📥 <b>Pinecone</b> API key';
 $lang['pinecone_baseurl'] = '📥 <b>Pinecone</b> base URL';

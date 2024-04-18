@@ -20,6 +20,8 @@ $conf['mistral_apikey'] = '';
 
 $conf['voyageai_apikey'] = '';
 
+$conf['reka_apikey'] = '';
+
 $conf['pinecone_apikey'] = '';
 $conf['pinecone_baseurl'] = '';
 
