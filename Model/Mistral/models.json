@@ -8,11 +8,18 @@
             "outputTokenPrice": 0.25
         },
         "open-mixtral-8x7b": {
-            "description": "Currently the best open model. A 7B sparse Mixture-of-Experts (SMoE). Uses 12B active parameters out of 45B total. Fluent in English, French, Italian, German, Spanish, and strong in code.",
+            "description": "A 7B sparse Mixture-of-Experts (SMoE). Uses 12B active parameters out of 45B total. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 32000,
             "inputTokenPrice": 0.7,
             "outputTokens": 4096,
             "outputTokenPrice": 0.7
+        },
+        "open-mixtral-8x22b": {
+            "description": "A 22B sparse Mixture-of-Experts (SMoE). Uses only 39B active parameters out of 141B. Fluent in English, French, Italian, German, Spanish, and strong in code.",
+            "inputTokens": 64000,
+            "inputTokenPrice": 2.0,
+            "outputTokens": 4096,
+            "outputTokenPrice": 6.0
         },
         "mistral-small-latest": {
             "description": "Cost-efficient reasoning for low-latency workloads. Fluent in English, French, Italian, German, Spanish, and strong in code.",
