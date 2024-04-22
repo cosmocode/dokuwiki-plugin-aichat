@@ -22,6 +22,8 @@ $conf['voyageai_apikey'] = '';
 
 $conf['reka_apikey'] = '';
 
+$conf['groq_apikey'] = '';
+
 $conf['pinecone_apikey'] = '';
 $conf['pinecone_baseurl'] = '';
 

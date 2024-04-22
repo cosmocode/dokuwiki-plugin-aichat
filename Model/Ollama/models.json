@@ -1,0 +1,27 @@
+{
+    "chat": {
+        "llama2": {
+            "description": "Llama 2 is released by Meta Platforms, Inc. This model is trained on 2 trillion tokens, and by default supports a context length of 4096. Llama 2 Chat models are fine-tuned on over 1 million human annotations, and are made for chat.",
+            "inputTokens": 4096,
+            "inputTokenPrice": 0,
+            "outputTokens": 4096,
+            "outputTokenPrice": 0
+        },
+
+        "gemma": {
+            "description": "Llama 2 is released by Meta Platforms, Inc. This model is trained on 2 trillion tokens, and by default supports a context length of 4096. Llama 2 Chat models are fine-tuned on over 1 million human annotations, and are made for chat.",
+            "inputTokens": 4096,
+            "inputTokenPrice": 0,
+            "outputTokens": 4096,
+            "outputTokenPrice": 0
+        }
+    },
+    "embedding": {
+        "text-embedding-ada-002": {
+            "description": "Most capable 2nd generation embedding model",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.10,
+            "dimensions": 1536
+        }
+    }
+}
