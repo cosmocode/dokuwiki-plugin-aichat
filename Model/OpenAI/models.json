@@ -20,6 +20,13 @@
             "inputTokenPrice": 10.00,
             "outputTokens": 4096,
             "outputTokenPrice": 30.00
+        },
+        "gpt-4o": {
+            "description": "GPT-4o has the same high intelligence as GPT-4 Turbo but is much more efficient",
+            "inputTokens": 128000,
+            "inputTokenPrice": 5.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 15.00
         }
     },
     "embedding": {
