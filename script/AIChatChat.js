@@ -237,6 +237,7 @@ class AIChatChat extends HTMLElement {
 
         this.stopProgress();
         this.#input.focus();
+        p.scrollIntoView();
     }
 
     /**
