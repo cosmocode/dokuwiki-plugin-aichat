@@ -181,7 +181,15 @@ class Embeddings
         if ($textRenderer instanceof PluginInterface) {
             global $ID;
             $ID = $page;
-            $text = p_cached_output(wikiFN($page), 'text', $page);
+            try {
+                $text = p_cached_output(wikiFN($page), 'text', $page);
+            } catch (\Throwable $e) {
+                if ($this->logger) $this->logger->error(
+                    'Failed to render page {page} using raw text instead. {msg}',
+                    ['page' => $page, 'msg' => $e->getMessage()]
+                );
+                $text = rawWiki($page);
+            }
         } else {
             $text = rawWiki($page);
         }
