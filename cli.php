@@ -80,6 +80,7 @@ class cli_plugin_aichat extends AbstractCLI
     protected function main(Options $options)
     {
         parent::main($options);
+        auth_setup(); // make sure ACLs are initialized
 
         $model = $options->getOpt('model');
         if ($model) {
