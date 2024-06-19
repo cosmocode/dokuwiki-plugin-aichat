@@ -37,7 +37,7 @@ class AIChatChat extends HTMLElement {
         this.#input.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
                 event.preventDefault();
-                form.dispatchEvent(new Event('submit'));
+                this.onSubmit(event);
             }
         });
     }
