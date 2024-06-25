@@ -7,6 +7,13 @@
             "outputTokens": 4096,
             "outputTokenPrice": 75.00
         },
+        "claude-3-5-sonnet-20240620": {
+            "description": "Most intelligent model",
+            "inputTokens": 200000,
+            "inputTokenPrice": 3.00,
+            "outputTokens": 4096,
+            "outputTokenPrice": 15.00
+        },
         "claude-3-sonnet-20240229": {
             "description": "Ideal balance of intelligence and speed for enterprise workloads. Maximum utility at a lower price, dependable, balanced for scaled deployments.",
             "inputTokens": 150000,
