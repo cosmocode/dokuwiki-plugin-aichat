@@ -358,10 +358,10 @@ class cli_plugin_aichat extends AbstractCLI
         $data = $this->helper->getRunData();
         $lastEmbedModel = $data['embed used'] ?? '';
 
-        if(
+        if (
             !$clear && $lastEmbedModel &&
             $lastEmbedModel != (string) $this->helper->getEmbeddingModel()
-        ){
+        ) {
             $this->warning('Embedding model has changed since last run. Forcing an index rebuild');
             $clear = true;
         }

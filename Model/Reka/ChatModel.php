@@ -65,8 +65,8 @@ class ChatModel extends AbstractModel implements ChatInterface
     /** @inheritdoc */
     protected function parseAPIResponse($response)
     {
-        if(((int) $this->http->status) !== 200) {
-            if(isset($response['detail'])) {
+        if (((int) $this->http->status) !== 200) {
+            if (isset($response['detail'])) {
                 throw new \Exception('Reka API error: ' . $response['detail']);
             } else {
                 throw new \Exception('Reka API error: ' . $this->http->status . ' ' . $this->http->error);

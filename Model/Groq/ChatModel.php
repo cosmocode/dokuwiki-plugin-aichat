@@ -16,7 +16,7 @@ class ChatModel extends AbstractModel implements ChatInterface
             throw new \Exception('Groq API key not configured');
         }
 
-        $this->http->headers['Authorization'] = 'Bearer '.$config['groq_apikey'];
+        $this->http->headers['Authorization'] = 'Bearer ' . $config['groq_apikey'];
     }
 
     /** @inheritdoc */

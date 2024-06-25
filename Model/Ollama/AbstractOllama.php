@@ -51,5 +51,4 @@ abstract class AbstractOllama extends AbstractModel
 
         return $response;
     }
-
 }

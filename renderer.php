@@ -1,24 +1,33 @@
 <?php
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+// phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
+
+use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\File\PageResolver;
 
 /**
  * Renderer for preparing data for embedding
  *
- * BAsed on the text and markdown renderers
+ * Based on the text and markdown renderers
  *
+ * @todo table handling is not perfect
  * @author Michael Hamann <michael@content-space.de>
  * @author Todd Augsburger <todd@rollerorgans.com>
- * @author  i-net software <tools@inetsoftware.de>
+ * @author i-net software <tools@inetsoftware.de>
  * @link https://www.dokuwiki.org/plugin:text
  * @link https://www.dokuwiki.org/plugin:dw2markdown
  */
 class renderer_plugin_aichat extends Doku_Renderer_xhtml
 {
+    /** @var array The stack of list types */
+    private $listMode = [];
 
+    /** @var int Number of table columns */
+    private $tableColumns = 0;
 
     /** @inheritdoc */
-    function getFormat()
+    public function getFormat()
     {
         return 'aichat';
     }
@@ -39,7 +48,7 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
      */
     public function plugin($name, $data, $state = '', $match = '')
     {
-        /** @var DokuWiki_Syntax_Plugin $plugin */
+        /** @var SyntaxPlugin $plugin */
         $plugin = plugin_load('syntax', $name);
         if ($plugin === null) return;
 
@@ -51,7 +60,7 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
             // plugin does not support any of the text formats, so use stripped-down xhtml
             $tmpData = $this->doc;
             $this->doc = '';
-            if ($plugin->render('xhtml', $this, $data) && ($this->doc != '')) {
+            if ($plugin->render('xhtml', $this, $data) && ($this->doc !== '')) {
                 $pluginoutput = $this->doc;
                 $this->doc = $tmpData . DOKU_LF . trim(strip_tags($pluginoutput)) . DOKU_LF;
             } else {
@@ -60,17 +69,15 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
         }
     }
 
-
     /** @inheritdoc */
     public function document_start()
     {
         global $ID;
 
-
         $this->doc = '';
-        $metaheader = array();
+        $metaheader = [];
         $metaheader['Content-Type'] = 'text/plain; charset=utf-8';
-        $meta = array();
+        $meta = [];
         $meta['format']['aichat'] = $metaheader;
         p_set_metadata($ID, $meta);
     }
@@ -212,67 +219,50 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
         $this->doc .= '))';
     }
 
-    private $listMode = [];
-
-    /**
-     * Open an unordered list
-     */
-    function listu_open($classes = null)
+    /** @inheritdoc */
+    public function listu_open($classes = null)
     {
-        if (empty($this->listMode)) {
+        if ($this->listMode === []) {
             $this->doc .= DOKU_LF;
         }
         $this->listMode[] = '*';
     }
 
-    /**
-     * Close an unordered list
-     */
-    function listu_close()
+    /** @inheritdoc */
+    public function listu_close()
     {
         array_pop($this->listMode);
-        if (empty($this->listMode)) {
+        if ($this->listMode === []) {
             $this->doc .= DOKU_LF;
         }
     }
 
-    /**
-     * Open an ordered list
-     */
-    function listo_open($classes = null)
+    /** @inheritdoc */
+    public function listo_open($classes = null)
     {
-        if (empty($this->listMode)) {
+        if ($this->listMode === []) {
             $this->doc .= DOKU_LF;
         }
         $this->listMode[] = '1.';
     }
 
-    /**
-     * Close an ordered list
-     */
-    function listo_close()
+    /** @inheritdoc */
+    public function listo_close()
     {
         array_pop($this->listMode);
-        if (empty($this->listMode)) {
+        if ($this->listMode === []) {
             $this->doc .= DOKU_LF;
         }
     }
 
-    /**
-     * Open a list item
-     *
-     * @param int $level the nesting level
-     * @param bool $node true when a node; false when a leaf
-     */
-    function listitem_open($level, $node = false)
+    /** @inheritdoc */
+    public function listitem_open($level, $node = false)
     {
         $this->doc .= str_repeat(' ', $level * 2) . $this->listMode[count($this->listMode) - 1];
     }
 
-    /**
-     * Close a list item
-     */
-    function listitem_close()
+    /** @inheritdoc */
+    public function listitem_close()
     {
     }
 
@@ -457,16 +447,30 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
     }
 
     /** @inheritdoc */
-    public function internalmedia($src, $title = null, $align = null, $width = null,
-                                  $height = null, $cache = null, $linking = null, $return = false)
-    {
+    public function internalmedia(
+        $src,
+        $title = null,
+        $align = null,
+        $width = null,
+        $height = null,
+        $cache = null,
+        $linking = null,
+        $return = false
+    ) {
         $this->doc .= $title;
     }
 
     /** @inheritdoc */
-    public function externalmedia($src, $title = null, $align = null, $width = null,
-                                  $height = null, $cache = null, $linking = null, $return = false)
-    {
+    public function externalmedia(
+        $src,
+        $title = null,
+        $align = null,
+        $width = null,
+        $height = null,
+        $cache = null,
+        $linking = null,
+        $return = false
+    ) {
         $this->doc .= $title;
     }
 
@@ -486,90 +490,70 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
         $this->doc .= DOKU_LF;
     }
 
-    private $tableColumns = 0;
-
-    /**
-     * Open a table header
-     */
-    function tablethead_open()
+    /** @inheritdoc */
+    public function tablethead_open()
     {
         $this->tableColumns = 0;
         $this->doc .= DOKU_LF; // . '|';
     }
 
-    /**
-     * Close a table header
-     */
-    function tablethead_close()
+    /** @inheritdoc */
+    public function tablethead_close()
     {
         $this->doc .= '|' . str_repeat('---|', $this->tableColumns) . DOKU_LF;
     }
 
-    /**
-     * Open a table body
-     */
-    function tabletbody_open()
+    /** @inheritdoc */
+    public function tabletbody_open()
     {
     }
 
-    /**
-     * Close a table body
-     */
-    function tabletbody_close()
+    /** @inheritdoc */
+    public function tabletbody_close()
     {
     }
 
-    /**
-     * Open a table row
-     */
-    function tablerow_open($classes = null)
+    /** @inheritdoc */
+    public function tabletfoot_open()
     {
     }
 
-    /**
-     * Close a table row
-     */
-    function tablerow_close()
+    /** @inheritdoc */
+    public function tabletfoot_close()
+    {
+    }
+
+    /** @inheritdoc */
+    public function tablerow_open($classes = null)
+    {
+    }
+
+    /** @inheritdoc */
+    public function tablerow_close()
     {
         $this->doc .= '|' . DOKU_LF;
     }
 
-    /**
-     * Open a table header cell
-     *
-     * @param int $colspan
-     * @param string $align left|center|right
-     * @param int $rowspan
-     */
-    function tableheader_open($colspan = 1, $align = null, $rowspan = 1, $classes = null)
+    /** @inheritdoc */
+    public function tableheader_open($colspan = 1, $align = null, $rowspan = 1, $classes = null)
     {
         $this->doc .= str_repeat('|', $colspan);
         $this->tableColumns += $colspan;
     }
 
-    /**
-     * Close a table header cell
-     */
-    function tableheader_close()
+    /** @inheritdoc */
+    public function tableheader_close()
     {
     }
 
-    /**
-     * Open a table cell
-     *
-     * @param int $colspan
-     * @param string $align left|center|right
-     * @param int $rowspan
-     */
-    function tablecell_open($colspan = 1, $align = null, $rowspan = 1, $classes = null)
+    /** @inheritdoc */
+    public function tablecell_open($colspan = 1, $align = null, $rowspan = 1, $classes = null)
     {
         $this->doc .= str_repeat('|', $colspan);
     }
 
-    /**
-     * Close a table cell
-     */
-    function tablecell_close()
+    /** @inheritdoc */
+    public function tablecell_close()
     {
     }
 
@@ -581,8 +565,7 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
             $isImage = true;
             if (!is_null($default) && ($default != $title['title']))
                 return $default . " " . $title['title'];
-            else
-                return $title['title'];
+            else return $title['title'];
         } elseif (is_null($title) || trim($title) == '') {
             if (useHeading($linktype) && $id) {
                 $heading = p_get_first_heading($id);
