@@ -4,6 +4,7 @@ namespace dokuwiki\plugin\aichat;
 
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\PluginInterface;
+use dokuwiki\File\PageResolver;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 use dokuwiki\plugin\aichat\Storage\AbstractStorage;
@@ -177,22 +178,19 @@ class Embeddings
     {
         $chunkList = [];
 
-        $textRenderer = plugin_load('renderer', 'text');
-        if ($textRenderer instanceof PluginInterface) {
-            global $ID;
-            $ID = $page;
-            try {
-                $text = p_cached_output(wikiFN($page), 'text', $page);
-            } catch (\Throwable $e) {
-                if ($this->logger) $this->logger->error(
-                    'Failed to render page {page} using raw text instead. {msg}',
-                    ['page' => $page, 'msg' => $e->getMessage()]
-                );
-                $text = rawWiki($page);
-            }
-        } else {
+        global $ID;
+        $ID = $page;
+        try {
+            $text = p_cached_output(wikiFN($page), 'aichat', $page);
+        } catch (\Throwable $e) {
+            if ($this->logger) $this->logger->error(
+                'Failed to render page {page}. Using raw text instead. {msg}',
+                ['page' => $page, 'msg' => $e->getMessage()]
+            );
             $text = rawWiki($page);
         }
+
+        $crumbs = $this->breadcrumbTrail($page);
 
         // allow plugins to modify the text before splitting
         $eventData = [
@@ -210,6 +208,8 @@ class Embeddings
         $parts = $this->splitIntoChunks($text);
         foreach ($parts as $part) {
             if (trim((string)$part) == '') continue; // skip empty chunks
+
+            $part = $crumbs . "\n\n" . $part; // add breadcrumbs to each chunk
 
             try {
                 $embedding = $this->embedModel->getEmbedding($part);
@@ -285,6 +285,37 @@ class Embeddings
         return $result;
     }
 
+    /**
+     * Create a breadcrumb trail for the given page
+     *
+     * Uses the first heading of each namespace and the page itself. This is added as a prefix to
+     * each chunk to give the AI some context.
+     *
+     * @param string $id
+     * @return string
+     */
+    protected function breadcrumbTrail($id)
+    {
+        $namespaces = explode(':', getNS($id));
+        $resolver = new PageResolver($id);
+        $crumbs = [];
+
+        // all namespaces
+        $check = '';
+        foreach ($namespaces as $namespace) {
+            $check .= $namespace . ':';
+            $page = $resolver->resolveId($check);
+            $title = p_get_first_heading($page);
+            $crumbs[] = $title ? "$title ($namespace)" : $namespace;
+        }
+
+        // the page itself
+        $title = p_get_first_heading($id);
+        $page = noNS($id);
+        $crumbs[] = $title ? "$title ($page)" : $page;
+
+        return implode(' » ', $crumbs);
+    }
 
     /**
      * @param $text
