@@ -366,15 +366,14 @@ class cli_plugin_aichat extends AbstractCLI
             $clear = true;
         }
 
+        $data['embed ran at'] = dformat();
+        $data['embed used'] = (string) $this->helper->getEmbeddingModel();
+        $this->helper->setRunData($data);
+
         $start = time();
         $this->helper->getEmbeddings()->createNewIndex($skipRE, $matchRE, $clear);
         $this->notice('Peak memory used: {memory}', ['memory' => filesize_h(memory_get_peak_usage(true))]);
         $this->notice('Spent time: {time}min', ['time' => round((time() - $start) / 60, 2)]);
-
-
-        $data['embed ran at'] = dformat();
-        $data['embed used'] = (string) $this->helper->getEmbeddingModel();
-        $this->helper->setRunData($data);
     }
 
     /**
