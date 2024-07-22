@@ -264,8 +264,8 @@ class Embeddings
         $this->timeSpent = round(microtime(true) - $time, 2);
         if ($this->logger instanceof CLI) {
             $this->logger->info(
-                'Fetched {count} similar chunks from store in {time} seconds',
-                ['count' => count($chunks), 'time' => $this->timeSpent]
+                'Fetched {count} similar chunks from store in {time} seconds. Query: {query}',
+                ['count' => count($chunks), 'time' => $this->timeSpent, 'query' => $query]
             );
         }
 
