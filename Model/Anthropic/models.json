@@ -2,31 +2,59 @@
     "chat": {
         "claude-3-opus-20240229": {
             "description": "Most powerful model for highly complex tasks. Top-level performance, intelligence, fluency, and understanding.",
-            "inputTokens": 150000,
-            "inputTokenPrice": 15.00,
+            "inputTokens": 200000,
+            "inputTokenPrice": 15,
             "outputTokens": 4096,
-            "outputTokenPrice": 75.00
+            "outputTokenPrice": 75
         },
         "claude-3-5-sonnet-20240620": {
             "description": "Most intelligent model",
             "inputTokens": 200000,
-            "inputTokenPrice": 3.00,
+            "inputTokenPrice": 3,
             "outputTokens": 4096,
-            "outputTokenPrice": 15.00
+            "outputTokenPrice": 15
         },
         "claude-3-sonnet-20240229": {
             "description": "Ideal balance of intelligence and speed for enterprise workloads. Maximum utility at a lower price, dependable, balanced for scaled deployments.",
-            "inputTokens": 150000,
-            "inputTokenPrice": 3.00,
+            "inputTokens": 200000,
+            "inputTokenPrice": 3,
             "outputTokens": 4096,
-            "outputTokenPrice": 15.00
+            "outputTokenPrice": 15
         },
         "claude-3-haiku-20240307": {
             "description": "Fastest and most compact model for near-instant responsiveness. Quick and accurate targeted performance.",
-            "inputTokens": 150000,
+            "inputTokens": 200000,
             "inputTokenPrice": 0.25,
             "outputTokens": 4096,
             "outputTokenPrice": 1.25
+        },
+        "claude-instant-1": {
+            "description": "",
+            "inputTokens": 100000,
+            "inputTokenPrice": 1.63,
+            "outputTokens": 8191,
+            "outputTokenPrice": 5.51
+        },
+        "claude-instant-1.2": {
+            "description": "",
+            "inputTokens": 100000,
+            "inputTokenPrice": 0.16,
+            "outputTokens": 8191,
+            "outputTokenPrice": 0.55
+        },
+        "claude-2": {
+            "description": "",
+            "inputTokens": 100000,
+            "inputTokenPrice": 8,
+            "outputTokens": 8191,
+            "outputTokenPrice": 24
+        },
+        "claude-2.1": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 8,
+            "outputTokens": 8191,
+            "outputTokenPrice": 24
         }
     }
 }

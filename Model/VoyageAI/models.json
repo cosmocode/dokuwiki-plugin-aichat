@@ -1,16 +1,40 @@
 {
     "embedding": {
         "voyage-2": {
-            "description": "Base generalist embedding model optimized for both latency and quality, while still offering better retrieval performance than OpenAI V3 Large.",
+            "description": "General-purpose embedding model optimized for a balance between cost, latency, and retrieval quality.",
             "inputTokens": 4000,
             "inputTokenPrice": 0.1,
             "dimensions": 1024
         },
         "voyage-large-2": {
-            "description": "Our most powerful generalist embedding model (e.g., better than OpenAI V3 Large).",
+            "description": "General-purpose embedding model that is optimized for retrieval quality.",
             "inputTokens": 16000,
-            "inputTokenPrice": 0.1,
+            "inputTokenPrice": 0.12,
             "dimensions": 1536
+        },
+        "voyage-law-2": {
+            "description": "Optimized for legal and long-context retrieval and RAG. Also improved performance across all domains.",
+            "inputTokens": 16000,
+            "inputTokenPrice": 0.12,
+            "dimensions": 1024
+        },
+        "voyage-code-2": {
+            "description": "Optimized for code retrieval (17% better than alternatives). ",
+            "inputTokens": 16000,
+            "inputTokenPrice": 0.12,
+            "dimensions": 1536
+        },
+        "voyage-multilingual": {
+            "description": "Optimized for multilingual retrieval and RAG",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.12,
+            "dimensions": 1024
+        },
+        "voyage-finance-2": {
+            "description": "Optimized for finance retrieval and RAG.",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.12,
+            "dimensions": 1024
         }
     }
 }

@@ -4,50 +4,99 @@
             "description": "Our very first. A 7B transformer model, fast-deployed and easily customisable. Small, yet very powerful for a variety of use cases. English and code.",
             "inputTokens": 32000,
             "inputTokenPrice": 0.25,
-            "outputTokens": 4096,
+            "outputTokens": 8191,
             "outputTokenPrice": 0.25
         },
         "open-mixtral-8x7b": {
             "description": "A 7B sparse Mixture-of-Experts (SMoE). Uses 12B active parameters out of 45B total. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 32000,
             "inputTokenPrice": 0.7,
-            "outputTokens": 4096,
+            "outputTokens": 8191,
             "outputTokenPrice": 0.7
         },
         "open-mixtral-8x22b": {
             "description": "A 22B sparse Mixture-of-Experts (SMoE). Uses only 39B active parameters out of 141B. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 64000,
-            "inputTokenPrice": 2.0,
-            "outputTokens": 4096,
-            "outputTokenPrice": 6.0
+            "inputTokenPrice": 2,
+            "outputTokens": 8191,
+            "outputTokenPrice": 6
         },
         "mistral-small-latest": {
             "description": "Cost-efficient reasoning for low-latency workloads. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 32000,
-            "inputTokenPrice": 2.00,
-            "outputTokens": 4096,
-            "outputTokenPrice": 6.00
+            "inputTokenPrice": 1,
+            "outputTokens": 8191,
+            "outputTokenPrice": 3
         },
         "mistral-medium-latest": {
             "description": "Balanced reasoning for a wide range of tasks. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 32000,
-            "inputTokenPrice": 2.70,
-            "outputTokens": 4096,
-            "outputTokenPrice": 8.10
+            "inputTokenPrice": 2.7,
+            "outputTokens": 8191,
+            "outputTokenPrice": 8.1
         },
         "mistral-large-latest": {
             "description": "Top-tier reasoning for high-complexity tasks. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 32000,
-            "inputTokenPrice": 8.00,
-            "outputTokens": 4096,
-            "outputTokenPrice": 24.00
+            "inputTokenPrice": 4,
+            "outputTokens": 8191,
+            "outputTokenPrice": 12
+        },
+        "mistral-tiny": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.25,
+            "outputTokens": 8191,
+            "outputTokenPrice": 0.25
+        },
+        "mistral-small": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 1,
+            "outputTokens": 8191,
+            "outputTokenPrice": 3
+        },
+        "mistral-medium": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 2.7,
+            "outputTokens": 8191,
+            "outputTokenPrice": 8.1
+        },
+        "codestral-latest": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 1,
+            "outputTokens": 8191,
+            "outputTokenPrice": 3
+        },
+        "open-mistral-nemo": {
+            "description": "https:\/\/mistral.ai\/technology\/",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0.3,
+            "outputTokens": 128000,
+            "outputTokenPrice": 0.3
+        },
+        "open-codestral-mamba": {
+            "description": "https:\/\/mistral.ai\/technology\/",
+            "inputTokens": 256000,
+            "inputTokenPrice": 0.25,
+            "outputTokens": 256000,
+            "outputTokenPrice": 0.25
+        },
+        "codestral-mamba-latest": {
+            "description": "https:\/\/mistral.ai\/technology\/",
+            "inputTokens": 256000,
+            "inputTokenPrice": 0.25,
+            "outputTokens": 256000,
+            "outputTokenPrice": 0.25
         }
     },
     "embedding": {
         "mistral-embed": {
             "description": "State-of-the-art semantic for extracting representation of text extracts. English only for now.",
-            "inputTokenPrice": 0.10,
-            "inputTokens": 4096,
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.1,
             "dimensions": 1024
         }
     }

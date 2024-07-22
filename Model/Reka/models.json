@@ -5,21 +5,21 @@
             "inputTokens": 128000,
             "inputTokenPrice": 0.8,
             "outputTokens": 8192,
-            "outputTokenPrice": 2.0
+            "outputTokenPrice": 2
         },
         "reka-edge": {
             "description": "Lightweight model for local (i.e., on-hardware) or latency sensitive applications",
             "inputTokens": 64000,
             "inputTokenPrice": 0.4,
             "outputTokens": 8192,
-            "outputTokenPrice": 1.0
+            "outputTokenPrice": 1
         },
         "reka-core": {
             "description": "Superior capabilities for complex tasks",
             "inputTokens": 128000,
-            "inputTokenPrice": 10.0,
+            "inputTokenPrice": 10,
             "outputTokens": 8192,
-            "outputTokenPrice": 25.0
+            "outputTokenPrice": 25
         }
     }
 }
