@@ -47,7 +47,7 @@ class QdrantStorage extends AbstractStorage
      * @return mixed
      * @throws \Exception
      */
-    protected function runQuery($endpoint, mixed $data, $method = 'POST')
+    protected function runQuery($endpoint, mixed $data, $method = 'POST', $retry = 0)
     {
         $endpoint = trim($endpoint, '/');
         $url = $this->baseurl . '/' . $endpoint . '?wait=true';
@@ -62,6 +62,11 @@ class QdrantStorage extends AbstractStorage
         $response = $this->http->resp_body;
 
         if (!$response) {
+            if($retry < 3) {
+                sleep(1 + $retry);
+                return $this->runQuery($endpoint, $data, $method, $retry + 1);
+            }
+
             throw new \Exception(
                 'Qdrant API returned no response. ' . $this->http->error . ' Status: ' . $this->http->status
             );
@@ -70,6 +75,11 @@ class QdrantStorage extends AbstractStorage
         try {
             $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Exception $e) {
+            if($retry < 3) {
+                sleep(1 + $retry);
+                return $this->runQuery($endpoint, $data, $method, $retry + 1);
+            }
+
             throw new \Exception('Qdrant API returned invalid JSON. ' . $response, 0, $e);
         }
 
