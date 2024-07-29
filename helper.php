@@ -59,7 +59,6 @@ class helper_plugin_aichat extends Plugin
     /**
      * Update the configuration
      *
-     * @param array $config
      * @return void
      */
     public function updateConfig(array $config)
@@ -388,7 +387,6 @@ class helper_plugin_aichat extends Plugin
     /**
      * Store info about the last run
      *
-     * @param array $data
      * @return void
      */
     public function setRunData(array $data)

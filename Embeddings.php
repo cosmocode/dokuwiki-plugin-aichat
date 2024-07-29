@@ -51,9 +51,6 @@ class Embeddings
     /**
      * Embeddings constructor.
      *
-     * @param ChatInterface $chatModel
-     * @param EmbeddingInterface $embedModel
-     * @param AbstractStorage $storage
      * @param array $config The plugin configuration
      */
     public function __construct(
