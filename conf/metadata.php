@@ -18,6 +18,8 @@ $meta['storage'] = array('multichoice',
     )
 );
 
+$meta['customprompt'] = array();
+
 $meta['openai_apikey'] = array('password');
 $meta['openai_org'] = array('string');
 

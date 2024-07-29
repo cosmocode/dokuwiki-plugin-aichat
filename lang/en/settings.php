@@ -10,7 +10,7 @@ $lang['chatmodel'] = 'The 🧠 model to use for chat completion. Configure requi
 $lang['rephrasemodel'] = 'The 🧠 model to use for rephrasing questions. Configure required credentials below.';
 $lang['embedmodel'] = 'The 🧠 model to use for text embedding. Configure required credentials below.<br>🔄 You need to rebuild the vector storage when changing this setting.';
 $lang['storage'] = 'Which 📥 vector storage to use. Configure required credentials below.<br>🔄 You need to rebuild the vector storage when changing this setting.';
-
+$lang['customprompt'] = 'A custom prompt that is added to the prompt used by this plugin when querying the AI model. For consistency, it should be in English.';
 
 $lang['openai_apikey'] = '🧠 <b>OpenAI</b> API key';
 $lang['openai_org'] = '🧠 <b>OpenAI</b> Organization ID (if any)';

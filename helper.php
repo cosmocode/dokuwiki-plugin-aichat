@@ -202,6 +202,7 @@ class helper_plugin_aichat extends Plugin
             $prompt = $this->getPrompt('question', [
                 'context' => $context,
                 'question' => $question,
+                'customprompt' => $this->getConf('customprompt'),
             ]);
         } else {
             $prompt = $this->getPrompt('noanswer', [

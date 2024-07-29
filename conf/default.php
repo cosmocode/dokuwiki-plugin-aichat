@@ -11,6 +11,8 @@ $conf['rephrasemodel'] = 'OpenAI gpt-3.5-turbo';
 $conf['embedmodel'] = 'OpenAI text-embedding-ada-002';
 $conf['storage'] = 'SQLite';
 
+$conf['customprompt'] = '';
+
 $conf['openai_apikey']    = '';
 $conf['openai_org']    = '';
 
