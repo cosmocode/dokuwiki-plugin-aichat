@@ -26,6 +26,8 @@ $conf['reka_apikey'] = '';
 
 $conf['groq_apikey'] = '';
 
+$conf['ollama_baseurl'] = '';
+
 $conf['pinecone_apikey'] = '';
 $conf['pinecone_baseurl'] = '';
 

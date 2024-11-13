@@ -33,6 +33,8 @@ $meta['reka_apikey'] = array('password');
 
 $meta['groq_apikey'] = array('password');
 
+$meta['ollama_baseurl'] = array('string');
+
 $meta['pinecone_apikey'] = array('password');
 $meta['pinecone_baseurl'] = array('string');
 
