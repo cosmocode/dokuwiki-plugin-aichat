@@ -32,7 +32,7 @@
         },
         "voyage-finance-2": {
             "description": "Optimized for finance retrieval and RAG.",
-            "inputTokens": 32000,
+            "inputTokens": 4000,
             "inputTokenPrice": 0.12,
             "dimensions": 1024
         }

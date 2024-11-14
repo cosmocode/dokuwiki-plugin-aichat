@@ -37,10 +37,10 @@
         },
         "mistral-large-latest": {
             "description": "Top-tier reasoning for high-complexity tasks. Fluent in English, French, Italian, German, Spanish, and strong in code.",
-            "inputTokens": 32000,
-            "inputTokenPrice": 4,
-            "outputTokens": 8191,
-            "outputTokenPrice": 12
+            "inputTokens": 128000,
+            "inputTokenPrice": 3,
+            "outputTokens": 128000,
+            "outputTokenPrice": 9
         },
         "mistral-tiny": {
             "description": "",

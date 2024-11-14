@@ -24,15 +24,15 @@
         "gpt-4o": {
             "description": "GPT-4o has the same high intelligence as GPT-4 Turbo but is much more efficient",
             "inputTokens": 128000,
-            "inputTokenPrice": 5,
-            "outputTokens": 4096,
-            "outputTokenPrice": 15
+            "inputTokenPrice": 2.5,
+            "outputTokens": 16384,
+            "outputTokenPrice": 10
         },
         "gpt-4o-mini": {
             "description": "",
             "inputTokens": 128000,
             "inputTokenPrice": 0.15,
-            "outputTokens": 4096,
+            "outputTokens": 16384,
             "outputTokenPrice": 0.6
         },
         "gpt-4-32k": {
@@ -48,6 +48,20 @@
             "inputTokenPrice": 3,
             "outputTokens": 4096,
             "outputTokenPrice": 4
+        },
+        "o1-mini": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 3,
+            "outputTokens": 65536,
+            "outputTokenPrice": 12
+        },
+        "chatgpt-4o-latest": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 5,
+            "outputTokens": 4096,
+            "outputTokenPrice": 15
         }
     },
     "embedding": {
