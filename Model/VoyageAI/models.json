@@ -24,7 +24,7 @@
             "inputTokenPrice": 0.12,
             "dimensions": 1536
         },
-        "voyage-multilingual": {
+        "voyage-multilingual-2": {
             "description": "Optimized for multilingual retrieval and RAG",
             "inputTokens": 32000,
             "inputTokenPrice": 0.12,
