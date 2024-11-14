@@ -23,6 +23,8 @@ $meta['customprompt'] = array();
 $meta['openai_apikey'] = array('password');
 $meta['openai_org'] = array('string');
 
+$meta['gemini_apikey'] = array('password');
+
 $meta['anthropic_apikey'] = array('password');
 
 $meta['mistral_apikey'] = array('password');

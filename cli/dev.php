@@ -69,6 +69,10 @@ class cli_plugin_aichat_dev extends AbstractCLI
                 'name' => 'VoyageAI',
                 'skip' => '/-(01|02)(-|$)/', // outdated models
             ],
+            'gemini' => [
+                'name' => 'Gemini',
+                'skip' => '/(-preview|-exp|-\d\d\d$)/'
+            ],
         ];
 
         // load existing models

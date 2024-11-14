@@ -16,6 +16,8 @@ $conf['customprompt'] = '';
 $conf['openai_apikey']    = '';
 $conf['openai_org']    = '';
 
+$conf['gemini_apikey'] = '';
+
 $conf['anthropic_apikey'] = '';
 
 $conf['mistral_apikey'] = '';

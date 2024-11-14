@@ -14,6 +14,7 @@ $lang['customprompt'] = 'A custom prompt that is added to the prompt used by thi
 
 $lang['openai_apikey'] = '🧠 <b>OpenAI</b> API key';
 $lang['openai_org'] = '🧠 <b>OpenAI</b> Organization ID (if any)';
+$lang['gemini_apikey'] = '🧠 Google <b>Gemini</b> API key';
 $lang['anthropic_apikey'] = '🧠 <b>Anthropic</b> API key';
 $lang['mistral_apikey'] = '🧠 <b>Mistral</b> API key';
 $lang['voyageai_apikey'] = '🧠 <b>Voyage AI</b> API key';
