@@ -1,27 +1,129 @@
 {
     "chat": {
-        "llama2": {
-            "description": "Llama 2 is released by Meta Platforms, Inc. This model is trained on 2 trillion tokens, and by default supports a context length of 4096. Llama 2 Chat models are fine-tuned on over 1 million human annotations, and are made for chat.",
+        "llama3.2:3b": {
+            "description": "Meta's Llama 3.2 model with 3 billion parameters.",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "llama3.2:1b": {
+            "description": "Meta's Llama 3.2 model with 1 billion parameters.",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "llama3.1:405b": {
+            "description": "Llama 3.1 is a new state-of-the-art model from Meta. 405 billion parameters.",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "llama3.1:70b": {
+            "description": "Llama 3.1 is a new state-of-the-art model from Meta. 70 billion parameters.",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "llama3.1:8b": {
+            "description": "Llama 3.1 is a new state-of-the-art model from Meta. 8 billion parameters.",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "gemma2:27b": {
+            "description": "Google Gemma 2 is a high-performing and efficient model. 27 billion parameters.",
             "inputTokens": 4096,
             "inputTokenPrice": 0,
             "outputTokens": 4096,
             "outputTokenPrice": 0
         },
-
-        "gemma": {
-            "description": "Llama 2 is released by Meta Platforms, Inc. This model is trained on 2 trillion tokens, and by default supports a context length of 4096. Llama 2 Chat models are fine-tuned on over 1 million human annotations, and are made for chat.",
+        "gemma2:9b": {
+            "description": "Google Gemma 2 is a high-performing and efficient model. 9 billion parameters.",
             "inputTokens": 4096,
             "inputTokenPrice": 0,
             "outputTokens": 4096,
             "outputTokenPrice": 0
+        },
+        "gemma2:2b": {
+            "description": "Google Gemma 2 is a high-performing and efficient model. 2 billion parameters.",
+            "inputTokens": 4096,
+            "inputTokenPrice": 0,
+            "outputTokens": 4096,
+            "outputTokenPrice": 0
+        },
+        "qwen2.5:72b": {
+            "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset. 72 billion parameters.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "qwen2.5:32b": {
+            "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset. 32 billion parameters.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "qwen2.5:14b": {
+            "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset. 14 billion parameters.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "qwen2.5:7b": {
+            "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset. 7 billion parameters.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "qwen2.5:3b": {
+            "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset. 3 billion parameters.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "qwen2.5:1.5b": {
+            "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset. 1.5 billion parameters.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
+        "qwen2.5:0.5b": {
+            "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset. 0.5 billion parameters.",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
         }
     },
     "embedding": {
-        "text-embedding-ada-002": {
-            "description": "Most capable 2nd generation embedding model",
+        "nomic-embed-text": {
+            "description": "A high-performing open embedding model with a large token context window.",
             "inputTokens": 8192,
-            "inputTokenPrice": 0.10,
-            "dimensions": 1536
+            "inputTokenPrice": 0,
+            "dimensions": 768
+        },
+        "mxbai-embed-large": {
+            "description": "State-of-the-art large embedding model from mixedbread.ai",
+            "inputTokens": 512,
+            "inputTokenPrice": 0,
+            "dimensions": 1024
+        },
+        "all-minilm": {
+            "description": "The project aims to train sentence embedding models on very large sentence level datasets using a self-supervised contrastive learning objective.",
+            "inputTokens": 256,
+            "inputTokenPrice": 0,
+            "dimensions": 384
         }
     }
 }
