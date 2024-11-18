@@ -232,7 +232,7 @@ class AIChatChat extends HTMLElement {
             this.displayMessage(response.answer, response.sources); // display the answer
         } catch (e) {
             console.error(e);
-            this.displayMessage('Sorry, something went wrong', {});
+            this.displayMessage(LANG.plugins.aichat.error, {});
         }
 
         this.stopProgress();
