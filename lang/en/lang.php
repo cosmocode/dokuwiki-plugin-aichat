@@ -12,3 +12,4 @@ $lang['send-button'] = 'Send your question [Enter]';
 $lang['restart-button'] = 'Restart the conversation';
 $lang['close-button'] = 'Close';
 $lang['fullscreen-button'] = 'Toggle fullscreen';
+$lang['js']['error'] = 'Sorry, something went wrong';
