@@ -124,6 +124,12 @@
             "inputTokens": 256,
             "inputTokenPrice": 0,
             "dimensions": 384
+        },
+        "bge-large": {
+            "description": "Embedding model from BAAI mapping texts to vectors.",
+            "inputTokens": 512,
+            "inputTokenPrice": 0,
+            "dimensions": 1024
         }
     }
 }
