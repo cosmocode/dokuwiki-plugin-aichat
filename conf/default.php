@@ -53,4 +53,5 @@ $conf['logging'] = 0;
 $conf['restrict'] = '';
 $conf['skipRegex'] = ':(playground|sandbox)(:|$)';
 $conf['matchRegex'] = '';
+$conf['ignoreRegex'] = '';
 $conf['preferUIlanguage'] = 0;

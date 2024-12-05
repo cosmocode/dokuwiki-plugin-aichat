@@ -87,6 +87,12 @@ class renderer_plugin_aichat extends Doku_Renderer_xhtml
     {
         $this->doc = preg_replace("/(\r?\n){3,}/", "\n\n", $this->doc);
         $this->doc = ltrim($this->doc); // remove leading space and empty lines
+
+        // remove ignored parts
+        $regex = $this->getConf('ignoreRegex');
+        if($regex) {
+            $this->doc = preg_replace('/' . $regex . '/i', '', $this->doc);
+        }
     }
 
     /** @inheritdoc */
