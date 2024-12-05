@@ -43,9 +43,9 @@ $lang['rephraseHistory'] = 'Number of previous chat messages to consider for con
 
 $lang['logging'] = 'Log all questions and answers. Use the <a href="?do=admin&page=logviewer&facility=aichat">Log Viewer</a> to access.';
 $lang['restrict'] = 'Restrict access to these users and groups (comma separated). Leave empty to allow all users.';
-$lang['skipRegex'] = 'Skip indexing pages matching this regular expression (no delimiters).';
-$lang['matchRegex'] = 'Only index pages matching this regular expression (no delimiters).';
-$lang['ignoreRegex'] = 'Ignore parts of the page content matching this regular expression (no delimiters).';
+$lang['skipRegex'] = 'Skip indexing pages matching this regular expression (no delimiters).<br>🔄 You need to rebuild the vector storage when changing this setting.';
+$lang['matchRegex'] = 'Only index pages matching this regular expression (no delimiters).<br>🔄 You need to rebuild the vector storage when changing this setting.';
+$lang['ignoreRegex'] = 'Ignore parts of the page content matching this regular expression (no delimiters).<br>🔄 You need to rebuild the vector storage when changing this setting.';
 $lang['preferUIlanguage'] = 'How to work with multilingual wikis? (Requires the translation plugin)';
 
 $lang['preferUIlanguage_o_0'] = 'Guess language, use all sources';
