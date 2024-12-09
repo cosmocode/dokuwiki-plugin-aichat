@@ -58,8 +58,11 @@ class syntax_plugin_aichat_chat extends SyntaxPlugin
             return true;
         }
 
+        $hello = trim((string)$data['body']);
+        if (!$hello) $hello = $this->getLang('hello');
+
         $opts = [
-            'hello' => trim((string) $data['body']),
+            'hello' => $hello,
             'placeholder' => $this->getLang('placeholder'),
             'url' => DOKU_BASE . 'lib/exe/ajax.php?call=aichat',
             'title-send' => $this->getLang('send-button'),

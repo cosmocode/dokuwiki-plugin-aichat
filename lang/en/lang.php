@@ -6,6 +6,7 @@
  */
 
 $lang['title'] = 'AI Chat';
+$lang['hello'] = 'Hello, how can I help you?';
 $lang['placeholder'] = 'Your question…';
 $lang['restricted'] = 'Sorry, the AI chat has not been enabled for you.';
 $lang['send-button'] = 'Send your question [Enter]';
