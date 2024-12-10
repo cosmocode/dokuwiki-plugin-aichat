@@ -62,7 +62,7 @@ class QdrantStorage extends AbstractStorage
         $response = $this->http->resp_body;
 
         if (!$response) {
-            if($retry < 3) {
+            if ($retry < 3) {
                 sleep(1 + $retry);
                 return $this->runQuery($endpoint, $data, $method, $retry + 1);
             }
@@ -75,7 +75,7 @@ class QdrantStorage extends AbstractStorage
         try {
             $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Exception $e) {
-            if($retry < 3) {
+            if ($retry < 3) {
                 sleep(1 + $retry);
                 return $this->runQuery($endpoint, $data, $method, $retry + 1);
             }
