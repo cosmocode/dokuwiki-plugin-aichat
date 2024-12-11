@@ -327,52 +327,61 @@ class Embeddings
     {
         $sentenceSplitter = new Sentence();
         $tiktok = $this->getTokenEncoder();
-
+    
         $chunks = [];
         $sentences = $sentenceSplitter->split($text);
-
+    
         $chunklen = 0;
         $chunk = '';
         while ($sentence = array_shift($sentences)) {
             $slen = count($tiktok->encode($sentence));
             if ($slen > $this->getChunkSize()) {
                 // sentence is too long, we need to split it further
-                if ($this->logger instanceof CLI) $this->logger->warning(
-                    'Sentence too long, splitting it into smaller parts'
-                );
+                if ($this->logger instanceof CLI) {
+                    $this->logger->warning(
+                        'Sentence too long, splitting it into smaller parts'
+                    );
+                }
+    
                 // Split the sentence into smaller parts
                 $subSentences = $this->splitLongSentence($sentence, $tiktok);
                 foreach ($subSentences as $subSentence) {
                     $subSlen = count($tiktok->encode($subSentence));
                     if ($chunklen + $subSlen < $this->getChunkSize()) {
-                // add to current chunk
+                        // add to current chunk
                         $chunk .= $subSentence;
                         $chunklen += $subSlen;
-                // remember sentence for overlap check
+    
+                        // remember sentence for overlap check
                         $this->rememberSentence($subSentence);
-            } else {
-                // add current chunk to result
-                $chunk = trim($chunk);
-                if ($chunk !== '') $chunks[] = $chunk;
-
-                // start new chunk with remembered sentences
-                $chunk = implode(' ', $this->sentenceQueue);
+                    } else {
+                        // add current chunk to result
+                        $chunk = trim($chunk);
+                        if ($chunk !== '') {
+                            $chunks[] = $chunk;
+                        }
+    
+                        // start new chunk with remembered sentences
+                        $chunk = implode(' ', $this->sentenceQueue);
                         $chunk .= $subSentence;
-                $chunklen = count($tiktok->encode($chunk));
-            }
-        }
+                        $chunklen = count($tiktok->encode($chunk));
+                    }
+                }
             } else {
                 if ($chunklen + $slen < $this->getChunkSize()) {
                     // add to current chunk
                     $chunk .= $sentence;
                     $chunklen += $slen;
+    
                     // remember sentence for overlap check
                     $this->rememberSentence($sentence);
                 } else {
                     // add current chunk to result
                     $chunk = trim($chunk);
-                    if ($chunk !== '') $chunks[] = $chunk;
-
+                    if ($chunk !== '') {
+                        $chunks[] = $chunk;
+                    }
+    
                     // start new chunk with remembered sentences
                     $chunk = implode(' ', $this->sentenceQueue);
                     $chunk .= $sentence;
@@ -380,10 +389,12 @@ class Embeddings
                 }
             }
         }
+    
         $chunks[] = trim($chunk);
 
         return $chunks;
     }
+    
 
     protected function splitLongSentence($sentence, $tiktok)
     {
