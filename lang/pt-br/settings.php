@@ -36,8 +36,9 @@ $lang['chatHistory']           = 'Número de mensagens de bate-papo anteriores a
 $lang['rephraseHistory']       = 'Número de mensagens de bate-papo anteriores a serem consideradas para fins de contexto ao reformular uma pergunta. Defina como 0 para desativar a reformulação.';
 $lang['logging']               = 'Registre todas as perguntas e respostas. Use o <a href="?do=admin&page=logviewer&facility=aichat">Ver logs</a> para acessar.';
 $lang['restrict']              = 'Restrinja o acesso a esses usuários e grupos (separados por vírgula). Deixe em branco para permitir todos os usuários.';
-$lang['skipRegex']             = 'Ignore as páginas de indexação que correspondam a esta expressão regular (sem delimitadores).';
-$lang['matchRegex']            = 'Apenas indexe páginas que correspondam a esta expressão regular (sem delimitadores).';
+$lang['skipRegex']             = 'Ignore as páginas de indexação que correspondam a esta expressão regular (sem delimitadores).<br>🔄 Você precisa reconstruir o armazenamento vetorial ao alterar esta configuração.';
+$lang['matchRegex']            = 'Apenas indexe páginas que correspondam a esta expressão regular (sem delimitadores).<br>🔄 Você precisa reconstruir o armazenamento vetorial ao alterar esta configuração.';
+$lang['ignoreRegex']           = 'Ignore partes do conteúdo da página que correspondam a esta expressão regular (sem delimitadores).<br>🔄 Você precisa reconstruir o armazenamento vetorial ao alterar esta configuração.';
 $lang['preferUIlanguage']      = 'Como trabalhar com wikis multilíngues? (Requer o plugin <i>translation</i>)';
 $lang['preferUIlanguage_o_0']  = 'Adivinhe o idioma, use todas as fontes';
 $lang['preferUIlanguage_o_1']  = 'Prefira o idioma da UI, use todas as fontes';
