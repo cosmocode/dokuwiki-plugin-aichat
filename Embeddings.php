@@ -374,30 +374,39 @@ class Embeddings
 
     protected function splitLongSentence($sentence, $tiktok)
     {
-        $words = explode(' ', $sentence);
+        $words = preg_split('/(\s+)/', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
         $subSentences = [];
         $currentSubSentence = '';
         $currentSubSentenceLen = 0;
         $chunkSize = $this->getChunkSize();
-
+    
         foreach ($words as $word) {
             $wordLen = count($tiktok->encode($word));
-            if ($currentSubSentenceLen + $wordLen < $chunkSize) {
-                $currentSubSentence .= $word . ' ';
+    
+            if ($wordLen > $chunkSize) {
+                // If a single word is too long, split it into smaller chunks
+                $wordChunks = str_split($word, intval($chunkSize / 2)); // Split into smaller parts
+                foreach ($wordChunks as $chunk) {
+                    $subSentences[] = trim($chunk);
+                }
+            } elseif ($currentSubSentenceLen + $wordLen < $chunkSize) {
+                // Add to current sub-sentence
+                $currentSubSentence .= $word;
                 $currentSubSentenceLen += $wordLen;
             } else {
-                // add current sub-sentence to result
+                // Add current sub-sentence to result
                 $subSentences[] = trim($currentSubSentence);
-                // start new sub-sentence
-                $currentSubSentence = $word . ' ';
+                // Start new sub-sentence
+                $currentSubSentence = $word;
                 $currentSubSentenceLen = $wordLen;
             }
         }
-        // add last sub-sentence to result
+    
+        // Add last sub-sentence to result
         if ($currentSubSentence !== '') {
             $subSentences[] = trim($currentSubSentence);
         }
-
+    
         return $subSentences;
     }
 
