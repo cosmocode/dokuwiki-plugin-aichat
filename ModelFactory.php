@@ -77,7 +77,7 @@ class ModelFactory
         if ($this->rephraseModel instanceof ChatInterface) {
             return $this->rephraseModel;
         }
-        $this->rephraseModel = $this->loadModel('chat', $this->config['chatmodel']);
+        $this->rephraseModel = $this->loadModel('chat', $this->config['rephrasemodel']);
         $this->rephraseModel->setDebug($this->debug);
         return $this->rephraseModel;
     }
