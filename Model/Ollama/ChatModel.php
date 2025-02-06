@@ -13,6 +13,9 @@ class ChatModel extends AbstractOllama implements ChatInterface
             'messages' => $messages,
             'model' => $this->getModelName(),
             'stream' => false,
+            'options' => [
+                'num_ctx' => $this->getMaxInputTokenLength()
+            ]
         ];
         $response = $this->request('chat', $data);
         return $response['message']['content'];

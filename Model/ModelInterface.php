@@ -55,4 +55,12 @@ interface ModelInterface
      * The price for 1,000,000 input tokens in USD
      */
     public function getInputTokenPrice(): float;
+
+    /**
+     * Load the model info if no data is in the model.json
+     *
+     * Either fetch the info via API or return sensible defaults.
+     * @return array
+     */
+    function loadUnknownModelInfo(): array;
 }

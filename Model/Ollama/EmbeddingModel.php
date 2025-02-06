@@ -12,6 +12,9 @@ class EmbeddingModel extends AbstractOllama implements EmbeddingInterface
         $data = [
             'model' => $this->getModelName(),
             'prompt' => $text,
+            'options' => [
+                'num_ctx' => $this->getMaxInputTokenLength()
+            ]
         ];
         $response = $this->request('embeddings', $data);
 

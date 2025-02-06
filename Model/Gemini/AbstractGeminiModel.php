@@ -13,13 +13,33 @@ abstract class AbstractGeminiModel extends AbstractModel
     /** @inheritdoc */
     public function __construct(string $name, array $config)
     {
-        parent::__construct($name, $config);
-
         if (empty($config['gemini_apikey'])) {
             throw new \Exception('Gemini API key not configured');
         }
 
         $this->apikey = $config['gemini_apikey'];
+
+        parent::__construct($name, $config);
+    }
+
+    /** @inheritdoc */
+    function loadUnknownModelInfo(): array
+    {
+        $url = sprintf(
+            'https://generativelanguage.googleapis.com/v1beta/models/%s?key=%s',
+            $this->modelName,
+            $this->apikey
+        );
+        $result = $this->sendAPIRequest('GET', $url, '');
+        if(!$result) {
+            throw new \Exception('Failed to load model info for '.$this->modelFullName);
+        }
+
+        $info = parent::loadUnknownModelInfo();
+        $info['description'] = $result['description'];
+        $info['inputTokens'] = $result['inputTokenLimit'];
+        $info['outputTokens'] = $result['outputTokenLimit'];
+        return $info;
     }
 
     /**

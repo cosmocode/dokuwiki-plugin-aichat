@@ -70,17 +70,20 @@ abstract class AbstractModel implements ModelInterface
         $this->modelFullName = basename(dirname($reflect->getFileName()) . ' ' . $name);
 
         if ($this instanceof ChatInterface) {
-            if (!isset($modelinfos['chat'][$name])) {
-                throw new \Exception('Invalid chat model configured: ' . $name);
+            if (isset($modelinfos['chat'][$name])) {
+                $this->modelInfo = $modelinfos['chat'][$name];
+            } else {
+                $this->modelInfo = $this->loadUnknownModelInfo();
             }
-            $this->modelInfo = $modelinfos['chat'][$name];
+
         }
 
         if ($this instanceof EmbeddingInterface) {
-            if (!isset($modelinfos['embedding'][$name])) {
-                throw new \Exception('Invalid embedding model configured: ' . $name);
+            if (isset($modelinfos['embedding'][$name])) {
+                $this->modelInfo = $modelinfos['embedding'][$name];
+            } else {
+                $this->modelInfo = $this->loadUnknownModelInfo();
             }
-            $this->modelInfo = $modelinfos['embedding'][$name];
         }
     }
 
@@ -142,6 +145,25 @@ abstract class AbstractModel implements ModelInterface
     public function getInputTokenPrice(): float
     {
         return $this->modelInfo['inputTokenPrice'];
+    }
+
+    /** @inheritdoc */
+    function loadUnknownModelInfo(): array
+    {
+        $info = [
+            'description' => $this->modelFullName,
+            'inputTokens' => 1024,
+            'inputTokenPrice' => 0,
+        ];
+
+        if ($this instanceof ChatInterface) {
+            $info['outputTokens'] = 1024;
+            $info['outputTokenPrice'] = 0;
+        } elseif ($this instanceof EmbeddingInterface) {
+            $info['dimensions'] = 512;
+        }
+
+        return $info;
     }
 
     // endregion
@@ -207,7 +229,7 @@ abstract class AbstractModel implements ModelInterface
      *
      * @param string $method The HTTP method to use (GET, POST, PUT, DELETE, etc.)
      * @param string $url The full URL to send the request to
-     * @param array $data Payload to send, will be encoded to JSON
+     * @param array|string $data Payload to send, will be encoded to JSON
      * @param int $retry How often this request has been retried, do not set externally
      * @return array API response as returned by parseAPIResponse
      * @throws \Exception when anything goes wrong
