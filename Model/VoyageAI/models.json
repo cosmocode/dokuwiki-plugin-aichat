@@ -32,9 +32,39 @@
         },
         "voyage-finance-2": {
             "description": "Optimized for finance retrieval and RAG.",
-            "inputTokens": 4000,
+            "inputTokens": 32000,
             "inputTokenPrice": 0.12,
             "dimensions": 1024
+        },
+        "voyage-3-large": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.18,
+            "dimensions": 1536
+        },
+        "voyage-3": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.06,
+            "dimensions": 1536
+        },
+        "voyage-3-lite": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.02,
+            "dimensions": 1536
+        },
+        "voyage-code-3": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.18,
+            "dimensions": 1536
+        },
+        "voyage-multimodal-3": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.12,
+            "dimensions": 1536
         }
     }
 }

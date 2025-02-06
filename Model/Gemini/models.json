@@ -55,20 +55,27 @@
             "inputTokenPrice": 0.35,
             "outputTokens": 8192,
             "outputTokenPrice": 1.05
+        },
+        "gemini-1.5-flash-8b": {
+            "description": "https:\/\/ai.google.dev\/pricing",
+            "inputTokens": 1048576,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
         }
     },
     "embedding": {
         "text-embedding-004": {
-          "description": "Achieves a stronger retrieval performance and outperforms existing models with comparable dimensions, on the standard MTEB embedding benchmarks",
-          "inputTokens": 2048,
-          "inputTokenPrice": 0.00625,
-          "dimensions": 768
+            "description": "Achieves a stronger retrieval performance and outperforms existing models with comparable dimensions, on the standard MTEB embedding benchmarks",
+            "inputTokens": 2048,
+            "inputTokenPrice": 0.00625,
+            "dimensions": 768
         },
         "embedding-001": {
-          "description": "Older embedding model",
-          "inputTokens": 2048,
-          "inputTokenPrice": 0.00625,
-          "dimensions": 768
+            "description": "Older embedding model",
+            "inputTokens": 2048,
+            "inputTokenPrice": 0.00625,
+            "dimensions": 768
         }
     }
 }

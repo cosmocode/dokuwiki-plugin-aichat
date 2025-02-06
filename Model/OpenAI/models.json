@@ -52,9 +52,9 @@
         "o1-mini": {
             "description": "",
             "inputTokens": 128000,
-            "inputTokenPrice": 3,
+            "inputTokenPrice": 1.1,
             "outputTokens": 65536,
-            "outputTokenPrice": 12
+            "outputTokenPrice": 4.4
         },
         "chatgpt-4o-latest": {
             "description": "",
@@ -62,6 +62,20 @@
             "inputTokenPrice": 5,
             "outputTokens": 4096,
             "outputTokenPrice": 15
+        },
+        "o1": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 15,
+            "outputTokens": 100000,
+            "outputTokenPrice": 60
+        },
+        "o3-mini": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 1.1,
+            "outputTokens": 100000,
+            "outputTokenPrice": 4.4
         }
     },
     "embedding": {

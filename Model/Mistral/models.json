@@ -16,7 +16,7 @@
         },
         "open-mixtral-8x22b": {
             "description": "A 22B sparse Mixture-of-Experts (SMoE). Uses only 39B active parameters out of 141B. Fluent in English, French, Italian, German, Spanish, and strong in code.",
-            "inputTokens": 64000,
+            "inputTokens": 65336,
             "inputTokenPrice": 2,
             "outputTokens": 8191,
             "outputTokenPrice": 6
@@ -38,9 +38,9 @@
         "mistral-large-latest": {
             "description": "Top-tier reasoning for high-complexity tasks. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 128000,
-            "inputTokenPrice": 3,
+            "inputTokenPrice": 2,
             "outputTokens": 128000,
-            "outputTokenPrice": 9
+            "outputTokenPrice": 6
         },
         "mistral-tiny": {
             "description": "",
@@ -90,6 +90,13 @@
             "inputTokenPrice": 0.25,
             "outputTokens": 256000,
             "outputTokenPrice": 0.25
+        },
+        "pixtral-large-latest": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 2,
+            "outputTokens": 128000,
+            "outputTokenPrice": 6
         }
     },
     "embedding": {
