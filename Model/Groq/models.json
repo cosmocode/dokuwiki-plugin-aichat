@@ -28,26 +28,12 @@
             "outputTokens": 32768,
             "outputTokenPrice": 0.24
         },
-        "gemma-7b-it": {
-            "description": "Gemma is a family of lightweight, state-of-the-art open models from Google, built from the same research and technology used to create the Gemini models. They are text-to-text, decoder-only large language models, available in English, with open weights, pre-trained variants, and instruction-tuned variants. Gemma models are well-suited for a variety of text generation tasks, including question answering, summarization, and reasoning. Their relatively small size makes it possible to deploy them in environments with limited resources such as a laptop, desktop or your own cloud infrastructure, democratizing access to state of the art AI models and helping foster innovation for everyone.",
-            "inputTokens": 8192,
-            "inputTokenPrice": 0.07,
-            "outputTokens": 8192,
-            "outputTokenPrice": 0.07
-        },
         "llama-3.1-8b-instant": {
             "description": "",
             "inputTokens": 8192,
             "inputTokenPrice": 0.05,
             "outputTokens": 8192,
             "outputTokenPrice": 0.08
-        },
-        "llama-3.1-70b-versatile": {
-            "description": "",
-            "inputTokens": 8192,
-            "inputTokenPrice": 0.59,
-            "outputTokens": 8192,
-            "outputTokenPrice": 0.79
         },
         "llama-3.1-405b-reasoning": {
             "description": "",
