@@ -10,14 +10,20 @@ class EmbeddingModel extends AbstractOllama implements EmbeddingInterface
     public function getEmbedding($text): array
     {
         $data = [
-            'model' => $this->getModelName(),
-            'prompt' => $text,
+            'model' => $this->getModelNameWithSuffix(),
+            'input' => $text,
             'options' => [
                 'num_ctx' => $this->getMaxInputTokenLength()
             ]
         ];
-        $response = $this->request('embeddings', $data);
+        $response = $this->request('api/embed', $data);
+        return $response['embeddings'][0] ?? [];
+    }
 
-        return $response['embedding'];
+    private function getModelNameWithSuffix(): string
+    {
+        $modelName = $this->getModelName();
+        return str_ends_with($modelName, ':latest') ? $modelName : $modelName . ':latest';
     }
 }
+
