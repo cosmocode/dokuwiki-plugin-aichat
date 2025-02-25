@@ -27,7 +27,7 @@
             "inputTokenPrice": 0,
             "outputTokens": 8192,
             "outputTokenPrice": 0
-        }
+        },
         "llama3.1:8b": {
             "description": "Llama 3.1 is a new state-of-the-art model from Meta. 8 billion parameters.",
             "inputTokens": 8192,

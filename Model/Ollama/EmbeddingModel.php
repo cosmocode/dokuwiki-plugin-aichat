@@ -16,7 +16,7 @@ class EmbeddingModel extends AbstractOllama implements EmbeddingInterface
                 'num_ctx' => $this->getMaxInputTokenLength()
             ]
         ];
-        $response = $this->request('api/embed', $data);
+        $response = $this->request('embed', $data);
         return $response['embeddings'][0] ?? [];
     }
 }
