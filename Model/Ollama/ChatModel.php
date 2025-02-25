@@ -18,6 +18,9 @@ class ChatModel extends AbstractOllama implements ChatInterface
             ]
         ];
         $response = $this->request('chat', $data);
-        return $response['message']['content'];
+        $content = $response['message']['content'];
+        // remove thinking part from deepseek answers
+        $content = preg_replace('/^<think>.*?(?:<\/think>)/s', '', $content);
+        return $content;
     }
 }
