@@ -12,11 +12,17 @@ class ChatModel extends AbstractOpenAIModel implements ChatInterface
         $data = [
             'messages' => $messages,
             'model' => $this->getModelName(),
-            'max_tokens' => null,
+            'max_completion_tokens' => null,
             'stream' => false,
             'n' => 1, // number of completions
-            'temperature' => 0.0,
         ];
+
+        // resoning models o1, o1-mini, o3-mini do not support setting temperature
+        // for all others we want a low temperature to get more coherent answers
+        if(!str_starts_with($this->getModelName(), 'o')) {
+            $data['temperature'] = 0.0;
+        }
+
         $response = $this->request('chat/completions', $data);
         return $response['choices'][0]['message']['content'];
     }
