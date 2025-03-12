@@ -3,7 +3,6 @@
 namespace dokuwiki\plugin\aichat;
 
 use dokuwiki\Extension\Event;
-use dokuwiki\Extension\PluginInterface;
 use dokuwiki\File\PageResolver;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
@@ -57,11 +56,12 @@ class Embeddings
      * @param array $config The plugin configuration
      */
     public function __construct(
-        ChatInterface $chatModel,
+        ChatInterface      $chatModel,
         EmbeddingInterface $embedModel,
-        AbstractStorage $storage,
-        $config
-    ) {
+        AbstractStorage    $storage,
+                           $config
+    )
+    {
         $this->chatModel = $chatModel;
         $this->embedModel = $embedModel;
         $this->storage = $storage;
@@ -78,6 +78,30 @@ class Embeddings
     public function getStorage()
     {
         return $this->storage;
+    }
+
+    /**
+     * Override the number of used context chunks
+     *
+     * @param int $max
+     * @return void
+     */
+    public function setConfigContextChunks(int $max)
+    {
+        if ($max <= 0) throw new \InvalidArgumentException('max context chunks must be greater than 0');
+        $this->configContextChunks = $max;
+    }
+
+    /**
+     * Override the similiarity threshold
+     *
+     * @param float $threshold
+     * @return void
+     */
+    public function setSimilarityThreshold(float $threshold)
+    {
+        if ($threshold < 0 || $threshold > 1) throw new \InvalidArgumentException('threshold must be between 0 and 1');
+        $this->similarityThreshold = $threshold;
     }
 
     /**
@@ -246,18 +270,23 @@ class Embeddings
      *
      * @param string $query The question
      * @param string $lang Limit results to this language
+     * @param bool $limits Apply chat token limits to the number of chunks returned?
      * @return Chunk[]
      * @throws \Exception
      */
-    public function getSimilarChunks($query, $lang = '')
+    public function getSimilarChunks($query, $lang = '', $limits = true)
     {
         global $auth;
         $vector = $this->embedModel->getEmbedding($query);
 
-        $fetch = min(
-            ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize()),
-            $this->configContextChunks
-        );
+        if ($limits) {
+            $fetch = min(
+                ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize()),
+                $this->configContextChunks
+            );
+        } else {
+            $fetch = $this->configContextChunks;
+        }
 
         $time = microtime(true);
         $chunks = $this->storage->getSimilarChunks($vector, $lang, $fetch);
@@ -276,11 +305,15 @@ class Embeddings
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
             if ($chunk->getScore() < $this->similarityThreshold) continue;
 
-            $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-            if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
+            if ($limits) {
+                $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
+                if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
+            }
 
             $result[] = $chunk;
-            $size += $chunkSize;
+            $size += $chunkSize ?? 0;
+
+            if (count($result) >= $this->configContextChunks) break; // we have enough
         }
         return $result;
     }
