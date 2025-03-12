@@ -156,17 +156,17 @@ class ModelFactory
         $class = $prefix . $namespace . '\\' . $cname;
 
         if (!class_exists($class)) {
-            throw new \Exception("No $cname found for $namespace");
+            throw new \Exception("No $cname found for $namespace", 1001);
         }
 
         try {
             $instance = new $class($model, $this->config);
         } catch (\Exception $e) {
-            throw new \Exception("Failed to initialize $cname for $namespace: " . $e->getMessage(), 0, $e);
+            throw new \Exception("Failed to initialize $cname for $namespace: " . $e->getMessage(), 1002, $e);
         }
 
         if (!($instance instanceof $interface)) {
-            throw new \Exception("$cname for $namespace does not implement $interface");
+            throw new \Exception("$cname for $namespace does not implement $interface", 1003);
         }
 
         return $instance;

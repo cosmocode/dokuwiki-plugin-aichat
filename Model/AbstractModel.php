@@ -59,12 +59,12 @@ abstract class AbstractModel implements ModelInterface
         $reflect = new \ReflectionClass($this);
         $json = dirname($reflect->getFileName()) . '/models.json';
         if (!file_exists($json)) {
-            throw new \Exception('Model info file not found at ' . $json);
+            throw new \Exception('Model info file not found at ' . $json, 2001);
         }
         try {
             $modelinfos = json_decode(file_get_contents($json), true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new \Exception('Failed to parse model info file: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new \Exception('Failed to parse model info file: ' . $e->getMessage(), 2002, $e);
         }
 
         $this->modelFullName = basename(dirname($reflect->getFileName()) . ' ' . $name);
@@ -249,7 +249,7 @@ abstract class AbstractModel implements ModelInterface
             $json = json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
         } catch (\JsonException $e) {
             $this->timeUsed += $this->requestStart - microtime(true);
-            throw new \Exception('Failed to encode JSON for API:' . $e->getMessage(), $e->getCode(), $e);
+            throw new \Exception('Failed to encode JSON for API:' . $e->getMessage(), 2003, $e);
         }
 
         if ($this->debug) {
@@ -266,7 +266,7 @@ abstract class AbstractModel implements ModelInterface
                 return $this->sendAPIRequest($method, $url, $data, $retry + 1);
             }
             $this->timeUsed += microtime(true) - $this->requestStart;
-            throw new \Exception('API returned no response. ' . $this->http->error);
+            throw new \Exception('API returned no response. ' . $this->http->error, 2004);
         }
 
         if ($this->debug) {
@@ -280,7 +280,7 @@ abstract class AbstractModel implements ModelInterface
             $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
             $this->timeUsed += microtime(true) - $this->requestStart;
-            throw new \Exception('API returned invalid JSON: ' . $response, 0, $e);
+            throw new \Exception('API returned invalid JSON: ' . $response, 2005, $e);
         }
 
         // parse the response, retry on error

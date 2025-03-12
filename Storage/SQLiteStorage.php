@@ -310,7 +310,7 @@ class SQLiteStorage extends AbstractStorage
             if ($this->logger) $this->logger->success('Created {clusters} clusters', ['clusters' => count($clusters)]);
         } catch (\Exception $e) {
             $this->db->getPdo()->rollBack();
-            throw new \RuntimeException('Clustering failed: ' . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('Clustering failed: ' . $e->getMessage(), 4005, $e);
         }
     }
 

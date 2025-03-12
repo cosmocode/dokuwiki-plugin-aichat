@@ -138,6 +138,6 @@ abstract class AbstractStorage
      */
     public function dumpTSV($vectorfile, $metafile)
     {
-        throw new \RuntimeException('Not implemented for current storage');
+        throw new \RuntimeException('Not implemented for current storage', 4000);
     }
 }

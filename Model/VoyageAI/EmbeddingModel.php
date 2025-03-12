@@ -13,7 +13,7 @@ class EmbeddingModel extends AbstractModel implements EmbeddingInterface
         parent::__construct($name, $config);
 
         if (empty($config['voyageai_apikey'])) {
-            throw new \Exception('Voyage AI API key not configured');
+            throw new \Exception('Voyage AI API key not configured', 3001);
         }
 
         $this->http->headers['Authorization'] = 'Bearer ' . $config['voyageai_apikey'];
@@ -53,7 +53,7 @@ class EmbeddingModel extends AbstractModel implements EmbeddingInterface
         }
 
         if (isset($response['error'])) {
-            throw new \Exception('OpenAI API error: ' . $response['error']['message']);
+            throw new \Exception('OpenAI API error: ' . $response['error']['message'], 3002);
         }
 
         return $response;

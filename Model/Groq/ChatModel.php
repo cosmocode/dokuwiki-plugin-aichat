@@ -13,7 +13,7 @@ class ChatModel extends AbstractModel implements ChatInterface
         parent::__construct($name, $config);
 
         if (empty($config['groq_apikey'])) {
-            throw new \Exception('Groq API key not configured');
+            throw new \Exception('Groq API key not configured', 3001);
         }
 
         $this->http->headers['Authorization'] = 'Bearer ' . $config['groq_apikey'];
@@ -57,7 +57,7 @@ class ChatModel extends AbstractModel implements ChatInterface
         }
 
         if (isset($response['error'])) {
-            throw new \Exception('Groq API error: ' . $response['error']['message']);
+            throw new \Exception('Groq API error: ' . $response['error']['message'], 3002);
         }
 
         return $response;

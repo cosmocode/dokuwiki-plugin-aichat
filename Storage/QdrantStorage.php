@@ -80,12 +80,12 @@ class QdrantStorage extends AbstractStorage
                 return $this->runQuery($endpoint, $data, $method, $retry + 1);
             }
 
-            throw new \Exception('Qdrant API returned invalid JSON. ' . $response, 0, $e);
+            throw new \Exception('Qdrant API returned invalid JSON. ' . $response, 4003, $e);
         }
 
         if ((int)$this->http->status !== 200) {
             $error = $result['status']['error'] ?? $this->http->error;
-            throw new \Exception('Qdrant API returned error. ' . $error);
+            throw new \Exception('Qdrant API returned error. ' . $error, 4002);
         }
 
         return $result['result'] ?? $result;

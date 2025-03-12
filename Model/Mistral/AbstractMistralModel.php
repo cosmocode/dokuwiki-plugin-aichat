@@ -16,7 +16,7 @@ abstract class AbstractMistralModel extends AbstractModel
     {
         parent::__construct($name, $config);
         if (empty($config['mistral_apikey'])) {
-            throw new \Exception('Mistral API key not configured');
+            throw new \Exception('Mistral API key not configured', 3001);
         }
         $this->http->headers['Authorization'] = 'Bearer ' . $config['mistral_apikey'];
     }
@@ -44,7 +44,7 @@ abstract class AbstractMistralModel extends AbstractModel
         }
 
         if (isset($response['object']) && $response['object'] === 'error') {
-            throw new \Exception('Mistral API error: ' . $response['message']);
+            throw new \Exception('Mistral API error: ' . $response['message'], 3002);
         }
 
         return $response;

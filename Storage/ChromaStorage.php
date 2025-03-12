@@ -63,13 +63,13 @@ class ChromaStorage extends AbstractStorage
         $response = $this->http->resp_body;
 
         if (!$response) {
-            throw new \Exception('Chroma API returned no response. ' . $this->http->error);
+            throw new \Exception('Chroma API returned no response. ' . $this->http->error, 4001);
         }
 
         try {
             $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Exception $e) {
-            throw new \Exception('Chroma API returned invalid JSON. ' . $response, 0, $e);
+            throw new \Exception('Chroma API returned invalid JSON. ' . $response, 4003, $e);
         }
 
         if ((int)$this->http->status !== 200) {
@@ -85,7 +85,7 @@ class ChromaStorage extends AbstractStorage
                 $error = $this->http->error;
             }
 
-            throw new \Exception('Chroma API returned error. ' . $error);
+            throw new \Exception('Chroma API returned error. ' . $error, 4002);
         }
 
         return $result;

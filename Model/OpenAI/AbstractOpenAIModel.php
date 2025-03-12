@@ -17,7 +17,7 @@ abstract class AbstractOpenAIModel extends AbstractModel
         parent::__construct($name, $config);
 
         if (empty($config['openai_apikey'])) {
-            throw new \Exception('OpenAI API key not configured');
+            throw new \Exception('OpenAI API key not configured', 3001);
         }
 
         $openAIKey = $config['openai_apikey'];
@@ -52,7 +52,7 @@ abstract class AbstractOpenAIModel extends AbstractModel
         }
 
         if (isset($response['error'])) {
-            throw new \Exception('OpenAI API error: ' . $response['error']['message']);
+            throw new \Exception('OpenAI API error: ' . $response['error']['message'], 3002);
         }
 
         return $response;

@@ -19,7 +19,7 @@ abstract class AbstractOllama extends AbstractModel
         parent::__construct($name, $config);
         $this->apiurl = rtrim($config['ollama_baseurl'] ?? '', '/');
         if ($this->apiurl === '') {
-            throw new \Exception('Ollama base URL not configured');
+            throw new \Exception('Ollama base URL not configured', 3001);
         }
     }
 
@@ -67,7 +67,7 @@ abstract class AbstractOllama extends AbstractModel
 
         if (isset($response['error'])) {
             $error = is_array($response['error']) ? $response['error']['message'] : $response['error'];
-            throw new \Exception('Ollama API error: ' . $error);
+            throw new \Exception('Ollama API error: ' . $error, 3002);
         }
 
         return $response;

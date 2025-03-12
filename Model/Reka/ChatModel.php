@@ -13,7 +13,7 @@ class ChatModel extends AbstractModel implements ChatInterface
         parent::__construct($name, $config);
 
         if (empty($config['reka_apikey'])) {
-            throw new \Exception('Reka API key not configured');
+            throw new \Exception('Reka API key not configured', 3001);
         }
 
         $this->http->headers['x-api-key'] = $config['reka_apikey'];
@@ -67,9 +67,9 @@ class ChatModel extends AbstractModel implements ChatInterface
     {
         if (((int) $this->http->status) !== 200) {
             if (isset($response['detail'])) {
-                throw new \Exception('Reka API error: ' . $response['detail']);
+                throw new \Exception('Reka API error: ' . $response['detail'], 3002);
             } else {
-                throw new \Exception('Reka API error: ' . $this->http->status . ' ' . $this->http->error);
+                throw new \Exception('Reka API error: ' . $this->http->status . ' ' . $this->http->error, 3002);
             }
         }
 

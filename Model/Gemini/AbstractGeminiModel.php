@@ -14,7 +14,7 @@ abstract class AbstractGeminiModel extends AbstractModel
     public function __construct(string $name, array $config)
     {
         if (empty($config['gemini_apikey'])) {
-            throw new \Exception('Gemini API key not configured');
+            throw new \Exception('Gemini API key not configured', 3001);
         }
 
         $this->apikey = $config['gemini_apikey'];
@@ -32,7 +32,7 @@ abstract class AbstractGeminiModel extends AbstractModel
         );
         $result = $this->sendAPIRequest('GET', $url, '');
         if(!$result) {
-            throw new \Exception('Failed to load model info for '.$this->modelFullName);
+            throw new \Exception('Failed to load model info for '.$this->modelFullName, 3003);
         }
 
         $info = parent::loadUnknownModelInfo();
@@ -71,7 +71,7 @@ abstract class AbstractGeminiModel extends AbstractModel
         }
 
         if (isset($response['error'])) {
-            throw new \Exception('Gemini API error: ' . $response['error']['message']);
+            throw new \Exception('Gemini API error: ' . $response['error']['message'], 3002);
         }
 
         return $response;

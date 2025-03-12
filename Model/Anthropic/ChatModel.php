@@ -13,7 +13,7 @@ class ChatModel extends AbstractModel implements ChatInterface
         parent::__construct($name, $config);
 
         if (empty($config['anthropic_apikey'])) {
-            throw new \Exception('Anthropic API key not configured');
+            throw new \Exception('Anthropic API key not configured', 3001);
         }
 
         $this->http->headers['x-api-key'] = $config['anthropic_apikey'];
@@ -73,7 +73,7 @@ class ChatModel extends AbstractModel implements ChatInterface
         }
 
         if (isset($response['error'])) {
-            throw new \Exception('Anthropic API error: ' . $response['error']['message']);
+            throw new \Exception('Anthropic API error: ' . $response['error']['message'], 3002);
         }
 
         return $response;

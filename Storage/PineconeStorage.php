@@ -50,17 +50,17 @@ class PineconeStorage extends AbstractStorage
         $this->http->sendRequest($url, $json, $method);
         $response = $this->http->resp_body;
         if ($response === false) {
-            throw new \Exception('Pinecone API returned no response. ' . $this->http->error);
+            throw new \Exception('Pinecone API returned no response. ' . $this->http->error, 4001);
         }
 
         try {
             $result = json_decode((string)$response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new \Exception('Pinecone API returned invalid JSON. ' . $response, 0, $e);
+            throw new \Exception('Pinecone API returned invalid JSON. ' . $response, 4003, $e);
         }
 
         if (isset($result['message'])) {
-            throw new \Exception('Pinecone API returned error. ' . $result['message'], $result['code'] ?? 0);
+            throw new \Exception('Pinecone API returned error. ' . $result['message'], $result['code'] ?: 4002);
         }
 
         return $result;
