@@ -218,6 +218,7 @@ class SQLiteStorage extends AbstractStorage
     {
         $dotProduct = 0;
         foreach ($queryVector as $key => $value) {
+            if(!isset($embedding[$key])) break; // if the vector is shorter than the query, stop.
             $dotProduct += $value * $embedding[$key];
         }
         return $dotProduct;
