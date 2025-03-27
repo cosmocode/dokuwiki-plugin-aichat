@@ -319,6 +319,54 @@ class Embeddings
     }
 
     /**
+     * Returns all chunks for a page
+     *
+     * Does not apply configContextChunks but checks token limits if requested
+     *
+     * @param string $page
+     * @param bool $limits Apply chat token limits to the number of chunks returned?
+     * @return Chunk[]
+     */
+    public function getPageChunks($page, $limits = true)
+    {
+        global $auth;
+        if ($auth && auth_quickaclcheck($page) < AUTH_READ) {
+            if ($this->logger instanceof CLI) $this->logger->warning(
+                'User not allowed to read context page {page}', ['page' => $page]
+            );
+            return [];
+        }
+
+        $indexer = new Indexer();
+        $pages = $indexer->getPages();
+        $pos = array_search(cleanID($page), $pages);
+
+        if ($pos === false) {
+            if ($this->logger instanceof CLI) $this->logger->warning(
+                'Context page {page} is not in index', ['page' => $page]
+            );
+            return [];
+        }
+
+        $chunks = $this->storage->getPageChunks($page, $pos * 100);
+
+        $size = 0;
+        $result = [];
+        foreach ($chunks as $chunk) {
+            if ($limits) {
+                $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
+                if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
+            }
+
+            $result[] = $chunk;
+            $size += $chunkSize ?? 0;
+        }
+
+        return $result;
+    }
+
+
+    /**
      * Create a breadcrumb trail for the given page
      *
      * Uses the first heading of each namespace and the page itself. This is added as a prefix to

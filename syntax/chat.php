@@ -67,6 +67,7 @@ class syntax_plugin_aichat_chat extends SyntaxPlugin
             'url' => DOKU_BASE . 'lib/exe/ajax.php?call=aichat',
             'title-send' => $this->getLang('send-button'),
             'title-restart' => $this->getLang('restart-button'),
+            'title-pagecontext' => $this->getLang('pagecontext'),
         ];
         $html = '<aichat-chat ' . buildAttributes($opts) . '></aichat-chat>';
 

@@ -167,7 +167,7 @@ class helper_plugin_aichat extends Plugin
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askChatQuestion($question, $history = [])
+    public function askChatQuestion($question, $history = [], $sourcePage = '')
     {
         if ($history && $this->getConf('rephraseHistory') > 0) {
             $contextQuestion = $this->rephraseChatQuestion($question, $history);
@@ -179,7 +179,7 @@ class helper_plugin_aichat extends Plugin
         } else {
             $contextQuestion = $question;
         }
-        return $this->askQuestion($question, $history, $contextQuestion);
+        return $this->askQuestion($question, $history, $contextQuestion, $sourcePage);
     }
 
     /**
@@ -188,12 +188,18 @@ class helper_plugin_aichat extends Plugin
      * @param string $question The question to ask
      * @param array $history [user, ai] of the previous question
      * @param string $contextQuestion The question to use for context search
+     * @param string $sourcePage The page the question was asked on
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askQuestion($question, $history = [], $contextQuestion = '')
+    public function askQuestion($question, $history = [], $contextQuestion = '', $sourcePage = '')
     {
-        $similar = $this->getEmbeddings()->getSimilarChunks($contextQuestion ?: $question, $this->getLanguageLimit());
+        if($sourcePage) {
+            $similar = $this->getEmbeddings()->getPageChunks($sourcePage);
+        } else {
+            $similar = $this->getEmbeddings()->getSimilarChunks($contextQuestion ?: $question, $this->getLanguageLimit());
+        }
+
         if ($similar) {
             $context = implode(
                 "\n",
