@@ -62,6 +62,27 @@
             "inputTokenPrice": 0,
             "outputTokens": 8192,
             "outputTokenPrice": 0
+        },
+        "gemini-2.0-flash": {
+            "description": "https:\/\/ai.google.dev\/pricing#2_0flash",
+            "inputTokens": 1048576,
+            "inputTokenPrice": 0.1,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0.4
+        },
+        "gemini-2.0-flash-lite": {
+            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/pricing#gemini-2.0-flash-lite",
+            "inputTokens": 1048576,
+            "inputTokenPrice": 0.08,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0.3
+        },
+        "gemma-3-27b-it": {
+            "description": "https:\/\/aistudio.google.com",
+            "inputTokens": 131072,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
         }
     },
     "embedding": {

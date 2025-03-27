@@ -59,15 +59,50 @@
         "claude-3-5-haiku-20241022": {
             "description": "",
             "inputTokens": 200000,
-            "inputTokenPrice": 1,
+            "inputTokenPrice": 0.8,
             "outputTokens": 8192,
-            "outputTokenPrice": 5
+            "outputTokenPrice": 4
         },
         "claude-3-5-sonnet-20241022": {
             "description": "",
             "inputTokens": 200000,
             "inputTokenPrice": 3,
             "outputTokens": 8192,
+            "outputTokenPrice": 15
+        },
+        "claude-3-5-haiku-latest": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 1,
+            "outputTokens": 8192,
+            "outputTokenPrice": 5
+        },
+        "claude-3-opus-latest": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 15,
+            "outputTokens": 4096,
+            "outputTokenPrice": 75
+        },
+        "claude-3-5-sonnet-latest": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 3,
+            "outputTokens": 8192,
+            "outputTokenPrice": 15
+        },
+        "claude-3-7-sonnet-latest": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 3,
+            "outputTokens": 128000,
+            "outputTokenPrice": 15
+        },
+        "claude-3-7-sonnet-20250219": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 3,
+            "outputTokens": 128000,
             "outputTokenPrice": 15
         }
     }

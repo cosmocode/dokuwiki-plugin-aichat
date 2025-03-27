@@ -24,9 +24,9 @@
         "mistral-small-latest": {
             "description": "Cost-efficient reasoning for low-latency workloads. Fluent in English, French, Italian, German, Spanish, and strong in code.",
             "inputTokens": 32000,
-            "inputTokenPrice": 1,
+            "inputTokenPrice": 0.1,
             "outputTokens": 8191,
-            "outputTokenPrice": 3
+            "outputTokenPrice": 0.3
         },
         "mistral-medium-latest": {
             "description": "Balanced reasoning for a wide range of tasks. Fluent in English, French, Italian, German, Spanish, and strong in code.",
@@ -52,9 +52,9 @@
         "mistral-small": {
             "description": "",
             "inputTokens": 32000,
-            "inputTokenPrice": 1,
+            "inputTokenPrice": 0.1,
             "outputTokens": 8191,
-            "outputTokenPrice": 3
+            "outputTokenPrice": 0.3
         },
         "mistral-medium": {
             "description": "",

@@ -69,6 +69,20 @@
             "inputTokenPrice": 0.59,
             "outputTokens": 8192,
             "outputTokenPrice": 0.99
+        },
+        "llama-3.1-70b-versatile": {
+            "description": "",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.59,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0.79
+        },
+        "gemma-7b-it": {
+            "description": "",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.07,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0.07
         }
     }
 }
