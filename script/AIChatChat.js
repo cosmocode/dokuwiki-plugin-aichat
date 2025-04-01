@@ -279,7 +279,6 @@ class AIChatChat extends HTMLElement {
         }
 
         this.stopProgress();
-        this.#pagecontext.classList.add('off'); // disable page context for next question
         this.#input.focus();
         p.scrollIntoView();
     }
