@@ -160,6 +160,7 @@ class AIChatChat extends HTMLElement {
                 padding: 0.5em 1em;
                 position: relative;
                 margin-bottom: 1em;
+                max-width: calc(100% - 4em);
             }
             .output > div::before {
                 content: "";
@@ -193,6 +194,17 @@ class AIChatChat extends HTMLElement {
                 border-right: 0.5em solid var(--color-ai);
                 border-top: 0.5em solid var(--color-ai);
                 border-bottom: 0.5em solid transparent;
+            }
+            .output pre {
+                max-width: 100%;
+                overflow: auto;
+                scrollbar-width: thin;
+            }
+            .output > div.ai pre {
+                scrollbar-color: var(--color-link) var(--color-ai);
+            }
+            .output > div.human pre {
+                scrollbar-color: var(--color-link) var(--color-human);
             }
         `;
         return style;
