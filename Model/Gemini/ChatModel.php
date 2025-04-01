@@ -23,7 +23,7 @@ class ChatModel extends AbstractGeminiModel implements ChatInterface
                 $data['system_instructions']['parts'][] = ['text' => $message['content']];
             } else {
                 $data['contents'][] = [
-                    'role' => $message['role'],
+                    'role' => $message['role'] === 'assistant' ? 'model' : 'user',
                     'parts' => [
                         ['text' => $message['content']]
                     ]
