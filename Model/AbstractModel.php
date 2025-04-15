@@ -25,6 +25,8 @@ abstract class AbstractModel implements ModelInterface
     protected $modelFullName;
     /** @var array The model info from the model.json file */
     protected $modelInfo;
+    /** @var string The provider name */
+    protected $selfIdent;
 
     /** @var int input tokens used since last reset */
     protected $inputTokensUsed = 0;
@@ -67,6 +69,7 @@ abstract class AbstractModel implements ModelInterface
             throw new \Exception('Failed to parse model info file: ' . $e->getMessage(), 2002, $e);
         }
 
+        $this->selfIdent = basename(dirname($reflect->getFileName()));
         $this->modelFullName = basename(dirname($reflect->getFileName()) . ' ' . $name);
 
         if ($this instanceof ChatInterface) {
@@ -92,7 +95,6 @@ abstract class AbstractModel implements ModelInterface
     {
         return $this->modelFullName;
     }
-
 
     /** @inheritdoc */
     public function getModelName()
@@ -299,4 +301,30 @@ abstract class AbstractModel implements ModelInterface
     }
 
     // endregion
+
+    // region Tools
+
+    /**
+     * Get a configuration value
+     *
+     * The given key is prefixed by the model namespace
+     *
+     * @param string $key
+     * @param mixed $default The default to return if the key is not found. When set to null an Exception is thrown.
+     * @return mixed
+     * @throws ModelException when the key is not found and no default is given
+     */
+    public function getFromConf(array $config, string $key, $default = null)
+    {
+        $key = strtolower($this->selfIdent) . '_' . $key;
+        if (isset($config[$key])) {
+            return $config[$key];
+        }
+        if ($default !== null) {
+            return $default;
+        }
+        throw new ModelException('Key ' . $key . ' not found in configuration', 3001);
+    }
+
+// endregion
 }

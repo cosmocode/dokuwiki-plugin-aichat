@@ -4,6 +4,7 @@ namespace dokuwiki\plugin\aichat\Model\Reka;
 
 use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
+use dokuwiki\plugin\aichat\Model\ModelException;
 
 class ChatModel extends AbstractModel implements ChatInterface
 {
@@ -11,12 +12,7 @@ class ChatModel extends AbstractModel implements ChatInterface
     public function __construct(string $name, array $config)
     {
         parent::__construct($name, $config);
-
-        if (empty($config['reka_apikey'])) {
-            throw new \Exception('Reka API key not configured', 3001);
-        }
-
-        $this->http->headers['x-api-key'] = $config['reka_apikey'];
+        $this->http->headers['x-api-key'] = $this->getFromConf($config, 'apikey');
     }
 
     /** @inheritdoc */
@@ -67,9 +63,9 @@ class ChatModel extends AbstractModel implements ChatInterface
     {
         if (((int) $this->http->status) !== 200) {
             if (isset($response['detail'])) {
-                throw new \Exception('Reka API error: ' . $response['detail'], 3002);
+                throw new ModelException('Reka API error: ' . $response['detail'], 3002);
             } else {
-                throw new \Exception('Reka API error: ' . $this->http->status . ' ' . $this->http->error, 3002);
+                throw new ModelException('Reka API error: ' . $this->http->status . ' ' . $this->http->error, 3002);
             }
         }
 

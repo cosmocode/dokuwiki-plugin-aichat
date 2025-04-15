@@ -30,6 +30,9 @@ $conf['groq_apikey'] = '';
 
 $conf['ollama_baseurl'] = '';
 
+$conf['generic_apikey'] = '';
+$conf['generic_apiurl'] = '';
+
 $conf['pinecone_apikey'] = '';
 $conf['pinecone_baseurl'] = '';
 

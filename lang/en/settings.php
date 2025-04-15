@@ -21,6 +21,8 @@ $lang['voyageai_apikey'] = '🧠 <b>Voyage AI</b> API key';
 $lang['reka_apikey'] = '🧠 <b>Reka</b> API key';
 $lang['groq_apikey'] = '🧠 <b>Groq</b> API key';
 $lang['ollama_baseurl'] = '🧠 <b>Ollama</b> base URL';
+$lang['generic_apikey'] = '🧠 <b>Generic</b> (OpenAI compatible) API key';
+$lang['generic_apiurl'] = '🧠 <b>Generic</b> (OpenAI compatible) API URL';
 
 $lang['pinecone_apikey'] = '📥 <b>Pinecone</b> API key';
 $lang['pinecone_baseurl'] = '📥 <b>Pinecone</b> base URL';
