@@ -140,13 +140,13 @@ abstract class AbstractModel implements ModelInterface
     /** @inheritdoc */
     public function getMaxInputTokenLength(): int
     {
-        return $this->modelInfo['inputTokens'];
+        return $this->modelInfo['inputTokens'] ?? 0;
     }
 
     /** @inheritdoc */
     public function getInputTokenPrice(): float
     {
-        return $this->modelInfo['inputTokenPrice'];
+        return $this->modelInfo['inputTokenPrice'] ?? 0;
     }
 
     /** @inheritdoc */
@@ -154,12 +154,12 @@ abstract class AbstractModel implements ModelInterface
     {
         $info = [
             'description' => $this->modelFullName,
-            'inputTokens' => 1024,
+            'inputTokens' => 0,
             'inputTokenPrice' => 0,
         ];
 
         if ($this instanceof ChatInterface) {
-            $info['outputTokens'] = 1024;
+            $info['outputTokens'] = 0;
             $info['outputTokenPrice'] = 0;
         } elseif ($this instanceof EmbeddingInterface) {
             $info['dimensions'] = 512;

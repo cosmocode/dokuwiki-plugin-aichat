@@ -271,11 +271,10 @@ class helper_plugin_aichat extends Plugin
         int $historySize
     ): array {
         // calculate the space for context
-        $remainingContext = $model->getMaxInputTokenLength();
+        $remainingContext = $model->getMaxInputTokenLength(); // might be 0
         $remainingContext -= $this->countTokens($promptedQuestion);
-        $safetyMargin = $remainingContext * 0.05; // 5% safety margin
-        $remainingContext -= $safetyMargin;
-        // FIXME we may want to also have an upper limit for the history and not always use the full context
+        $safetyMargin = abs($remainingContext) * 0.05; // 5% safety margin
+        $remainingContext -= $safetyMargin; // may be negative, it will be ignored then
 
         $messages = $this->historyMessages($history, $remainingContext, $historySize);
         $messages[] = [
@@ -291,7 +290,7 @@ class helper_plugin_aichat extends Plugin
      * Only as many messages are used as fit into the token limit
      *
      * @param array[] $history The chat history [[user, ai], [user, ai], ...]
-     * @param int $tokenLimit The maximum number of tokens to use
+     * @param int $tokenLimit The maximum number of tokens to use, negative limit disables this check
      * @param int $sizeLimit The maximum number of messages to use
      * @return array
      */
@@ -304,7 +303,8 @@ class helper_plugin_aichat extends Plugin
         $history = array_slice($history, 0, $sizeLimit);
         foreach ($history as $row) {
             $length = $this->countTokens($row[0] . $row[1]);
-            if ($length > $remainingContext) {
+
+            if ($tokenLimit > 0 && $length > $remainingContext) {
                 break;
             }
             $remainingContext -= $length;

@@ -134,6 +134,12 @@ class Embeddings
      */
     public function getChunkSize()
     {
+        $tokenlimit = $this->chatModel->getMaxInputTokenLength();
+        if(!$tokenlimit) {
+            // no token limit, use the configured chunk size
+            return $this->configChunkSize;
+        }
+
         return min(
             floor($this->chatModel->getMaxInputTokenLength() / 4), // be able to fit 4 chunks into the max input
             floor($this->embedModel->getMaxInputTokenLength() * 0.9), // only use 90% of the embedding model to be safe
@@ -279,9 +285,11 @@ class Embeddings
         global $auth;
         $vector = $this->embedModel->getEmbedding($query);
 
-        if ($limits) {
+        $tokenlimit = $limits ? $this->chatModel->getMaxInputTokenLength() : 0;
+
+        if ($tokenlimit) {
             $fetch = min(
-                ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize()),
+                ($tokenlimit / $this->getChunkSize()),
                 $this->configContextChunks
             );
         } else {
@@ -305,9 +313,9 @@ class Embeddings
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
             if ($chunk->getScore() < $this->similarityThreshold) continue;
 
-            if ($limits) {
+            if ($tokenlimit) {
                 $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-                if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
+                if ($size + $chunkSize > $tokenlimit) break; // we have enough
             }
 
             $result[] = $chunk;
@@ -350,12 +358,14 @@ class Embeddings
 
         $chunks = $this->storage->getPageChunks($page, $pos * 100);
 
+        $tokenlimit = $limits ? $this->chatModel->getMaxInputTokenLength() : 0;
+
         $size = 0;
         $result = [];
         foreach ($chunks as $chunk) {
-            if ($limits) {
+            if ($tokenlimit) {
                 $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-                if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
+                if ($size + $chunkSize > $tokenlimit) break; // we have enough
             }
 
             $result[] = $chunk;
