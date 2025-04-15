@@ -70,7 +70,7 @@ abstract class AbstractModel implements ModelInterface
         }
 
         $this->selfIdent = basename(dirname($reflect->getFileName()));
-        $this->modelFullName = basename(dirname($reflect->getFileName()) . ' ' . $name);
+        $this->modelFullName = basename(dirname($reflect->getFileName())) . ' ' . $name;
 
         if ($this instanceof ChatInterface) {
             if (isset($modelinfos['chat'][$name])) {
