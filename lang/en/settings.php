@@ -40,6 +40,7 @@ $lang['qdrant_collection'] = '📥 <b>Qdrant</b> collection. Will be created.';
 $lang['chunkSize'] = 'Maximum number of tokens per chunk.<br>🔄 You need to rebuild the vector storage when changing this setting.';
 $lang['similarityThreshold'] = 'Minimum similarity threshold when selecting sources for a question. 0-100.';
 $lang['contextChunks'] = 'Maximum number of chunks to send to the AI model for context.';
+$lang['fullpagecontext'] = 'Always send the full page content for each matching chunk as context for the AI model. This will not apply any token limits and may result in large, expensive requests. Use with large context models only!';
 $lang['chatHistory'] = 'Number of previous chat messages to consider for context in the conversation.';
 $lang['rephraseHistory'] = 'Number of previous chat messages to consider for context when rephrasing a question. Set to 0 to disable rephrasing.';
 

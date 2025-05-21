@@ -135,7 +135,7 @@ class Embeddings
     public function getChunkSize()
     {
         $tokenlimit = $this->chatModel->getMaxInputTokenLength();
-        if(!$tokenlimit) {
+        if (!$tokenlimit) {
             // no token limit, use the configured chunk size
             return $this->configChunkSize;
         }
@@ -193,6 +193,31 @@ class Embeddings
     }
 
     /**
+     * Get the content of a page
+     *
+     * Uses our own renderer to format the contents in an LLM friendly way. Falls back to
+     * raw syntax if the renderer fails for some reason
+     *
+     * @param string $page Name of the page to read
+     * @return string The content of the page
+     */
+    public function getPageContent($page)
+    {
+        global $ID;
+        $ID = $page;
+        try {
+            $text = p_cached_output(wikiFN($page), 'aichat', $page);
+        } catch (\Throwable $e) {
+            if ($this->logger) $this->logger->error(
+                'Failed to render page {page}. Using raw text instead. {msg}',
+                ['page' => $page, 'msg' => $e->getMessage()]
+            );
+            $text = rawWiki($page);
+        }
+        return $text;
+    }
+
+    /**
      * Split the given page, fetch embedding vectors and return Chunks
      *
      * Will use the text renderer plugin if available to get the rendered text.
@@ -208,18 +233,7 @@ class Embeddings
     {
         $chunkList = [];
 
-        global $ID;
-        $ID = $page;
-        try {
-            $text = p_cached_output(wikiFN($page), 'aichat', $page);
-        } catch (\Throwable $e) {
-            if ($this->logger) $this->logger->error(
-                'Failed to render page {page}. Using raw text instead. {msg}',
-                ['page' => $page, 'msg' => $e->getMessage()]
-            );
-            $text = rawWiki($page);
-        }
-
+        $text = $this->getPageContent($page);
         $crumbs = $this->breadcrumbTrail($page);
 
         // allow plugins to modify the text before splitting
@@ -324,6 +338,41 @@ class Embeddings
             if (count($result) >= $this->configContextChunks) break; // we have enough
         }
         return $result;
+    }
+
+    /**
+     * This works similar to getSimilarChunks, but returns the full page content for each found similar chunk
+     *
+     * This will not apply any token limits
+     *
+     * @param string $query The question
+     * @param string $lang Limit results to this language
+     * @return Chunk[]
+     * @throws \Exception
+     */
+    public function getSimilarPages($query, $lang = '')
+    {
+        $chunks = $this->getSimilarChunks($query, $lang, false);
+        $pages = [];
+
+        foreach ($chunks as $chunk) {
+            $page = $chunk->getPage();
+            if (isset($pages[$page])) continue; // we already have this page
+
+            $content = $this->getPageContent($chunk->getPage());
+            $crumbs = $this->breadcrumbTrail($chunk->getPage());
+
+            $pages[$page] = new Chunk(
+                $page,
+                $chunk->getId(),
+                $crumbs . "\n\n" . $content,
+                $chunk->getEmbedding(),
+                $chunk->getLanguage(),
+                $chunk->getCreated(),
+                $chunk->getScore()
+            );
+        }
+        return $pages;
     }
 
     /**

@@ -49,6 +49,7 @@ $conf['qdrant_collection'] = 'aichat';
 $conf['chunkSize'] = 1500;
 $conf['similarityThreshold'] = 75;
 $conf['contextChunks'] = 5;
+$conf['fullpagecontext'] = 0;
 $conf['chatHistory'] = 1;
 $conf['rephraseHistory'] = 1;
 

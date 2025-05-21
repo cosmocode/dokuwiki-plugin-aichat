@@ -56,6 +56,7 @@ $meta['qdrant_collection'] = array('string');
 $meta['chunkSize'] = array('numeric', '_min' => 100, '_regexp' => '/^\d+$/');
 $meta['similarityThreshold'] = array('numeric', '_min' => 0, '_max' => 100, '_regexp' => '/^\d+$/');
 $meta['contextChunks'] = array('numeric', '_min' => 1, '_regexp' => '/^\d+$/');
+$meta['fullpagecontext'] = array('onoff');
 $meta['chatHistory'] = array('numeric', '_min' => 0, '_regexp' => '/^\d+$/');
 $meta['rephraseHistory'] = array('numeric', '_min' => 0, '_regexp' => '/^\d+$/');
 

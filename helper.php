@@ -194,10 +194,22 @@ class helper_plugin_aichat extends Plugin
      */
     public function askQuestion($question, $history = [], $contextQuestion = '', $sourcePage = '')
     {
-        if($sourcePage) {
+        if ($sourcePage) {
+            // only the current page is context
             $similar = $this->getEmbeddings()->getPageChunks($sourcePage);
         } else {
-            $similar = $this->getEmbeddings()->getSimilarChunks($contextQuestion ?: $question, $this->getLanguageLimit());
+            if ($this->getConf('fullpagecontext')) {
+                // match chunks but use full pages as context
+                $similar = $this->getEmbeddings()->getSimilarPages(
+                    $contextQuestion ?: $question,
+                    $this->getLanguageLimit()
+                );
+            } else {
+                // use the chunks as context
+                $similar = $this->getEmbeddings()->getSimilarChunks(
+                    $contextQuestion ?: $question, $this->getLanguageLimit()
+                );
+            }
         }
 
         if ($similar) {
@@ -266,10 +278,11 @@ class helper_plugin_aichat extends Plugin
      */
     protected function prepareMessages(
         ChatInterface $model,
-        string $promptedQuestion,
-        array $history,
-        int $historySize
-    ): array {
+        string        $promptedQuestion,
+        array         $history,
+        int           $historySize
+    ): array
+    {
         // calculate the space for context
         $remainingContext = $model->getMaxInputTokenLength(); // might be 0
         $remainingContext -= $this->countTokens($promptedQuestion);
