@@ -13,15 +13,14 @@ abstract class AbstractOpenAIModel extends AbstractGenericModel
 {
     protected $apiurl = 'https://api.openai.com/v1/';
 
-    /** @inheritdoc */
-    public function __construct(string $name, array $config)
+    protected function getHttpClient()
     {
-        parent::__construct($name, $config);
-
-        $orgKey = $this->getFromConf($config, 'org', '');
-
+        $http = parent::getHttpClient();
+        $orgKey = $this->getFromConf('org', '');
         if ($orgKey) {
             $this->http->headers['OpenAI-Organization'] = $orgKey;
         }
+
+        return $http;
     }
 }

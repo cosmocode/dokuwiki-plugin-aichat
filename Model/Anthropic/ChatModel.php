@@ -9,13 +9,14 @@ use dokuwiki\plugin\aichat\Model\ModelException;
 class ChatModel extends AbstractModel implements ChatInterface
 {
     /** @inheritdoc */
-    public function __construct(string $name, array $config)
+    protected function getHttpClient()
     {
-        parent::__construct($name, $config);
-
-        $this->http->headers['x-api-key'] = $this->getFromConf($config, 'apikey');
-        $this->http->headers['anthropic-version'] = '2023-06-01';
+        $http = parent::getHttpClient();
+        $http->headers['x-api-key'] = $this->getFromConf('apikey');
+        $http->headers['anthropic-version'] = '2023-06-01';
+        return $http;
     }
+
 
     /** @inheritdoc */
     public function getAnswer(array $messages): string

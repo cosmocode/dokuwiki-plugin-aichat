@@ -24,13 +24,20 @@ abstract class AbstractGenericModel extends AbstractModel implements ChatInterfa
     {
         parent::__construct($name, $config);
 
-        $apiKey = $this->getFromConf($config, 'apikey');
-        $this->http->headers['Authorization'] = 'Bearer ' . $apiKey;
-
         if($this->apiurl === '') {
-            $this->apiurl = $this->getFromConf($config, 'apiurl');
+            $this->apiurl = $this->getFromConf('apiurl');
         }
         $this->apiurl = rtrim($this->apiurl, '/');
+    }
+
+    /** @inheritdoc */
+    protected function getHttpClient()
+    {
+        $http = parent::getHttpClient();
+
+        $apiKey = $this->getFromConf('apikey');
+        $http->headers['Authorization'] = 'Bearer ' . $apiKey;
+        return $http;
     }
 
     /**
@@ -100,7 +107,8 @@ abstract class AbstractGenericModel extends AbstractModel implements ChatInterfa
      */
     public function listUpstreamModels()
     {
+        $http = $this->getHttpClient();
         $url = $this->apiurl . '/models';
-        return $this->http->get($url);
+        return $http->get($url);
     }
 }

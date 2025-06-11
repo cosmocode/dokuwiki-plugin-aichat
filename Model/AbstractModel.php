@@ -47,16 +47,16 @@ abstract class AbstractModel implements ModelInterface
     /** @var bool debug API communication */
     protected $debug = false;
 
+    /** @var array The plugin configuration */
+    protected $config;
+
     // region ModelInterface
 
     /** @inheritdoc */
     public function __construct(string $name, array $config)
     {
         $this->modelName = $name;
-        $this->http = new DokuHTTPClient();
-        $this->http->timeout = 60;
-        $this->http->headers['Content-Type'] = 'application/json';
-        $this->http->headers['Accept'] = 'application/json';
+        $this->config = $config;
 
         $reflect = new \ReflectionClass($this);
         $json = dirname($reflect->getFileName()) . '/models.json';
@@ -207,6 +207,28 @@ abstract class AbstractModel implements ModelInterface
     }
 
     /**
+     * Get the HTTP client used for API requests
+     *
+     * This method will create a new DokuHTTPClient instance if it does not exist yet.
+     * The client will be configured with a timeout and the appropriate headers for JSON communication.
+     * Inheriting models should override this method if they need to add additional headers or configuration
+     * to the HTTP client.
+     *
+     * @return DokuHTTPClient
+     */
+    protected function getHttpClient()
+    {
+        if($this->http === null) {
+            $this->http = new DokuHTTPClient();
+            $this->http->timeout = 60;
+            $this->http->headers['Content-Type'] = 'application/json';
+            $this->http->headers['Accept'] = 'application/json';
+        }
+
+        return $this->http;
+    }
+
+    /**
      * This method should check the response for any errors. If the API singalled an error,
      * this method should throw an Exception with a meaningful error message.
      *
@@ -261,14 +283,15 @@ abstract class AbstractModel implements ModelInterface
         }
 
         // send request and handle retries
-        $this->http->sendRequest($url, $json, $method);
-        $response = $this->http->resp_body;
-        if ($response === false || $this->http->error) {
+        $http = $this->getHttpClient();
+        $http->sendRequest($url, $json, $method);
+        $response = $http->resp_body;
+        if ($response === false || $http->error) {
             if ($retry < self::MAX_RETRIES) {
                 return $this->sendAPIRequest($method, $url, $data, $retry + 1);
             }
             $this->timeUsed += microtime(true) - $this->requestStart;
-            throw new \Exception('API returned no response. ' . $this->http->error, 2004);
+            throw new \Exception('API returned no response. ' . $http->error, 2004);
         }
 
         if ($this->debug) {
@@ -314,8 +337,10 @@ abstract class AbstractModel implements ModelInterface
      * @return mixed
      * @throws ModelException when the key is not found and no default is given
      */
-    public function getFromConf(array $config, string $key, $default = null)
+    public function getFromConf(string $key, $default = null)
     {
+        $config = $this->config;
+
         $key = strtolower($this->selfIdent) . '_' . $key;
         if (isset($config[$key])) {
             return $config[$key];
@@ -326,5 +351,5 @@ abstract class AbstractModel implements ModelInterface
         throw new ModelException('Key ' . $key . ' not found in configuration', 3001);
     }
 
-// endregion
+    // endregion
 }

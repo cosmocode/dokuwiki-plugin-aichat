@@ -9,10 +9,11 @@ use dokuwiki\plugin\aichat\Model\ModelException;
 class ChatModel extends AbstractModel implements ChatInterface
 {
     /** @inheritdoc */
-    public function __construct(string $name, array $config)
+    protected function getHttpClient()
     {
-        parent::__construct($name, $config);
-        $this->http->headers['x-api-key'] = $this->getFromConf($config, 'apikey');
+        $http = parent::getHttpClient();
+        $http->headers['x-api-key'] = $this->getFromConf('apikey');
+        return $http;
     }
 
     /** @inheritdoc */
@@ -61,11 +62,13 @@ class ChatModel extends AbstractModel implements ChatInterface
     /** @inheritdoc */
     protected function parseAPIResponse($response)
     {
-        if (((int) $this->http->status) !== 200) {
+        $http = $this->getHttpClient();
+
+        if (((int) $http->status) !== 200) {
             if (isset($response['detail'])) {
                 throw new ModelException('Reka API error: ' . $response['detail'], 3002);
             } else {
-                throw new ModelException('Reka API error: ' . $this->http->status . ' ' . $this->http->error, 3002);
+                throw new ModelException('Reka API error: ' . $http->status . ' ' . $http->error, 3002);
             }
         }
 
