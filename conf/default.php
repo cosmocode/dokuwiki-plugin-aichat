@@ -28,7 +28,7 @@ $conf['reka_apikey'] = '';
 
 $conf['groq_apikey'] = '';
 
-$conf['ollama_baseurl'] = '';
+$conf['ollama_apiurl'] = 'http://localhost:11434/api';
 
 $conf['generic_apikey'] = '';
 $conf['generic_apiurl'] = '';

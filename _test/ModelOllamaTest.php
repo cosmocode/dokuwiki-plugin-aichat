@@ -12,7 +12,7 @@ namespace dokuwiki\plugin\aichat\test;
 class ModelOllamaTest extends AbstractModelTest
 {
     protected string $provider = 'Ollama';
-    protected string $api_key_env = 'OLLAMA_API_KEY';
+    protected string $api_key_env = '';
     protected string $chat_model = 'llama3.2';
     protected string $embedding_model = 'nomic-embed-text';
 }

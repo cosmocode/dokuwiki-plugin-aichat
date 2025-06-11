@@ -15,20 +15,6 @@ use dokuwiki\plugin\aichat\Model\ModelException;
  */
 abstract class AbstractGenericModel extends AbstractModel implements ChatInterface, EmbeddingInterface
 {
-    /** @var string The API base URL */
-    protected $apiurl = '';
-
-
-    /** @inheritdoc */
-    public function __construct(string $name, array $config)
-    {
-        parent::__construct($name, $config);
-
-        if($this->apiurl === '') {
-            $this->apiurl = $this->getFromConf('apiurl');
-        }
-        $this->apiurl = rtrim($this->apiurl, '/');
-    }
 
     /** @inheritdoc */
     protected function getHttpClient()

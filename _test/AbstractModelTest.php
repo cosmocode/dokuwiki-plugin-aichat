@@ -36,14 +36,20 @@ abstract class AbstractModelTest extends DokuWikiTest
         parent::setUp();
         global $conf;
 
-        $apikey = getenv($this->api_key_env);
-        if (!$apikey) {
-            $this->markTestSkipped('API key environment not set');
+        // get API key from environment
+        if($this->api_key_env) {
+            $apikey = getenv($this->api_key_env);
+            if (!$apikey) {
+                $this->markTestSkipped('API key environment not set');
+            }
+        } else {
+            // if not env name is set, probably no key is needed. We simply set it to empty
+            $apikey = '';
         }
 
+        // set basic configuration for the plugin
         $providerName = ucfirst($this->provider);
         $providerConf = strtolower($this->provider);
-
         $conf['plugin']['aichat']['chatmodel'] = $providerName . ' ' . $this->chat_model;
         $conf['plugin']['aichat']['rephrasemodel'] = $providerName . ' ' . $this->chat_model;
         $conf['plugin']['aichat']['embedmodel'] = $providerName . ' ' . $this->embedding_model;

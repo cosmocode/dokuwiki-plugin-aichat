@@ -46,6 +46,8 @@ abstract class AbstractModel implements ModelInterface
     protected $http;
     /** @var bool debug API communication */
     protected $debug = false;
+    /** @var string The base API URL. Configurable for some models */
+    protected $apiurl = '';
 
     /** @var array The plugin configuration */
     protected $config;
@@ -71,6 +73,12 @@ abstract class AbstractModel implements ModelInterface
 
         $this->selfIdent = basename(dirname($reflect->getFileName()));
         $this->modelFullName = basename(dirname($reflect->getFileName())) . ' ' . $name;
+
+        if($this->apiurl === '') {
+            // we use an empty default here, since some models may not use this property
+            $this->apiurl = $this->getFromConf('apiurl', '');
+        }
+        $this->apiurl = rtrim($this->apiurl, '/');
 
         if ($this instanceof ChatInterface) {
             if (isset($modelinfos['chat'][$name])) {
