@@ -14,5 +14,12 @@ class ModelGroqTest extends AbstractModelTest
     protected string $provider = 'Groq';
     protected string $api_key_env = 'GROQ_API_KEY';
     protected string $chat_model = 'llama3-8b-8192';
-    protected string $embedding_model = 'llama3-8b-8192';
+    protected string $embedding_model = '';
+
+    public function testEmbedding()
+    {
+        $this->markTestSkipped('Groq does not support embeddings yet');
+    }
+
+
 }

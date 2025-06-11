@@ -83,7 +83,7 @@ abstract class AbstractGenericModel extends AbstractModel implements ChatInterfa
             'max_completion_tokens' => null,
             'stream' => false,
             'n' => 1, // number of completions
-            $data['temperature'] = 0.0
+            'temperature' => 0.0
         ];
 
         $response = $this->request('chat/completions', $data);
