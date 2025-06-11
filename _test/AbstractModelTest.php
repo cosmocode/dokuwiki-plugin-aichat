@@ -65,9 +65,17 @@ abstract class AbstractModelTest extends DokuWikiTest
             'Model seems to be the wrong class'
         );
 
-        $reply = $model->getAnswer([
-            ['role' => 'user', 'content' => $prompt]
-        ]);
+        try {
+            $reply = $model->getAnswer([
+                ['role' => 'user', 'content' => $prompt]
+            ]);
+        } catch (\Exception $e) {
+            if (preg_match('/(credit|fund|balance)/i', $e->getMessage())) {
+                $this->markTestIncomplete($e->getMessage());
+            } else {
+                throw $e;
+            }
+        }
 
         $this->assertStringContainsString('hello world', strtolower($reply));
     }
@@ -87,7 +95,16 @@ abstract class AbstractModelTest extends DokuWikiTest
             'Model seems to be the wrong class'
         );
 
-        $embedding = $model->getEmbedding($text);
+        try {
+            $embedding = $model->getEmbedding($text);
+        } catch (\Exception $e) {
+            if (preg_match('/(credit|fund|balance)/i', $e->getMessage())) {
+                $this->markTestIncomplete($e->getMessage());
+            } else {
+                throw $e;
+            }
+        }
+
         $this->assertIsArray($embedding);
         $this->assertNotEmpty($embedding, 'Embedding should not be empty');
         $this->assertIsFloat($embedding[0], 'Embedding should be an array of floats');
