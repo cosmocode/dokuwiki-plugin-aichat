@@ -2,6 +2,8 @@
 
 namespace dokuwiki\plugin\aichat\test;
 
+use dokuwiki\plugin\aichat\Model\ChatInterface;
+use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 use DokuWikiTest;
 
 /**
@@ -44,19 +46,25 @@ abstract class AbstractModelTest extends DokuWikiTest
 
         $conf['plugin']['aichat']['chatmodel'] = $providerName . ' ' . $this->chat_model;
         $conf['plugin']['aichat']['rephrasemodel'] = $providerName . ' ' . $this->chat_model;
-        $conf['plugin']['aichat']['embeddingmodel'] = $providerName . ' ' . $this->embedding_model;
+        $conf['plugin']['aichat']['embedmodel'] = $providerName . ' ' . $this->embedding_model;
         $conf['plugin']['aichat'][$providerConf . '_apikey'] = $apikey;
     }
 
     public function testChat()
     {
-        global $conf;
-
         $prompt = 'This is a test. Please reply with "Hello World"';
 
         /** @var \helper_plugin_aichat $helper */
         $helper = plugin_load('helper', 'aichat');
         $model = $helper->getChatModel();
+
+        $this->assertInstanceOf(ChatInterface::class, $model, 'Model should implement ChatInterface');
+        $this->assertEquals(
+            'dokuwiki\\plugin\\aichat\\Model\\' . $this->provider . '\\ChatModel',
+            get_class($model),
+            'Model seems to be the wrong class'
+        );
+
         $reply = $model->getAnswer([
             ['role' => 'user', 'content' => $prompt]
         ]);
@@ -71,6 +79,14 @@ abstract class AbstractModelTest extends DokuWikiTest
         /** @var \helper_plugin_aichat $helper */
         $helper = plugin_load('helper', 'aichat');
         $model = $helper->getEmbeddingModel();
+
+        $this->assertInstanceOf(EmbeddingInterface::class, $model, 'Model should implement EmbeddingInterface');
+        $this->assertEquals(
+            'dokuwiki\\plugin\\aichat\\Model\\' . $this->provider . '\\EmbeddingModel',
+            get_class($model),
+            'Model seems to be the wrong class'
+        );
+
         $embedding = $model->getEmbedding($text);
         $this->assertIsArray($embedding);
         $this->assertNotEmpty($embedding, 'Embedding should not be empty');

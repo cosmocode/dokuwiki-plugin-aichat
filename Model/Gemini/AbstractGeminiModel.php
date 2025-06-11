@@ -15,7 +15,7 @@ abstract class AbstractGeminiModel extends AbstractModel
     public function __construct(string $name, array $config)
     {
         parent::__construct($name, $config);
-        $this->apikey = $this->getFromConf($config, 'apikey');
+        $this->apikey = $this->getFromConf('apikey');
     }
 
     /** @inheritdoc */
