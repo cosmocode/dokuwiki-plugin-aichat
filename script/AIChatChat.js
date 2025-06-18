@@ -175,6 +175,17 @@ class AIChatChat extends HTMLElement {
                 border-top: 0.5em solid var(--color-ai);
                 border-bottom: 0.5em solid transparent;
             }
+            details.think {
+                font-size: 0.8em;
+                margin: 0.5em 0;
+            }
+            details.think summary {
+                cursor: pointer;
+            }
+            details.think .think-content {
+                max-height: 10em;
+                overflow-y: auto;
+            }
         `;
         return style;
     }
@@ -281,8 +292,11 @@ class AIChatChat extends HTMLElement {
      */
     displayMessage(message, sources = null) {
         const div = document.createElement('div');
-        if(sources !== null) {
+        const isAI = sources !== null || /(?:<|&lt;)\s*think(?:>|&gt;)/i.test(message);
+        if (isAI) {
             div.classList.add('ai');
+            message = message.replace(/(?:<|&lt;)\s*think(?:>|&gt;)([\s\S]*?)(?:<|&lt;)\s*\/\s*think(?:>|&gt;)/gi,
+                (m, c) => `<details class="think"><summary>thinking...</summary><div class="think-content">${c}</div></details>`);
             div.innerHTML = message; // we get HTML for AI messages
         } else {
             div.classList.add('user');
@@ -304,6 +318,24 @@ class AIChatChat extends HTMLElement {
         }
 
         this.#output.appendChild(div);
+        div.querySelectorAll('details.think').forEach(det => {
+            const box = det.querySelector('.think-content');
+            const scroll = () => {
+                if(box.scrollTop < box.scrollHeight - box.clientHeight) {
+                    box.scrollTop += 1;
+                    box._timer = requestAnimationFrame(scroll);
+                }
+            };
+            det.addEventListener('toggle', () => {
+                if(det.open) {
+                    cancelAnimationFrame(box._timer);
+                    box.scrollTop = 0;
+                    box._timer = requestAnimationFrame(scroll);
+                } else if(box._timer) {
+                    cancelAnimationFrame(box._timer);
+                }
+            });
+        });
         return div;
     }
 
