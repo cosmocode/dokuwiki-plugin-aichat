@@ -38,7 +38,7 @@ abstract class AbstractModel implements ModelInterface
     protected $requestStart = 0;
 
     /** @var int How often to retry a request if it fails */
-    public const MAX_RETRIES = 3;
+    final public const MAX_RETRIES = 3;
 
     /** @var DokuHTTPClient */
     protected $http;
@@ -216,7 +216,7 @@ abstract class AbstractModel implements ModelInterface
      * @return mixed
      * @throws \Exception when the response indicates an error
      */
-    abstract protected function parseAPIResponse($response);
+    abstract protected function parseAPIResponse(mixed $response);
 
     /**
      * Send a request to the API
