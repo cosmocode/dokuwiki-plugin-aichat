@@ -8,7 +8,7 @@ class AIChatButton extends HTMLElement {
         this.#root = this.attachShadow({mode: 'open'});
         this.#root.innerHTML = `
             <button class="toggle start">
-                <object type="image/svg+xml" data="../images/aichat.svg" onload="this.parentNode.replaceChild(this.contentDocument.documentElement, this);"></object>
+                <object type="image/svg+xml" data="/lib/plugins/aichat/images/aichat.svg" onload="this.parentNode.replaceChild(this.contentDocument.documentElement, this);"></object>
             </button>
             <dialog>
                 <div>
