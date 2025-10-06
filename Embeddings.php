@@ -20,9 +20,6 @@ use Vanderlee\Sentence\Sentence;
  */
 class Embeddings
 {
-    /** @var int maximum overlap between chunks in tokens */
-    final public const MAX_OVERLAP_LEN = 200;
-
     /** @var ChatInterface */
     protected $chatModel;
 
@@ -249,9 +246,10 @@ class Embeddings
             $text = $eventData['body'];
         }
 
-        $parts = $this->splitIntoChunks($text);
+        $splitter = new TextSplitter($this->getChunkSize(), $this->getTokenEncoder());
+        $parts = $splitter->splitIntoChunks($text);
         foreach ($parts as $part) {
-            if (trim((string)$part) == '') continue; // skip empty chunks
+            if (trim($part) === '') continue; // skip empty chunks
 
             $part = $crumbs . "\n\n" . $part; // add breadcrumbs to each chunk
 
@@ -455,71 +453,5 @@ class Embeddings
         $crumbs[] = $title ? "$title ($page)" : $page;
 
         return implode(' » ', $crumbs);
-    }
-
-    /**
-     * @param $text
-     * @return array
-     * @throws \Exception
-     * @todo support splitting too long sentences
-     */
-    protected function splitIntoChunks($text)
-    {
-        $sentenceSplitter = new Sentence();
-        $tiktok = $this->getTokenEncoder();
-
-        $chunks = [];
-        $sentences = $sentenceSplitter->split($text);
-
-        $chunklen = 0;
-        $chunk = '';
-        while ($sentence = array_shift($sentences)) {
-            $slen = count($tiktok->encode($sentence));
-            if ($slen > $this->getChunkSize()) {
-                // sentence is too long, we need to split it further
-                if ($this->logger instanceof CLI) $this->logger->warning(
-                    'Sentence too long, splitting not implemented yet'
-                );
-                continue;
-            }
-
-            if ($chunklen + $slen < $this->getChunkSize()) {
-                // add to current chunk
-                $chunk .= $sentence;
-                $chunklen += $slen;
-                // remember sentence for overlap check
-                $this->rememberSentence($sentence);
-            } else {
-                // add current chunk to result
-                $chunk = trim($chunk);
-                if ($chunk !== '') $chunks[] = $chunk;
-
-                // start new chunk with remembered sentences
-                $chunk = implode(' ', $this->sentenceQueue);
-                $chunk .= $sentence;
-                $chunklen = count($tiktok->encode($chunk));
-            }
-        }
-        $chunks[] = $chunk;
-
-        return $chunks;
-    }
-
-    /**
-     * Add a sentence to the queue of remembered sentences
-     *
-     * @param string $sentence
-     * @return void
-     */
-    protected function rememberSentence($sentence)
-    {
-        // add sentence to queue
-        $this->sentenceQueue[] = $sentence;
-
-        // remove oldest sentences from queue until we are below the max overlap
-        $encoder = $this->getTokenEncoder();
-        while (count($encoder->encode(implode(' ', $this->sentenceQueue))) > self::MAX_OVERLAP_LEN) {
-            array_shift($this->sentenceQueue);
-        }
     }
 }
