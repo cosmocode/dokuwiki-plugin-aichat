@@ -14,23 +14,23 @@ use Vanderlee\Sentence\Sentence;
  */
 class TextSplitter
 {
-    /** @var int maximum overlap between chunks in tokens */
-    final public const MAX_OVERLAP_LEN = 200;
-
     protected int $chunkSize;
     protected Encoder $tiktok;
     protected array $sentenceQueue = [];
+    protected int $overlap;
 
     /**
      * Constructor
      *
      * @param int $chunksize maximum chunk size in tokens
      * @param Encoder $tiktok token encoder
+     * @param int $overlap desired overlap between chunks in tokens
      */
-    public function __construct(int $chunksize, Encoder $tiktok)
+    public function __construct(int $chunksize, Encoder $tiktok, $overlap = 200)
     {
         $this->chunkSize = $chunksize;
         $this->tiktok = $tiktok;
+        $this->overlap = $overlap;
     }
 
     /**
@@ -93,7 +93,7 @@ class TextSplitter
         $chunkSize = $this->chunkSize / 4; // when force splitting, make sentences a quarter of the chunk size
 
         // Try naive approach first: split by spaces
-        $words = preg_split('/(\b+)/', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $words = preg_split('/\b/', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
         $subSentences = [];
         $currentSubSentence = '';
         $currentSubSentenceLen = 0;
@@ -157,7 +157,7 @@ class TextSplitter
         $this->sentenceQueue[] = $sentence;
 
         // remove oldest sentences from queue until we are below the max overlap
-        while (count($this->tiktok->encode(implode(' ', $this->sentenceQueue))) > self::MAX_OVERLAP_LEN) {
+        while (count($this->tiktok->encode(implode(' ', $this->sentenceQueue))) > $this->overlap) {
             array_shift($this->sentenceQueue);
         }
     }
