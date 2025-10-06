@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\aichat;
 
+use dokuwiki\Utf8\PhpString;
 use TikToken\Encoder;
 use Vanderlee\Sentence\Sentence;
 
@@ -82,17 +83,17 @@ class TextSplitter
     }
 
     /**
-     * Force splitting of a too long sentence into smaller parts
+     * Force splitting of a too long sentence into smaller parts, preferably at word boundaries
      *
      * @param string $sentence
      * @return string[]
      */
-    protected function splitLongSentence($sentence)
+    protected function splitLongSentence(string $sentence): array
     {
         $chunkSize = $this->chunkSize / 4; // when force splitting, make sentences a quarter of the chunk size
 
         // Try naive approach first: split by spaces
-        $words = preg_split('/(\s+)/', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $words = preg_split('/(\b+)/', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
         $subSentences = [];
         $currentSubSentence = '';
         $currentSubSentenceLen = 0;
@@ -101,11 +102,8 @@ class TextSplitter
             $wordLen = count($this->tiktok->encode($word));
 
             if ($wordLen > $chunkSize) {
-                // If a single word is too long, split it into smaller chunks
-                $wordChunks = str_split($word, $chunkSize); // Split into smaller parts //FIXME this splitting should be done by tokens, not by characters
-                foreach ($wordChunks as $chunk) {
-                    $subSentences[] = $chunk;
-                }
+                // word is too long, probably no spaces, split it further
+                array_merge($subSentences, $this->splitString($word, $wordLen, $chunkSize));
             } elseif ($currentSubSentenceLen + $wordLen < $chunkSize) {
                 // Add to current sub-sentence
                 $currentSubSentence .= $word;
@@ -125,6 +123,27 @@ class TextSplitter
         return $subSentences;
     }
 
+    /**
+     * Split a string into smaller parts of approximately the given size
+     * This is a naive split that does not care about word boundaries
+     *
+     * @param string $text text to split
+     * @param int $tokenlength length of the text in tokens
+     * @param int $chunksize desired chunk size in tokens
+     * @return string[]
+     */
+    protected function splitString(string $text, int $tokenlength, int $chunksize): array
+    {
+        $numPieces = ceil($tokenlength / $chunksize);
+        $pieceLength = ceil(PhpString::strlen($text) / $numPieces);
+
+        // utf8 aware split
+        $pieces = [];
+        for ($i = 0; $i < $numPieces; $i++) {
+            $pieces[] = PhpString::substr($text, $i * $pieceLength, $pieceLength);
+        }
+        return $pieces;
+    }
 
     /**
      * Add a sentence to the queue of remembered sentences
