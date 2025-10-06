@@ -9,8 +9,17 @@ This is a DokuWiki plugin that enables AI-powered chat functionality using LLMs 
 ## Development Commands
 
 ### Testing
+
 ```bash
 ../../../bin/plugin.php dev test
+```
+
+The command does not accept any additional arguments or parameters and runs all tests in the `_test/` directory.
+
+PHPUnit can also be called directly, when special options are needed:
+
+```bash
+../../../_test/vendor/bin/phpunit -c ../../../_test/phpunit.xml --group plugin_aichat
 ```
 
 ### CLI Commands
