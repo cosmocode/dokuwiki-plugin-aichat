@@ -369,16 +369,9 @@ class Embeddings
         while ($sentence = array_shift($sentences)) {
             $slen = count($tiktok->encode($sentence));
             if ($slen > $this->getChunkSize()) {
-                // Sentence is too long, split into smaller parts
-                if ($this->logger instanceof CLI) {
-                    $this->logger->warning(
-                        'Sentence too long, splitting it into smaller parts'
-                    );
-                }
-    
-                // Push split sentences to the front of the queue
+                // Sentence is too long, split into smaller parts and push the results back to the front of the queue
                 array_unshift($sentences, ...$this->splitLongSentence($sentence, $tiktok));
-                continue; // Restart loop with the newly inserted sentences
+                continue;
             }
 
             if ($chunklen + $slen < $this->getChunkSize()) {
@@ -398,29 +391,40 @@ class Embeddings
                 $chunklen = count($tiktok->encode($chunk));
             }
         }
-    
+
         // Add the last chunk if not empty
-        if (trim($chunk) !== '') $chunks[] = trim($chunk);
-    
+        $chunk = trim($chunk);
+        if ($chunk !== '') $chunks[] = $chunk;
+
         return $chunks;
     }
 
-    protected function splitLongSentence($sentence, $tiktok)
+    /**
+     * Force splitting of a too long sentence into smaller parts
+     *
+     * @param string $sentence
+     * @return string[]
+     */
+    protected function splitLongSentence($sentence)
     {
+        $tiktok = $this->getTokenEncoder();
+        $chunkSize = $this->getChunkSize() / 4; // when force splitting, make sentences a quarter of the chunk size
+
+
+        // Try naive approach first: split by spaces
         $words = preg_split('/(\s+)/', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
         $subSentences = [];
         $currentSubSentence = '';
         $currentSubSentenceLen = 0;
-        $chunkSize = $this->getChunkSize();
-    
+
         foreach ($words as $word) {
             $wordLen = count($tiktok->encode($word));
-    
+
             if ($wordLen > $chunkSize) {
                 // If a single word is too long, split it into smaller chunks
-                $wordChunks = str_split($word, intval($chunkSize / 2)); // Split into smaller parts
+                $wordChunks = str_split($word, $chunkSize); // Split into smaller parts
                 foreach ($wordChunks as $chunk) {
-                    $subSentences[] = trim($chunk);
+                    $subSentences[] = $chunk;
                 }
             } elseif ($currentSubSentenceLen + $wordLen < $chunkSize) {
                 // Add to current sub-sentence
@@ -428,18 +432,16 @@ class Embeddings
                 $currentSubSentenceLen += $wordLen;
             } else {
                 // Add current sub-sentence to result
-                $subSentences[] = trim($currentSubSentence);
+                $subSentences[] = $currentSubSentence;
                 // Start new sub-sentence
                 $currentSubSentence = $word;
                 $currentSubSentenceLen = $wordLen;
             }
         }
-    
+
         // Add last sub-sentence to result
-        if ($currentSubSentence !== '') {
-            $subSentences[] = trim($currentSubSentence);
-        }
-    
+        $subSentences[] = $currentSubSentence;
+
         return $subSentences;
     }
 
