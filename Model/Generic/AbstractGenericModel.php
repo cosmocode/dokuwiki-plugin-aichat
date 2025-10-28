@@ -21,8 +21,10 @@ abstract class AbstractGenericModel extends AbstractModel implements ChatInterfa
     {
         $http = parent::getHttpClient();
 
-        $apiKey = $this->getFromConf('apikey');
-        $http->headers['Authorization'] = 'Bearer ' . $apiKey;
+        $apiKey = $this->getFromConf('apikey', ''); //auth is optional
+        if ($apiKey) {
+            $http->headers['Authorization'] = 'Bearer ' . $apiKey;
+        }
         return $http;
     }
 
@@ -44,7 +46,7 @@ abstract class AbstractGenericModel extends AbstractModel implements ChatInterfa
     protected function parseAPIResponse($response)
     {
         if (isset($response['usage'])) {
-            if(isset($response['usage']['prompt_tokens'])) {
+            if (isset($response['usage']['prompt_tokens'])) {
                 $this->inputTokensUsed += $response['usage']['prompt_tokens'];
             } elseif ($response['usage']['total_tokens']) {
                 // on embedding models, prompt_tokens is not available

@@ -13,6 +13,16 @@ abstract class AbstractOllama extends AbstractGenericModel
 {
 
     /** @inheritdoc */
+    protected function getHttpClient()
+    {
+        $http = parent::getHttpClient();
+
+        $apiKey = $this->getFromConf('apikey');
+        $http->headers['Authorization'] = 'Bearer ' . $apiKey;
+        return $http;
+    }
+
+    /** @inheritdoc */
     function loadUnknownModelInfo(): array
     {
         $info = parent::loadUnknownModelInfo();
