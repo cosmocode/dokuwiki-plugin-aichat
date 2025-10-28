@@ -48,6 +48,7 @@ class AIChatChat extends HTMLElement {
      * We initialize the attribute based states here
      */
     connectedCallback() {
+        this.#output.innerHTML = '';
         this.#input.placeholder = this.getAttribute('placeholder') || 'Your question...';
         this.displayMessage(this.getAttribute('hello') || 'Hello, how can I help you?', {});
 
@@ -203,7 +204,6 @@ class AIChatChat extends HTMLElement {
     deleteHistory() {
         sessionStorage.removeItem('ai-chat-history');
         this.#history = [];
-        this.#output.innerHTML = '';
         this.connectedCallback(); // re-initialize
     }
 
