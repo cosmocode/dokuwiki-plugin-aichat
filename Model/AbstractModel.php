@@ -25,6 +25,8 @@ abstract class AbstractModel implements ModelInterface
     protected $modelFullName;
     /** @var array The model info from the model.json file */
     protected $modelInfo;
+    /** @var string The provider name */
+    protected $selfIdent;
 
     /** @var int input tokens used since last reset */
     protected $inputTokensUsed = 0;
@@ -44,6 +46,11 @@ abstract class AbstractModel implements ModelInterface
     protected $http;
     /** @var bool debug API communication */
     protected $debug = false;
+    /** @var string The base API URL. Configurable for some models */
+    protected $apiurl = '';
+
+    /** @var array The plugin configuration */
+    protected $config;
 
     // region ModelInterface
 
@@ -51,10 +58,7 @@ abstract class AbstractModel implements ModelInterface
     public function __construct(string $name, array $config)
     {
         $this->modelName = $name;
-        $this->http = new DokuHTTPClient();
-        $this->http->timeout = 60;
-        $this->http->headers['Content-Type'] = 'application/json';
-        $this->http->headers['Accept'] = 'application/json';
+        $this->config = $config;
 
         $reflect = new \ReflectionClass($this);
         $json = dirname($reflect->getFileName()) . '/models.json';
@@ -67,7 +71,14 @@ abstract class AbstractModel implements ModelInterface
             throw new \Exception('Failed to parse model info file: ' . $e->getMessage(), 2002, $e);
         }
 
-        $this->modelFullName = basename(dirname($reflect->getFileName()) . ' ' . $name);
+        $this->selfIdent = basename(dirname($reflect->getFileName()));
+        $this->modelFullName = basename(dirname($reflect->getFileName())) . ' ' . $name;
+
+        if($this->apiurl === '') {
+            // we use an empty default here, since some models may not use this property
+            $this->apiurl = $this->getFromConf('apiurl', '');
+        }
+        $this->apiurl = rtrim($this->apiurl, '/');
 
         if ($this instanceof ChatInterface) {
             if (isset($modelinfos['chat'][$name])) {
@@ -92,7 +103,6 @@ abstract class AbstractModel implements ModelInterface
     {
         return $this->modelFullName;
     }
-
 
     /** @inheritdoc */
     public function getModelName()
@@ -138,13 +148,13 @@ abstract class AbstractModel implements ModelInterface
     /** @inheritdoc */
     public function getMaxInputTokenLength(): int
     {
-        return $this->modelInfo['inputTokens'];
+        return $this->modelInfo['inputTokens'] ?? 0;
     }
 
     /** @inheritdoc */
     public function getInputTokenPrice(): float
     {
-        return $this->modelInfo['inputTokenPrice'];
+        return $this->modelInfo['inputTokenPrice'] ?? 0;
     }
 
     /** @inheritdoc */
@@ -152,12 +162,12 @@ abstract class AbstractModel implements ModelInterface
     {
         $info = [
             'description' => $this->modelFullName,
-            'inputTokens' => 1024,
+            'inputTokens' => 0,
             'inputTokenPrice' => 0,
         ];
 
         if ($this instanceof ChatInterface) {
-            $info['outputTokens'] = 1024;
+            $info['outputTokens'] = 0;
             $info['outputTokenPrice'] = 0;
         } elseif ($this instanceof EmbeddingInterface) {
             $info['dimensions'] = 512;
@@ -202,6 +212,28 @@ abstract class AbstractModel implements ModelInterface
     public function setDebug($debug = true)
     {
         $this->debug = $debug;
+    }
+
+    /**
+     * Get the HTTP client used for API requests
+     *
+     * This method will create a new DokuHTTPClient instance if it does not exist yet.
+     * The client will be configured with a timeout and the appropriate headers for JSON communication.
+     * Inheriting models should override this method if they need to add additional headers or configuration
+     * to the HTTP client.
+     *
+     * @return DokuHTTPClient
+     */
+    protected function getHttpClient()
+    {
+        if($this->http === null) {
+            $this->http = new DokuHTTPClient();
+            $this->http->timeout = 60;
+            $this->http->headers['Content-Type'] = 'application/json';
+            $this->http->headers['Accept'] = 'application/json';
+        }
+
+        return $this->http;
     }
 
     /**
@@ -259,14 +291,15 @@ abstract class AbstractModel implements ModelInterface
         }
 
         // send request and handle retries
-        $this->http->sendRequest($url, $json, $method);
-        $response = $this->http->resp_body;
-        if ($response === false || $this->http->error) {
+        $http = $this->getHttpClient();
+        $http->sendRequest($url, $json, $method);
+        $response = $http->resp_body;
+        if ($response === false || $http->error) {
             if ($retry < self::MAX_RETRIES) {
                 return $this->sendAPIRequest($method, $url, $data, $retry + 1);
             }
             $this->timeUsed += microtime(true) - $this->requestStart;
-            throw new \Exception('API returned no response. ' . $this->http->error, 2004);
+            throw new \Exception('API returned no response. ' . $http->error, 2004);
         }
 
         if ($this->debug) {
@@ -296,6 +329,34 @@ abstract class AbstractModel implements ModelInterface
 
         $this->timeUsed += microtime(true) - $this->requestStart;
         return $result;
+    }
+
+    // endregion
+
+    // region Tools
+
+    /**
+     * Get a configuration value
+     *
+     * The given key is prefixed by the model namespace
+     *
+     * @param string $key
+     * @param mixed $default The default to return if the key is not found. When set to null an Exception is thrown.
+     * @return mixed
+     * @throws ModelException when the key is not found and no default is given
+     */
+    public function getFromConf(string $key, $default = null)
+    {
+        $config = $this->config;
+
+        $key = strtolower($this->selfIdent) . '_' . $key;
+        if (isset($config[$key])) {
+            return $config[$key];
+        }
+        if ($default !== null) {
+            return $default;
+        }
+        throw new ModelException('Key ' . $key . ' not found in configuration', 3001);
     }
 
     // endregion

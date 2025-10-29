@@ -20,9 +20,6 @@ use Vanderlee\Sentence\Sentence;
  */
 class Embeddings
 {
-    /** @var int maximum overlap between chunks in tokens */
-    final public const MAX_OVERLAP_LEN = 200;
-
     /** @var ChatInterface */
     protected $chatModel;
 
@@ -134,6 +131,12 @@ class Embeddings
      */
     public function getChunkSize()
     {
+        $tokenlimit = $this->chatModel->getMaxInputTokenLength();
+        if (!$tokenlimit) {
+            // no token limit, use the configured chunk size
+            return $this->configChunkSize;
+        }
+
         return min(
             floor($this->chatModel->getMaxInputTokenLength() / 4), // be able to fit 4 chunks into the max input
             floor($this->embedModel->getMaxInputTokenLength() * 0.9), // only use 90% of the embedding model to be safe
@@ -187,6 +190,31 @@ class Embeddings
     }
 
     /**
+     * Get the content of a page
+     *
+     * Uses our own renderer to format the contents in an LLM friendly way. Falls back to
+     * raw syntax if the renderer fails for some reason
+     *
+     * @param string $page Name of the page to read
+     * @return string The content of the page
+     */
+    public function getPageContent($page)
+    {
+        global $ID;
+        $ID = $page;
+        try {
+            $text = p_cached_output(wikiFN($page), 'aichat', $page);
+        } catch (\Throwable $e) {
+            if ($this->logger) $this->logger->error(
+                'Failed to render page {page}. Using raw text instead. {msg}',
+                ['page' => $page, 'msg' => $e->getMessage()]
+            );
+            $text = rawWiki($page);
+        }
+        return $text;
+    }
+
+    /**
      * Split the given page, fetch embedding vectors and return Chunks
      *
      * Will use the text renderer plugin if available to get the rendered text.
@@ -202,18 +230,7 @@ class Embeddings
     {
         $chunkList = [];
 
-        global $ID;
-        $ID = $page;
-        try {
-            $text = p_cached_output(wikiFN($page), 'aichat', $page);
-        } catch (\Throwable $e) {
-            if ($this->logger) $this->logger->error(
-                'Failed to render page {page}. Using raw text instead. {msg}',
-                ['page' => $page, 'msg' => $e->getMessage()]
-            );
-            $text = rawWiki($page);
-        }
-
+        $text = $this->getPageContent($page);
         $crumbs = $this->breadcrumbTrail($page);
 
         // allow plugins to modify the text before splitting
@@ -229,9 +246,10 @@ class Embeddings
             $text = $eventData['body'];
         }
 
-        $parts = $this->splitIntoChunks($text);
+        $splitter = new TextSplitter($this->getChunkSize(), $this->getTokenEncoder());
+        $parts = $splitter->splitIntoChunks($text);
         foreach ($parts as $part) {
-            if (trim((string)$part) == '') continue; // skip empty chunks
+            if (trim($part) === '') continue; // skip empty chunks
 
             $part = $crumbs . "\n\n" . $part; // add breadcrumbs to each chunk
 
@@ -279,9 +297,11 @@ class Embeddings
         global $auth;
         $vector = $this->embedModel->getEmbedding($query);
 
-        if ($limits) {
+        $tokenlimit = $limits ? $this->chatModel->getMaxInputTokenLength() : 0;
+
+        if ($tokenlimit) {
             $fetch = min(
-                ($this->chatModel->getMaxInputTokenLength() / $this->getChunkSize()),
+                ($tokenlimit / $this->getChunkSize()),
                 $this->configContextChunks
             );
         } else {
@@ -305,9 +325,9 @@ class Embeddings
             if ($auth && auth_quickaclcheck($chunk->getPage()) < AUTH_READ) continue;
             if ($chunk->getScore() < $this->similarityThreshold) continue;
 
-            if ($limits) {
+            if ($tokenlimit) {
                 $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
-                if ($size + $chunkSize > $this->chatModel->getMaxInputTokenLength()) break; // we have enough
+                if ($size + $chunkSize > $tokenlimit) break; // we have enough
             }
 
             $result[] = $chunk;
@@ -317,6 +337,91 @@ class Embeddings
         }
         return $result;
     }
+
+    /**
+     * This works similar to getSimilarChunks, but returns the full page content for each found similar chunk
+     *
+     * This will not apply any token limits
+     *
+     * @param string $query The question
+     * @param string $lang Limit results to this language
+     * @return Chunk[]
+     * @throws \Exception
+     */
+    public function getSimilarPages($query, $lang = '')
+    {
+        $chunks = $this->getSimilarChunks($query, $lang, false);
+        $pages = [];
+
+        foreach ($chunks as $chunk) {
+            $page = $chunk->getPage();
+            if (isset($pages[$page])) continue; // we already have this page
+
+            $content = $this->getPageContent($chunk->getPage());
+            $crumbs = $this->breadcrumbTrail($chunk->getPage());
+
+            $pages[$page] = new Chunk(
+                $page,
+                $chunk->getId(),
+                $crumbs . "\n\n" . $content,
+                $chunk->getEmbedding(),
+                $chunk->getLanguage(),
+                $chunk->getCreated(),
+                $chunk->getScore()
+            );
+        }
+        return $pages;
+    }
+
+    /**
+     * Returns all chunks for a page
+     *
+     * Does not apply configContextChunks but checks token limits if requested
+     *
+     * @param string $page
+     * @param bool $limits Apply chat token limits to the number of chunks returned?
+     * @return Chunk[]
+     */
+    public function getPageChunks($page, $limits = true)
+    {
+        global $auth;
+        if ($auth && auth_quickaclcheck($page) < AUTH_READ) {
+            if ($this->logger instanceof CLI) $this->logger->warning(
+                'User not allowed to read context page {page}', ['page' => $page]
+            );
+            return [];
+        }
+
+        $indexer = new Indexer();
+        $pages = $indexer->getPages();
+        $pos = array_search(cleanID($page), $pages);
+
+        if ($pos === false) {
+            if ($this->logger instanceof CLI) $this->logger->warning(
+                'Context page {page} is not in index', ['page' => $page]
+            );
+            return [];
+        }
+
+        $chunks = $this->storage->getPageChunks($page, $pos * 100);
+
+        $tokenlimit = $limits ? $this->chatModel->getMaxInputTokenLength() : 0;
+
+        $size = 0;
+        $result = [];
+        foreach ($chunks as $chunk) {
+            if ($tokenlimit) {
+                $chunkSize = count($this->getTokenEncoder()->encode($chunk->getText()));
+                if ($size + $chunkSize > $tokenlimit) break; // we have enough
+            }
+
+            $result[] = $chunk;
+            $size += $chunkSize ?? 0;
+        }
+
+        return $result;
+    }
+
 
     /**
      * Create a breadcrumb trail for the given page
@@ -348,71 +453,5 @@ class Embeddings
         $crumbs[] = $title ? "$title ($page)" : $page;
 
         return implode(' » ', $crumbs);
-    }
-
-    /**
-     * @param $text
-     * @return array
-     * @throws \Exception
-     * @todo support splitting too long sentences
-     */
-    protected function splitIntoChunks($text)
-    {
-        $sentenceSplitter = new Sentence();
-        $tiktok = $this->getTokenEncoder();
-
-        $chunks = [];
-        $sentences = $sentenceSplitter->split($text);
-
-        $chunklen = 0;
-        $chunk = '';
-        while ($sentence = array_shift($sentences)) {
-            $slen = count($tiktok->encode($sentence));
-            if ($slen > $this->getChunkSize()) {
-                // sentence is too long, we need to split it further
-                if ($this->logger instanceof CLI) $this->logger->warning(
-                    'Sentence too long, splitting not implemented yet'
-                );
-                continue;
-            }
-
-            if ($chunklen + $slen < $this->getChunkSize()) {
-                // add to current chunk
-                $chunk .= $sentence;
-                $chunklen += $slen;
-                // remember sentence for overlap check
-                $this->rememberSentence($sentence);
-            } else {
-                // add current chunk to result
-                $chunk = trim($chunk);
-                if ($chunk !== '') $chunks[] = $chunk;
-
-                // start new chunk with remembered sentences
-                $chunk = implode(' ', $this->sentenceQueue);
-                $chunk .= $sentence;
-                $chunklen = count($tiktok->encode($chunk));
-            }
-        }
-        $chunks[] = $chunk;
-
-        return $chunks;
-    }
-
-    /**
-     * Add a sentence to the queue of remembered sentences
-     *
-     * @param string $sentence
-     * @return void
-     */
-    protected function rememberSentence($sentence)
-    {
-        // add sentence to queue
-        $this->sentenceQueue[] = $sentence;
-
-        // remove oldest sentences from queue until we are below the max overlap
-        $encoder = $this->getTokenEncoder();
-        while (count($encoder->encode(implode(' ', $this->sentenceQueue))) > self::MAX_OVERLAP_LEN) {
-            array_shift($this->sentenceQueue);
-        }
     }
 }

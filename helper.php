@@ -167,7 +167,7 @@ class helper_plugin_aichat extends Plugin
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askChatQuestion($question, $history = [])
+    public function askChatQuestion($question, $history = [], $sourcePage = '')
     {
         if ($history && $this->getConf('rephraseHistory') > 0) {
             $contextQuestion = $this->rephraseChatQuestion($question, $history);
@@ -179,7 +179,7 @@ class helper_plugin_aichat extends Plugin
         } else {
             $contextQuestion = $question;
         }
-        return $this->askQuestion($question, $history, $contextQuestion);
+        return $this->askQuestion($question, $history, $contextQuestion, $sourcePage);
     }
 
     /**
@@ -188,12 +188,30 @@ class helper_plugin_aichat extends Plugin
      * @param string $question The question to ask
      * @param array $history [user, ai] of the previous question
      * @param string $contextQuestion The question to use for context search
+     * @param string $sourcePage The page the question was asked on
      * @return array ['question' => $question, 'answer' => $answer, 'sources' => $sources]
      * @throws Exception
      */
-    public function askQuestion($question, $history = [], $contextQuestion = '')
+    public function askQuestion($question, $history = [], $contextQuestion = '', $sourcePage = '')
     {
-        $similar = $this->getEmbeddings()->getSimilarChunks($contextQuestion ?: $question, $this->getLanguageLimit());
+        if ($sourcePage) {
+            // only the current page is context
+            $similar = $this->getEmbeddings()->getPageChunks($sourcePage);
+        } else {
+            if ($this->getConf('fullpagecontext')) {
+                // match chunks but use full pages as context
+                $similar = $this->getEmbeddings()->getSimilarPages(
+                    $contextQuestion ?: $question,
+                    $this->getLanguageLimit()
+                );
+            } else {
+                // use the chunks as context
+                $similar = $this->getEmbeddings()->getSimilarChunks(
+                    $contextQuestion ?: $question, $this->getLanguageLimit()
+                );
+            }
+        }
+
         if ($similar) {
             $context = implode(
                 "\n",
@@ -260,16 +278,16 @@ class helper_plugin_aichat extends Plugin
      */
     protected function prepareMessages(
         ChatInterface $model,
-        string $promptedQuestion,
-        array $history,
-        int $historySize
-    ): array {
+        string        $promptedQuestion,
+        array         $history,
+        int           $historySize
+    ): array
+    {
         // calculate the space for context
-        $remainingContext = $model->getMaxInputTokenLength();
+        $remainingContext = $model->getMaxInputTokenLength(); // might be 0
         $remainingContext -= $this->countTokens($promptedQuestion);
-        $safetyMargin = $remainingContext * 0.05; // 5% safety margin
-        $remainingContext -= $safetyMargin;
-        // FIXME we may want to also have an upper limit for the history and not always use the full context
+        $safetyMargin = abs($remainingContext) * 0.05; // 5% safety margin
+        $remainingContext -= $safetyMargin; // may be negative, it will be ignored then
 
         $messages = $this->historyMessages($history, $remainingContext, $historySize);
         $messages[] = [
@@ -285,7 +303,7 @@ class helper_plugin_aichat extends Plugin
      * Only as many messages are used as fit into the token limit
      *
      * @param array[] $history The chat history [[user, ai], [user, ai], ...]
-     * @param int $tokenLimit The maximum number of tokens to use
+     * @param int $tokenLimit The maximum number of tokens to use, negative limit disables this check
      * @param int $sizeLimit The maximum number of messages to use
      * @return array
      */
@@ -298,7 +316,8 @@ class helper_plugin_aichat extends Plugin
         $history = array_slice($history, 0, $sizeLimit);
         foreach ($history as $row) {
             $length = $this->countTokens($row[0] . $row[1]);
-            if ($length > $remainingContext) {
+
+            if ($tokenLimit > 0 && $length > $remainingContext) {
                 break;
             }
             $remainingContext -= $length;

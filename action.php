@@ -41,6 +41,7 @@ class action_plugin_aichat extends ActionPlugin
         $helper = plugin_load('helper', 'aichat');
 
         $question = $INPUT->post->str('question');
+        $pagecontext = $INPUT->post->str('pagecontext');
         $history = json_decode((string)$INPUT->post->str('history'), null, 512, JSON_THROW_ON_ERROR);
         header('Content-Type: application/json');
 
@@ -54,7 +55,7 @@ class action_plugin_aichat extends ActionPlugin
         }
 
         try {
-            $result = $helper->askChatQuestion($question, $history);
+            $result = $helper->askChatQuestion($question, $history, $pagecontext);
             $sources = [];
             foreach ($result['sources'] as $source) {
                 /** @var Chunk $source */

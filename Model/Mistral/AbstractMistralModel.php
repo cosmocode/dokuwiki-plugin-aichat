@@ -3,43 +3,22 @@
 namespace dokuwiki\plugin\aichat\Model\Mistral;
 
 use dokuwiki\plugin\aichat\Model\AbstractModel;
+use dokuwiki\plugin\aichat\Model\Generic\AbstractGenericModel;
 
 /**
  * Abstract OpenAI Model
  *
  * This class provides a basic interface to the OpenAI API
  */
-abstract class AbstractMistralModel extends AbstractModel
+abstract class AbstractMistralModel extends AbstractGenericModel
 {
-    /** @inheritdoc */
-    public function __construct(string $name, array $config)
-    {
-        parent::__construct($name, $config);
-        if (empty($config['mistral_apikey'])) {
-            throw new \Exception('Mistral API key not configured', 3001);
-        }
-        $this->http->headers['Authorization'] = 'Bearer ' . $config['mistral_apikey'];
-    }
-
-    /**
-     * Send a request to the OpenAI API
-     *
-     * @param string $endpoint
-     * @param array $data Payload to send
-     * @return array API response
-     * @throws \Exception
-     */
-    protected function request($endpoint, $data)
-    {
-        $url = 'https://api.mistral.ai/v1/' . $endpoint;
-        return $this->sendAPIRequest('POST', $url, $data);
-    }
+    protected $apiurl = 'https://api.mistral.ai/v1/';
 
     /** @inheritdoc */
     protected function parseAPIResponse($response)
     {
         if (isset($response['usage'])) {
-            $this->inputTokensUsed += $response['usage']['prompt_tokens'];
+            $this->inputTokensUsed += $response['usage']['prompt_tokens'] ?? 0;
             $this->outputTokensUsed += $response['usage']['completion_tokens'] ?? 0;
         }
 
@@ -50,12 +29,4 @@ abstract class AbstractMistralModel extends AbstractModel
         return $response;
     }
 
-    /**
-     * @internal for checking available models
-     */
-    public function listUpstreamModels()
-    {
-        $url = 'https://api.openai.com/v1/models';
-        return $this->http->get($url);
-    }
 }

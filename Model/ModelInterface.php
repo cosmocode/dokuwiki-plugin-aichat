@@ -48,6 +48,9 @@ interface ModelInterface
      * Maximum number of tokens the model can handle as input.
      *
      * This is the absolute limit, including any context, prompts, questions etc.
+     *
+     * The method may return 0 if the limit is unknown. In that case we will simply send what
+     * we have and hope for the best
      */
     public function getMaxInputTokenLength(): int;
 

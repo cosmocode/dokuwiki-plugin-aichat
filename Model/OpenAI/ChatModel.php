@@ -2,9 +2,8 @@
 
 namespace dokuwiki\plugin\aichat\Model\OpenAI;
 
-use dokuwiki\plugin\aichat\Model\ChatInterface;
 
-class ChatModel extends AbstractOpenAIModel implements ChatInterface
+class ChatModel extends AbstractOpenAIModel
 {
     /** @inheritdoc */
     public function getAnswer(array $messages): string

@@ -4,21 +4,19 @@ namespace dokuwiki\plugin\aichat\Model\Anthropic;
 
 use dokuwiki\plugin\aichat\Model\AbstractModel;
 use dokuwiki\plugin\aichat\Model\ChatInterface;
+use dokuwiki\plugin\aichat\Model\ModelException;
 
 class ChatModel extends AbstractModel implements ChatInterface
 {
     /** @inheritdoc */
-    public function __construct(string $name, array $config)
+    protected function getHttpClient()
     {
-        parent::__construct($name, $config);
-
-        if (empty($config['anthropic_apikey'])) {
-            throw new \Exception('Anthropic API key not configured', 3001);
-        }
-
-        $this->http->headers['x-api-key'] = $config['anthropic_apikey'];
-        $this->http->headers['anthropic-version'] = '2023-06-01';
+        $http = parent::getHttpClient();
+        $http->headers['x-api-key'] = $this->getFromConf('apikey');
+        $http->headers['anthropic-version'] = '2023-06-01';
+        return $http;
     }
+
 
     /** @inheritdoc */
     public function getAnswer(array $messages): string
@@ -73,7 +71,7 @@ class ChatModel extends AbstractModel implements ChatInterface
         }
 
         if (isset($response['error'])) {
-            throw new \Exception('Anthropic API error: ' . $response['error']['message'], 3002);
+            throw new ModelException('Anthropic API error: ' . $response['error']['message'], 3002);
         }
 
         return $response;
