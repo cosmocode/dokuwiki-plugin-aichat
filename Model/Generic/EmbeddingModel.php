@@ -2,6 +2,8 @@
 
 namespace dokuwiki\plugin\aichat\Model\Generic;
 
-class EmbeddingModel extends AbstractGenericModel
+use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
+
+class EmbeddingModel extends AbstractGenericModel implements EmbeddingInterface
 {
 }

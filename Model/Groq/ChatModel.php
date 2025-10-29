@@ -2,9 +2,10 @@
 
 namespace dokuwiki\plugin\aichat\Model\Groq;
 
-use dokuwiki\plugin\aichat\Model\Generic\AbstractGenericModel;
 
-class ChatModel extends AbstractGenericModel
+use dokuwiki\plugin\aichat\Model\Generic\ChatModel as GenericChatModel;
+
+class ChatModel extends GenericChatModel
 {
     protected $apiurl = 'https://api.groq.com/openai/v1';
 
