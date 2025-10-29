@@ -3,6 +3,8 @@
 namespace dokuwiki\plugin\aichat\Model\OpenAI;
 
 
-class EmbeddingModel extends AbstractOpenAIModel
+use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
+
+class EmbeddingModel extends AbstractOpenAIModel implements EmbeddingInterface
 {
 }

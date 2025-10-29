@@ -13,7 +13,7 @@ use dokuwiki\plugin\aichat\Model\ModelException;
  * This class provides a basic interface to the OpenAI API as implemented by many other providers.
  * It implements chat and embedding interfaces.
  */
-abstract class AbstractGenericModel extends AbstractModel implements ChatInterface, EmbeddingInterface
+abstract class AbstractGenericModel extends AbstractModel
 {
 
     /** @inheritdoc */

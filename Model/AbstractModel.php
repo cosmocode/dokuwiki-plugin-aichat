@@ -74,7 +74,7 @@ abstract class AbstractModel implements ModelInterface
         $this->selfIdent = basename(dirname($reflect->getFileName()));
         $this->modelFullName = basename(dirname($reflect->getFileName())) . ' ' . $name;
 
-        if($this->apiurl === '') {
+        if ($this->apiurl === '') {
             // we use an empty default here, since some models may not use this property
             $this->apiurl = $this->getFromConf('apiurl', '');
         }
@@ -226,7 +226,7 @@ abstract class AbstractModel implements ModelInterface
      */
     protected function getHttpClient()
     {
-        if($this->http === null) {
+        if ($this->http === null) {
             $this->http = new DokuHTTPClient();
             $this->http->timeout = 60;
             $this->http->headers['Content-Type'] = 'application/json';
