@@ -202,7 +202,8 @@ class helper_plugin_aichat extends Plugin
                 // match chunks but use full pages as context
                 $similar = $this->getEmbeddings()->getSimilarPages(
                     $contextQuestion ?: $question,
-                    $this->getLanguageLimit()
+                    $this->getLanguageLimit(),
+                    (int) $this->getConf('fullpagecontext')
                 );
             } else {
                 // use the chunks as context

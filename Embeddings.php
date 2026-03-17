@@ -345,13 +345,15 @@ class Embeddings
      *
      * @param string $query The question
      * @param string $lang Limit results to this language
+     * @param int $limit Limit the number of returned pages (0 for determined by chunk limits)
      * @return Chunk[]
      * @throws \Exception
      */
-    public function getSimilarPages($query, $lang = '')
+    public function getSimilarPages($query, $lang = '', $limit=0)
     {
         $chunks = $this->getSimilarChunks($query, $lang, false);
         $pages = [];
+        $count = 0;
 
         foreach ($chunks as $chunk) {
             $page = $chunk->getPage();
@@ -369,6 +371,8 @@ class Embeddings
                 $chunk->getCreated(),
                 $chunk->getScore()
             );
+            $count++;
+            if ($limit && $count >= $limit) break; // we have enough pages
         }
         return $pages;
     }
