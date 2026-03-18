@@ -131,7 +131,7 @@ class Embeddings
      */
     public function getChunkSize()
     {
-        $tokenlimit = $this->chatModel->getMaxInputTokenLength();
+        $tokenlimit = min($this->embedModel->getMaxInputTokenLength(), $this->chatModel->getMaxInputTokenLength());
         if (!$tokenlimit) {
             // no token limit, use the configured chunk size
             return $this->configChunkSize;
