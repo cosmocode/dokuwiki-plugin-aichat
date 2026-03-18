@@ -13,4 +13,5 @@ $lang['send-button'] = 'Send your question [Enter]';
 $lang['restart-button'] = 'Restart the conversation';
 $lang['close-button'] = 'Close';
 $lang['fullscreen-button'] = 'Toggle fullscreen';
+$lang['pagecontext'] = 'Enable to ask about the current page.';
 $lang['js']['error'] = 'Sorry, something went wrong';

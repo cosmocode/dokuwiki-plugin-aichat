@@ -1,25 +1,32 @@
 {
     "chat": {
-        "gemini-1.5-flash": {
+        "gemini-2.5-flash": {
             "description": "https:\/\/ai.google.dev\/pricing",
             "inputTokens": 1048576,
             "inputTokenPrice": 0.08,
             "outputTokens": 8192,
             "outputTokenPrice": 0.3
         },
-        "gemini-1.5-flash-latest": {
+        "gemini-2.5-pro": {
             "description": "https:\/\/ai.google.dev\/pricing",
+            "inputTokens": 2097152,
+            "inputTokenPrice": 2.5,
+            "outputTokens": 8192,
+            "outputTokenPrice": 7.5
+        },
+        "gemini-2.0-flash": {
+            "description": "https:\/\/ai.google.dev\/pricing#2_0flash",
+            "inputTokens": 1048576,
+            "inputTokenPrice": 0.1,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0.4
+        },
+        "gemini-2.0-flash-lite": {
+            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/pricing#gemini-2.0-flash-lite",
             "inputTokens": 1048576,
             "inputTokenPrice": 0.08,
             "outputTokens": 8192,
             "outputTokenPrice": 0.3
-        },
-        "gemini-pro": {
-            "description": "https:\/\/cloud.google.com\/vertex-ai\/generative-ai\/docs\/learn\/models#foundation_models",
-            "inputTokens": 32760,
-            "inputTokenPrice": 0.35,
-            "outputTokens": 8192,
-            "outputTokenPrice": 1.05
         },
         "gemini-1.5-pro": {
             "description": "https:\/\/ai.google.dev\/pricing",
@@ -35,13 +42,6 @@
             "outputTokens": 8192,
             "outputTokenPrice": 1.05
         },
-        "gemini-pro-vision": {
-            "description": "https:\/\/cloud.google.com\/vertex-ai\/generative-ai\/docs\/learn\/models#foundation_models",
-            "inputTokens": 30720,
-            "inputTokenPrice": 0.35,
-            "outputTokens": 2048,
-            "outputTokenPrice": 1.05
-        },
         "gemini-gemma-2-27b-it": {
             "description": "https:\/\/cloud.google.com\/vertex-ai\/generative-ai\/docs\/learn\/models#foundation_models",
             "inputTokens": 8192,
@@ -55,27 +55,6 @@
             "inputTokenPrice": 0.35,
             "outputTokens": 8192,
             "outputTokenPrice": 1.05
-        },
-        "gemini-1.5-flash-8b": {
-            "description": "https:\/\/ai.google.dev\/pricing",
-            "inputTokens": 1048576,
-            "inputTokenPrice": 0,
-            "outputTokens": 8192,
-            "outputTokenPrice": 0
-        },
-        "gemini-2.0-flash": {
-            "description": "https:\/\/ai.google.dev\/pricing#2_0flash",
-            "inputTokens": 1048576,
-            "inputTokenPrice": 0.1,
-            "outputTokens": 8192,
-            "outputTokenPrice": 0.4
-        },
-        "gemini-2.0-flash-lite": {
-            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/pricing#gemini-2.0-flash-lite",
-            "inputTokens": 1048576,
-            "inputTokenPrice": 0.08,
-            "outputTokens": 8192,
-            "outputTokenPrice": 0.3
         },
         "gemma-3-27b-it": {
             "description": "https:\/\/aistudio.google.com",

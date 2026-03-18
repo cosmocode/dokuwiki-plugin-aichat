@@ -2,25 +2,24 @@
 
 namespace dokuwiki\plugin\aichat\Model\Ollama;
 
-use dokuwiki\plugin\aichat\Model\AbstractModel;
+use dokuwiki\plugin\aichat\Model\Generic\AbstractGenericModel;
 
 /**
  * Abstract Ollama Model
  *
  * This class provides a basic interface to the Ollama API
  */
-abstract class AbstractOllama extends AbstractModel
+abstract class AbstractOllama extends AbstractGenericModel
 {
-    protected $apiurl = 'http://localhost:11434/api/';
 
     /** @inheritdoc */
-    public function __construct(string $name, array $config)
+    protected function getHttpClient()
     {
-        parent::__construct($name, $config);
-        $this->apiurl = rtrim($config['ollama_baseurl'] ?? '', '/');
-        if ($this->apiurl === '') {
-            throw new \Exception('Ollama base URL not configured', 3001);
-        }
+        $http = parent::getHttpClient();
+
+        $apiKey = $this->getFromConf('apikey');
+        $http->headers['Authorization'] = 'Bearer ' . $apiKey;
+        return $http;
     }
 
     /** @inheritdoc */
@@ -28,7 +27,7 @@ abstract class AbstractOllama extends AbstractModel
     {
         $info = parent::loadUnknownModelInfo();
 
-        $url = $this->apiurl . 'show';
+        $url = $this->apiurl . '/show';
 
         $result = $this->sendAPIRequest('POST', $url, ['model' => $this->modelName]);
         foreach($result['model_info'] as $key => $value) {
@@ -44,19 +43,7 @@ abstract class AbstractOllama extends AbstractModel
         return $info;
     }
 
-    /**
-     * Send a request to the Ollama API
-     *
-     * @param string $endpoint
-     * @param array $data Payload to send
-     * @return array API response
-     * @throws \Exception
-     */
-    protected function request($endpoint, $data)
-    {
-        $url = $this->apiurl . '/' . ltrim($endpoint, '/');
-        return $this->sendAPIRequest('POST', $url, $data);
-    }
+
 
     /** @inheritdoc */
     protected function parseAPIResponse($response)

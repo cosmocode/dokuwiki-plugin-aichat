@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\aichat\Model\OpenAI;
 
+
 use dokuwiki\plugin\aichat\Model\ChatInterface;
 
 class ChatModel extends AbstractOpenAIModel implements ChatInterface

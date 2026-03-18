@@ -3,6 +3,7 @@
 namespace dokuwiki\plugin\aichat\Model\Gemini;
 
 use dokuwiki\plugin\aichat\Model\AbstractModel;
+use dokuwiki\plugin\aichat\Model\ModelException;
 
 abstract class AbstractGeminiModel extends AbstractModel
 {
@@ -13,13 +14,8 @@ abstract class AbstractGeminiModel extends AbstractModel
     /** @inheritdoc */
     public function __construct(string $name, array $config)
     {
-        if (empty($config['gemini_apikey'])) {
-            throw new \Exception('Gemini API key not configured', 3001);
-        }
-
-        $this->apikey = $config['gemini_apikey'];
-
         parent::__construct($name, $config);
+        $this->apikey = $this->getFromConf('apikey');
     }
 
     /** @inheritdoc */
@@ -32,7 +28,7 @@ abstract class AbstractGeminiModel extends AbstractModel
         );
         $result = $this->sendAPIRequest('GET', $url, '');
         if(!$result) {
-            throw new \Exception('Failed to load model info for '.$this->modelFullName, 3003);
+            throw new ModelException('Failed to load model info for '.$this->modelFullName, 3003);
         }
 
         $info = parent::loadUnknownModelInfo();
@@ -71,7 +67,7 @@ abstract class AbstractGeminiModel extends AbstractModel
         }
 
         if (isset($response['error'])) {
-            throw new \Exception('Gemini API error: ' . $response['error']['message'], 3002);
+            throw new ModelException('Gemini API error: ' . $response['error']['message'], 3002);
         }
 
         return $response;
