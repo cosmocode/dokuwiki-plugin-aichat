@@ -19,6 +19,14 @@ class ChatModel extends AbstractModel implements ChatInterface
 
 
     /** @inheritdoc */
+    function loadUnknownModelInfo(): array
+    {
+        $info = parent::loadUnknownModelInfo();
+        $info['outputTokens'] = 32000;
+        return $info;
+    }
+
+    /** @inheritdoc */
     public function getAnswer(array $messages): string
     {
         // system message is separate from the messages array

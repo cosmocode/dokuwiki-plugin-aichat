@@ -167,7 +167,7 @@ abstract class AbstractModel implements ModelInterface
         ];
 
         if ($this instanceof ChatInterface) {
-            $info['outputTokens'] = 0;
+            $info['outputTokens'] = 8000;
             $info['outputTokenPrice'] = 0;
         } elseif ($this instanceof EmbeddingInterface) {
             $info['dimensions'] = 512;
@@ -231,6 +231,7 @@ abstract class AbstractModel implements ModelInterface
             $this->http->timeout = 60;
             $this->http->headers['Content-Type'] = 'application/json';
             $this->http->headers['Accept'] = 'application/json';
+            $this->http->headers['Accept-Encoding'] = '';
         }
 
         return $this->http;
