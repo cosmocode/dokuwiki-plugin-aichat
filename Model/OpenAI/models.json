@@ -3,9 +3,9 @@
         "gpt-3.5-turbo": {
             "description": "GPT-3.5 Turbo is a variant of GPT-3.5 that is optimized for speed and can generate responses in a fraction of the time.",
             "inputTokens": 16385,
-            "inputTokenPrice": 1.5,
+            "inputTokenPrice": 0.5,
             "outputTokens": 4096,
-            "outputTokenPrice": 2
+            "outputTokenPrice": 1.5
         },
         "gpt-4": {
             "description": "GPT-4 is the latest version of OpenAI's Generative Pre-trained Transformer (GPT) language model. It is capable of generating human-like text and can be used for a wide range of natural language processing tasks.",
@@ -76,6 +76,188 @@
             "inputTokenPrice": 1.1,
             "outputTokens": 100000,
             "outputTokenPrice": 4.4
+        },
+        "gpt-4.1": {
+            "description": "",
+            "inputTokens": 1047576,
+            "inputTokenPrice": 2,
+            "outputTokens": 32768,
+            "outputTokenPrice": 8
+        },
+        "gpt-4.1-mini": {
+            "description": "",
+            "inputTokens": 1047576,
+            "inputTokenPrice": 0.4,
+            "outputTokens": 32768,
+            "outputTokenPrice": 1.6
+        },
+        "gpt-4.1-nano": {
+            "description": "",
+            "inputTokens": 1047576,
+            "inputTokenPrice": 0.1,
+            "outputTokens": 32768,
+            "outputTokenPrice": 0.4
+        },
+        "gpt-audio": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 2.5,
+            "outputTokens": 16384,
+            "outputTokenPrice": 10
+        },
+        "gpt-audio-1.5": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 2.5,
+            "outputTokens": 16384,
+            "outputTokenPrice": 10
+        },
+        "gpt-audio-mini": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0.6,
+            "outputTokens": 16384,
+            "outputTokenPrice": 2.4
+        },
+        "gpt-5": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 1.25,
+            "outputTokens": 128000,
+            "outputTokenPrice": 10
+        },
+        "gpt-5.1": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 1.25,
+            "outputTokens": 128000,
+            "outputTokenPrice": 10
+        },
+        "gpt-5.1-chat-latest": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 1.25,
+            "outputTokens": 16384,
+            "outputTokenPrice": 10
+        },
+        "gpt-5.2": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 1.75,
+            "outputTokens": 128000,
+            "outputTokenPrice": 14
+        },
+        "gpt-5.2-chat-latest": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 1.75,
+            "outputTokens": 16384,
+            "outputTokenPrice": 14
+        },
+        "gpt-5.3-chat-latest": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 1.75,
+            "outputTokens": 16384,
+            "outputTokenPrice": 14
+        },
+        "gpt-5.4": {
+            "description": "",
+            "inputTokens": 1050000,
+            "inputTokenPrice": 2.5,
+            "outputTokens": 128000,
+            "outputTokenPrice": 15
+        },
+        "gpt-5.4-mini": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 0.75,
+            "outputTokens": 128000,
+            "outputTokenPrice": 4.5
+        },
+        "gpt-5.4-nano": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 0.2,
+            "outputTokens": 128000,
+            "outputTokenPrice": 1.25
+        },
+        "gpt-5-chat": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 1.25,
+            "outputTokens": 16384,
+            "outputTokenPrice": 10
+        },
+        "gpt-5-chat-latest": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 1.25,
+            "outputTokens": 16384,
+            "outputTokenPrice": 10
+        },
+        "gpt-5-mini": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 0.25,
+            "outputTokens": 128000,
+            "outputTokenPrice": 2
+        },
+        "gpt-5-nano": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 0.05,
+            "outputTokens": 128000,
+            "outputTokenPrice": 0.4
+        },
+        "gpt-realtime": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 4,
+            "outputTokens": 4096,
+            "outputTokenPrice": 16
+        },
+        "gpt-realtime-1.5": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 4,
+            "outputTokens": 4096,
+            "outputTokenPrice": 16
+        },
+        "gpt-realtime-mini": {
+            "description": "",
+            "inputTokens": 128000,
+            "inputTokenPrice": 0.6,
+            "outputTokens": 4096,
+            "outputTokenPrice": 2.4
+        },
+        "o3": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 2,
+            "outputTokens": 100000,
+            "outputTokenPrice": 8
+        },
+        "o4-mini": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 1.1,
+            "outputTokens": 100000,
+            "outputTokenPrice": 4.4
+        },
+        "container": {
+            "description": "",
+            "inputTokens": null,
+            "inputTokenPrice": 0,
+            "outputTokens": null,
+            "outputTokenPrice": 0
+        },
+        "gpt-5-search-api": {
+            "description": "",
+            "inputTokens": 272000,
+            "inputTokenPrice": 1.25,
+            "outputTokens": 128000,
+            "outputTokenPrice": 10
         }
     },
     "embedding": {

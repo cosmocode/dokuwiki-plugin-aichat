@@ -65,6 +65,24 @@
             "inputTokens": 32000,
             "inputTokenPrice": 0.12,
             "dimensions": 1536
+        },
+        "voyage-3.5": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.06,
+            "dimensions": 1536
+        },
+        "voyage-3.5-lite": {
+            "description": "",
+            "inputTokens": 32000,
+            "inputTokenPrice": 0.02,
+            "dimensions": 1536
+        },
+        "voyage-context-3": {
+            "description": "",
+            "inputTokens": 120000,
+            "inputTokenPrice": 0.18,
+            "dimensions": 1536
         }
     }
 }
