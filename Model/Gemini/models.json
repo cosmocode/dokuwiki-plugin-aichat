@@ -1,5 +1,26 @@
 {
     "chat": {
+        "gemini-3.1-pro-preview": {
+            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/models#gemini-3.1-pro",
+            "inputTokens": 2097152,
+            "inputTokenPrice": 2.0,
+            "outputTokens": 65535,
+            "outputTokenPrice": 12.0
+        },
+        "gemini-3-flash-preview": {
+            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/models#gemini-3-flash",
+            "inputTokens": 1048576,
+            "inputTokenPrice": 0.5,
+            "outputTokens": 65535,
+            "outputTokenPrice": 3.0
+        },
+        "gemini-3.1-flash-lite-preview": {
+            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/models#gemini-3.1-flash-lite",
+            "inputTokens": 1048576,
+            "inputTokenPrice": 0.25,
+            "outputTokens": 65535,
+            "outputTokenPrice": 1.5
+        },
         "gemini-2.5-flash": {
             "description": "https:\/\/ai.google.dev\/pricing",
             "inputTokens": 1048576,
@@ -12,7 +33,7 @@
             "inputTokens": 1048576,
             "inputTokenPrice": 1.25,
             "outputTokens": 65535,
-            "outputTokenPrice": 10
+            "outputTokenPrice": 10.0
         },
         "gemini-2.0-flash": {
             "description": "https:\/\/ai.google.dev\/pricing#2_0flash",
@@ -63,6 +84,13 @@
             "outputTokens": 8192,
             "outputTokenPrice": 0
         },
+        "gemma-4-31b-it": {
+            "description": "https:\/\/aistudio.google.com",
+            "inputTokens": 131072,
+            "inputTokenPrice": 0,
+            "outputTokens": 8192,
+            "outputTokenPrice": 0
+        },
         "gemini-2.5-flash-lite": {
             "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/models#gemini-2.5-flash-lite",
             "inputTokens": 1048576,
@@ -71,18 +99,18 @@
             "outputTokenPrice": 0.4
         },
         "gemini-flash-latest": {
-            "description": "https:\/\/developers.googleblog.com\/en\/continuing-to-bring-you-our-latest-models-with-an-improved-gemini-2-5-flash-and-flash-lite-release\/",
+            "description": "Alias for the latest Flash model",
             "inputTokens": 1048576,
-            "inputTokenPrice": 0.3,
+            "inputTokenPrice": 0.5,
             "outputTokens": 65535,
-            "outputTokenPrice": 2.5
+            "outputTokenPrice": 3.0
         },
         "gemini-flash-lite-latest": {
-            "description": "https:\/\/developers.googleblog.com\/en\/continuing-to-bring-you-our-latest-models-with-an-improved-gemini-2-5-flash-and-flash-lite-release\/",
+            "description": "Alias for the latest Flash Lite model",
             "inputTokens": 1048576,
-            "inputTokenPrice": 0.1,
+            "inputTokenPrice": 0.25,
             "outputTokens": 65535,
-            "outputTokenPrice": 0.4
+            "outputTokenPrice": 1.5
         },
         "gemini-2.5-flash-native-audio-latest": {
             "description": "https:\/\/ai.google.dev\/pricing",
@@ -92,31 +120,20 @@
             "outputTokenPrice": 2.5
         },
         "gemini-pro-latest": {
-            "description": "https:\/\/cloud.google.com\/vertex-ai\/generative-ai\/pricing",
+            "description": "Alias for the latest Pro model",
             "inputTokens": 1048576,
-            "inputTokenPrice": 1.25,
+            "inputTokenPrice": 2.0,
             "outputTokens": 65535,
-            "outputTokenPrice": 10
+            "outputTokenPrice": 12.0
         }
     },
     "embedding": {
-        "text-embedding-004": {
+        "gemini-embedding-2": {
             "description": "Achieves a stronger retrieval performance and outperforms existing models with comparable dimensions, on the standard MTEB embedding benchmarks",
-            "inputTokens": 2048,
-            "inputTokenPrice": 0.00625,
-            "dimensions": 768
-        },
-        "embedding-001": {
-            "description": "Older embedding model",
-            "inputTokens": 2048,
-            "inputTokenPrice": 0.00625,
-            "dimensions": 768
-        },
-        "gemini-1.5-flash": {
-            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/embeddings#multimodal",
             "inputTokens": 8192,
-            "inputTokenPrice": 0.08,
-            "dimensions": 1536
-        }
-    }
-}
+            "inputTokenPrice": 0.15,
+            "dimensions": 3072
+        },
+        "gemini-embedding-001": {
+            "description": "Successor to text-embedding-004. High-performance text-only embeddings",
+            "inputTokens": 2048
