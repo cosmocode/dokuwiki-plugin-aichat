@@ -136,4 +136,21 @@
         },
         "gemini-embedding-001": {
             "description": "Successor to text-embedding-004. High-performance text-only embeddings",
-            "inputTokens": 2048
+            "inputTokens": 2048,
+            "inputTokenPrice": 0.15,
+            "dimensions": 3072
+        },
+        "embedding-001": {
+            "description": "Older embedding model",
+            "inputTokens": 2048,
+            "inputTokenPrice": 0.00625,
+            "dimensions": 768
+        },
+        "gemini-1.5-flash": {
+            "description": "https:\/\/ai.google.dev\/gemini-api\/docs\/embeddings#multimodal",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.08,
+            "dimensions": 1536
+        }
+    }
+}
