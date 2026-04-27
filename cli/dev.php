@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\HTTP\DokuHTTPClient;
 use dokuwiki\plugin\aichat\AbstractCLI;
 use splitbrain\phpcli\Options;
 
@@ -25,7 +26,6 @@ class cli_plugin_aichat_dev extends AbstractCLI
         parent::main($options);
 
         switch ($options->getCmd()) {
-
             case 'update':
                 $this->updateModelData();
                 break;
@@ -37,7 +37,7 @@ class cli_plugin_aichat_dev extends AbstractCLI
     protected function updateModelData()
     {
 
-        $http = new \dokuwiki\HTTP\DokuHTTPClient();
+        $http = new DokuHTTPClient();
         $url = 'https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json';
         $response = $http->get($url);
         if ($response === false) {
@@ -88,7 +88,7 @@ class cli_plugin_aichat_dev extends AbstractCLI
             if (!isset($ourProviders[$data['litellm_provider']])) continue;
             if (!in_array($data['mode'], ['chat', 'embedding'])) continue;
             $provider = $data['litellm_provider'];
-            $model = explode('/', $model);
+            $model = explode('/', (string) $model);
             $model = array_pop($model);
 
             if (isset($ourProviders[$provider]['skip']) && preg_match($ourProviders[$provider]['skip'], $model)) {
@@ -107,13 +107,11 @@ class cli_plugin_aichat_dev extends AbstractCLI
             if ($data['mode'] === 'chat') {
                 $newmodel['outputTokens'] = $data['max_output_tokens'];
                 $newmodel['outputTokenPrice'] = round($data['output_cost_per_token'] * 1_000_000, 2);
+            } elseif (isset($oldmodel['dimensions'])) {
+                $newmodel['dimensions'] = $oldmodel['dimensions'];
             } else {
-                if (isset($oldmodel['dimensions'])) {
-                    $newmodel['dimensions'] = $oldmodel['dimensions'];
-                } else {
-                    $this->warning('No dimensions for ' . $provider . ' ' . $model . '. Check manually!');
-                    $newmodel['dimensions'] = 1536;
-                }
+                $this->warning('No dimensions for ' . $provider . ' ' . $model . '. Check manually!');
+                $newmodel['dimensions'] = 1536;
             }
             $ourProviders[$provider]['models'][$data['mode']][$model] = $newmodel;
         }
