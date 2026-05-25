@@ -52,11 +52,6 @@ class AIChatButton extends HTMLElement {
             iconUrl = iconUrl.slice(4, -1).replace(/["']/g, '');
         }
 
-        const iconAttr = this.getAttribute('icon');
-        if (iconAttr) {
-            iconUrl = iconAttr;
-        }
-
         if (!iconUrl) {
             const base = window.DOKU_BASE || '';
             iconUrl = `${base}lib/plugins/aichat/images/aichat.svg`;
