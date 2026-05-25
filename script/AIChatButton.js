@@ -8,7 +8,6 @@ class AIChatButton extends HTMLElement {
         this.#root = this.attachShadow({mode: 'open'});
         this.#root.innerHTML = `
             <button class="toggle start">
-                <object type="image/svg+xml" data="lib/plugins/aichat/images/aichat.svg" onload="this.parentNode.replaceChild(this.contentDocument.documentElement, this);"></object>
             </button>
             <dialog>
                 <div>
@@ -47,6 +46,25 @@ class AIChatButton extends HTMLElement {
      * We initialize the attribute based states here
      */
     connectedCallback() {
+        const style = window.getComputedStyle(this);
+        let iconUrl = style.getPropertyValue('--icon-url').trim();
+        if (iconUrl.startsWith('url(')) {
+            iconUrl = iconUrl.slice(4, -1).replace(/["']/g, '');
+        }
+
+        const iconAttr = this.getAttribute('icon');
+        if (iconAttr) {
+            iconUrl = iconAttr;
+        }
+
+        if (!iconUrl) {
+            const base = window.DOKU_BASE || '';
+            iconUrl = `${base}lib/plugins/aichat/images/aichat.svg`;
+        }
+
+        this.style.setProperty('--icon-url', `url("${iconUrl}")`);
+        this.#root.querySelector('button.start').innerHTML = `<div class="icon"></div>`;
+
         this.#root.querySelector('button.start').title = this.getAttribute('label') || 'AI Chat';
         this.#dialog.querySelector('header h1').textContent = this.getAttribute('label') || 'AI Chat';
 
@@ -68,19 +86,21 @@ class AIChatButton extends HTMLElement {
      * @returns {HTMLStyleElement}
      */
     getStyle() {
+        const base = window.DOKU_BASE || '';
         const style = document.createElement('style');
         style.textContent = `
             :host {
                 --color-chat-icon: #4881bf;
                 --color-link: #4881bf;
                 --icon-size: 2em;
+                --icon-url: url("${base}lib/plugins/aichat/images/aichat.svg");
             }
             button {
                 background: none;
                 border: none;
                 cursor: pointer;
             }
-            :host > button svg {
+            :host > button .icon, :host > button svg {
                 fill: var(--color-chat-icon);
                 filter: drop-shadow(0.2em 0.2em 0.2em rgb(0 0 0 / 0.4));
             }
@@ -88,9 +108,18 @@ class AIChatButton extends HTMLElement {
                 width: 2em;
                 height: 2em;
             }
-            button.start svg {
+            button.start .icon {
                 width: var(--icon-size);
                 height: var(--icon-size);
+                background-color: var(--color-chat-icon);
+                mask-image: var(--icon-url);
+                mask-size: contain;
+                mask-repeat: no-repeat;
+                mask-position: center;
+                -webkit-mask-image: var(--icon-url);
+                -webkit-mask-size: contain;
+                -webkit-mask-repeat: no-repeat;
+                -webkit-mask-position: center;
             }
             dialog {
                 width: 500px;
