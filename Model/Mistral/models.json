@@ -23,24 +23,24 @@
         },
         "mistral-small-latest": {
             "description": "Cost-efficient reasoning for low-latency workloads. Fluent in English, French, Italian, German, Spanish, and strong in code.",
-            "inputTokens": 32000,
-            "inputTokenPrice": 0.1,
-            "outputTokens": 8191,
-            "outputTokenPrice": 0.3
+            "inputTokens": 131072,
+            "inputTokenPrice": 0.06,
+            "outputTokens": 131072,
+            "outputTokenPrice": 0.18
         },
         "mistral-medium-latest": {
             "description": "Balanced reasoning for a wide range of tasks. Fluent in English, French, Italian, German, Spanish, and strong in code.",
-            "inputTokens": 32000,
-            "inputTokenPrice": 2.7,
-            "outputTokens": 8191,
-            "outputTokenPrice": 8.1
+            "inputTokens": 131072,
+            "inputTokenPrice": 0.4,
+            "outputTokens": 131072,
+            "outputTokenPrice": 2
         },
         "mistral-large-latest": {
             "description": "Top-tier reasoning for high-complexity tasks. Fluent in English, French, Italian, German, Spanish, and strong in code.",
-            "inputTokens": 128000,
-            "inputTokenPrice": 2,
-            "outputTokens": 128000,
-            "outputTokenPrice": 6
+            "inputTokens": 262144,
+            "inputTokenPrice": 0.5,
+            "outputTokens": 262144,
+            "outputTokenPrice": 1.5
         },
         "mistral-tiny": {
             "description": "",
@@ -97,6 +97,48 @@
             "inputTokenPrice": 2,
             "outputTokens": 128000,
             "outputTokenPrice": 6
+        },
+        "devstral-small-latest": {
+            "description": "https:\/\/docs.mistral.ai\/models\/devstral-small-2-25-12",
+            "inputTokens": 256000,
+            "inputTokenPrice": 0.1,
+            "outputTokens": 256000,
+            "outputTokenPrice": 0.3
+        },
+        "devstral-latest": {
+            "description": "https:\/\/mistral.ai\/news\/devstral-2-vibe-cli",
+            "inputTokens": 256000,
+            "inputTokenPrice": 0.4,
+            "outputTokens": 256000,
+            "outputTokenPrice": 2
+        },
+        "devstral-medium-latest": {
+            "description": "https:\/\/mistral.ai\/news\/devstral-2-vibe-cli",
+            "inputTokens": 256000,
+            "inputTokenPrice": 0.4,
+            "outputTokens": 256000,
+            "outputTokenPrice": 2
+        },
+        "magistral-medium-latest": {
+            "description": "https:\/\/mistral.ai\/news\/magistral",
+            "inputTokens": 40000,
+            "inputTokenPrice": 2,
+            "outputTokens": 40000,
+            "outputTokenPrice": 5
+        },
+        "magistral-small-latest": {
+            "description": "https:\/\/mistral.ai\/pricing#api-pricing",
+            "inputTokens": 40000,
+            "inputTokenPrice": 0.5,
+            "outputTokens": 40000,
+            "outputTokenPrice": 1.5
+        },
+        "mistral-large-3": {
+            "description": "https:\/\/docs.mistral.ai\/models\/mistral-large-3-25-12",
+            "inputTokens": 262144,
+            "inputTokenPrice": 0.5,
+            "outputTokens": 262144,
+            "outputTokenPrice": 1.5
         }
     },
     "embedding": {
@@ -105,6 +147,12 @@
             "inputTokens": 8192,
             "inputTokenPrice": 0.1,
             "dimensions": 1024
+        },
+        "codestral-embed": {
+            "description": "",
+            "inputTokens": 8192,
+            "inputTokenPrice": 0.15,
+            "dimensions": 1536
         }
     }
 }

@@ -102,7 +102,112 @@
             "description": "",
             "inputTokens": 200000,
             "inputTokenPrice": 3,
+            "outputTokens": 64000,
+            "outputTokenPrice": 15
+        },
+        "claude-haiku-4-5-20251001": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 1,
+            "outputTokens": 64000,
+            "outputTokenPrice": 5
+        },
+        "claude-haiku-4-5": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 1,
+            "outputTokens": 64000,
+            "outputTokenPrice": 5
+        },
+        "claude-4-opus-20250514": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 15,
+            "outputTokens": 32000,
+            "outputTokenPrice": 75
+        },
+        "claude-4-sonnet-20250514": {
+            "description": "",
+            "inputTokens": 1000000,
+            "inputTokenPrice": 3,
+            "outputTokens": 64000,
+            "outputTokenPrice": 15
+        },
+        "claude-sonnet-4-5": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 3,
+            "outputTokens": 64000,
+            "outputTokenPrice": 15
+        },
+        "claude-sonnet-4-5-20250929": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 3,
+            "outputTokens": 64000,
+            "outputTokenPrice": 15
+        },
+        "claude-sonnet-4-6": {
+            "description": "",
+            "inputTokens": 1000000,
+            "inputTokenPrice": 3,
+            "outputTokens": 64000,
+            "outputTokenPrice": 15
+        },
+        "claude-opus-4-1": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 15,
+            "outputTokens": 32000,
+            "outputTokenPrice": 75
+        },
+        "claude-opus-4-1-20250805": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 15,
+            "outputTokens": 32000,
+            "outputTokenPrice": 75
+        },
+        "claude-opus-4-20250514": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 15,
+            "outputTokens": 32000,
+            "outputTokenPrice": 75
+        },
+        "claude-opus-4-5-20251101": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 5,
+            "outputTokens": 64000,
+            "outputTokenPrice": 25
+        },
+        "claude-opus-4-5": {
+            "description": "",
+            "inputTokens": 200000,
+            "inputTokenPrice": 5,
+            "outputTokens": 64000,
+            "outputTokenPrice": 25
+        },
+        "claude-opus-4-6": {
+            "description": "",
+            "inputTokens": 1000000,
+            "inputTokenPrice": 5,
             "outputTokens": 128000,
+            "outputTokenPrice": 25
+        },
+        "claude-opus-4-6-20260205": {
+            "description": "",
+            "inputTokens": 1000000,
+            "inputTokenPrice": 5,
+            "outputTokens": 128000,
+            "outputTokenPrice": 25
+        },
+        "claude-sonnet-4-20250514": {
+            "description": "",
+            "inputTokens": 1000000,
+            "inputTokenPrice": 3,
+            "outputTokens": 64000,
             "outputTokenPrice": 15
         }
     }
