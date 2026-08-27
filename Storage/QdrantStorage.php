@@ -28,6 +28,7 @@ class QdrantStorage extends AbstractStorage
         $this->collectionName = $config['qdrant_collection'] ?? '';
 
         $this->http = new DokuHTTPClient();
+        $this->http->http = '1.1';
         $this->http->headers['Content-Type'] = 'application/json';
         $this->http->headers['Accept'] = 'application/json';
         $this->http->keep_alive = false;
