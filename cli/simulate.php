@@ -159,8 +159,6 @@ class cli_plugin_aichat_simulate extends AbstractCLI
     /**
      * Prefix each key in the given stats array to be merged with a larger array
      *
-     * @param string $prefix
-     * @param array $stats
      * @return array
      */
     protected function flattenStats(string $prefix, array $stats)
@@ -173,7 +171,6 @@ class cli_plugin_aichat_simulate extends AbstractCLI
     }
 
     /**
-     * @param string $file
      * @return array
      * @throws Exception
      */

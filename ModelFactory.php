@@ -7,9 +7,6 @@ use dokuwiki\plugin\aichat\Model\EmbeddingInterface;
 
 class ModelFactory
 {
-    /** @var array The plugin configuration */
-    protected array $config;
-
     public $chatModel;
     public $rephraseModel;
     public $embeddingModel;
@@ -19,9 +16,8 @@ class ModelFactory
     /**
      * @param array $config The plugin configuration
      */
-    public function __construct(array $config)
+    public function __construct(protected array $config)
     {
-        $this->config = $config;
     }
 
     /**
@@ -39,8 +35,6 @@ class ModelFactory
 
     /**
      * Set the debug flag for all models
-     *
-     * @param bool $debug
      */
     public function setDebug(bool $debug = true)
     {
@@ -122,7 +116,7 @@ class ModelFactory
                     try {
                         $info['instance'] = $this->loadModel($type, "$namespace $name");
                         $info['instance']->setDebug($this->debug);
-                    } catch (\Exception $e) {
+                    } catch (\Exception) {
                         if ($availableOnly) continue;
                         $info['instance'] = false;
                     }
